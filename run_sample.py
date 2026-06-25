@@ -168,7 +168,8 @@ def main():
     _save_saliency_map(adv_saliency_map[0], adv_map_path)
 
     history_chart_path = None
-    if args.save_history_chart:
+    should_save_history_chart = args.save_history_chart or (args.history_chart_output is not None)
+    if should_save_history_chart:
         history_chart_path = args.history_chart_output
         if history_chart_path is None:
             output_root, output_ext = os.path.splitext(args.output)
@@ -196,6 +197,8 @@ def main():
     print(f"saved_adv_map: {adv_map_path}")
     if history_chart_path is not None:
         print(f"saved_history_chart: {history_chart_path}")
+    else:
+        print("saved_history_chart: disabled (use --save-history-chart)")
 
 
 if __name__ == "__main__":
