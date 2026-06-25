@@ -132,3 +132,51 @@ def save_attack_history_chart(history, output_path, title="Attack score history"
     plt.close(fig)
 
 
+def _save_single_score_chart(iterations, values, label, output_path, title):
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError as exc:
+        raise ImportError("matplotlib is required to save history chart") from exc
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(iterations, values, label=label, linewidth=2)
+    ax.set_xlabel("Iteration")
+    ax.set_ylabel("Score")
+    ax.set_title(title)
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=180)
+    plt.close(fig)
+
+
+def save_attack_two_score_charts(
+    history,
+    margin_output_path,
+    saliency_output_path,
+    margin_title="Margin loss history",
+    saliency_title="Saliency loss history",
+):
+    if not history:
+        raise ValueError("history is empty, cannot create chart")
+
+    iterations = list(range(len(history)))
+    margin_losses = [_to_float(item["margin_loss"]) for item in history]
+    saliency_losses = [_to_float(item["saliency_loss"]) for item in history]
+
+    _save_single_score_chart(
+        iterations=iterations,
+        values=margin_losses,
+        label="margin_loss",
+        output_path=margin_output_path,
+        title=margin_title,
+    )
+    _save_single_score_chart(
+        iterations=iterations,
+        values=saliency_losses,
+        label="saliency_loss",
+        output_path=saliency_output_path,
+        title=saliency_title,
+    )
+
+

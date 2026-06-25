@@ -13,7 +13,7 @@ if CORE_DIR not in sys.path:
     sys.path.insert(0, CORE_DIR)
 
 from LossFunctions import MarginSalinecy_Fitness
-from util import get_explainable_method, get_torchvision_model, save_attack_history_chart
+from util import get_explainable_method, get_torchvision_model, save_attack_two_score_charts
 from weightedSUM_GA import Weighted_Sum_GA
 
 
@@ -24,8 +24,10 @@ def parse_args():
     parser.add_argument("--clean-image-output", type=str, default=None, help="Path to save resized clean image")
     parser.add_argument("--clean-map-output", type=str, default=None, help="Path to save clean/original saliency map")
     parser.add_argument("--adv-map-output", type=str, default=None, help="Path to save adversarial saliency map")
-    parser.add_argument("--save-history-chart", action="store_true", help="Save chart of margin/saliency/weighted scores")
-    parser.add_argument("--history-chart-output", type=str, default=None, help="Path to save history chart")
+    parser.add_argument("--save-history-chart", action="store_true", help="Save separate charts for margin and saliency scores")
+    parser.add_argument("--history-chart-output", type=str, default=None, help="Base path used to derive *_margin and *_saliency chart files")
+    parser.add_argument("--margin-chart-output", type=str, default=None, help="Path to save margin score chart")
+    parser.add_argument("--saliency-chart-output", type=str, default=None, help="Path to save saliency score chart")
     parser.add_argument("--model", type=str, default="resnet50", help="Torchvision model name")
     parser.add_argument("--label", type=int, default=None, help="True label index. If omitted, uses model prediction")
     parser.add_argument(
@@ -167,17 +169,34 @@ def main():
     _save_saliency_map(clean_saliency_map, clean_map_path)
     _save_saliency_map(adv_saliency_map[0], adv_map_path)
 
-    history_chart_path = None
-    should_save_history_chart = args.save_history_chart or (args.history_chart_output is not None)
+    margin_chart_path = None
+    saliency_chart_path = None
+    should_save_history_chart = (
+        args.save_history_chart
+        or (args.history_chart_output is not None)
+        or (args.margin_chart_output is not None)
+        or (args.saliency_chart_output is not None)
+    )
     if should_save_history_chart:
-        history_chart_path = args.history_chart_output
-        if history_chart_path is None:
-            output_root, output_ext = os.path.splitext(args.output)
-            output_ext = output_ext if output_ext else ".png"
-            history_chart_path = f"{output_root}_scores{output_ext}"
+        output_root, output_ext = os.path.splitext(args.output)
+        output_ext = output_ext if output_ext else ".png"
 
-        os.makedirs(os.path.dirname(history_chart_path) or ".", exist_ok=True)
-        save_attack_history_chart(history, history_chart_path)
+        base_root = output_root
+        if args.history_chart_output is not None:
+            base_root, base_ext = os.path.splitext(args.history_chart_output)
+            if base_ext:
+                output_ext = base_ext
+
+        margin_chart_path = args.margin_chart_output or f"{base_root}_margin{output_ext}"
+        saliency_chart_path = args.saliency_chart_output or f"{base_root}_saliency{output_ext}"
+
+        os.makedirs(os.path.dirname(margin_chart_path) or ".", exist_ok=True)
+        os.makedirs(os.path.dirname(saliency_chart_path) or ".", exist_ok=True)
+        save_attack_two_score_charts(
+            history,
+            margin_output_path=margin_chart_path,
+            saliency_output_path=saliency_chart_path,
+        )
 
     print("=== Attack summary ===")
     print(f"model: {args.model}")
@@ -195,8 +214,9 @@ def main():
     print(f"saved_adv: {args.output}")
     print(f"saved_clean_map: {clean_map_path}")
     print(f"saved_adv_map: {adv_map_path}")
-    if history_chart_path is not None:
-        print(f"saved_history_chart: {history_chart_path}")
+    if margin_chart_path is not None and saliency_chart_path is not None:
+        print(f"saved_margin_chart: {margin_chart_path}")
+        print(f"saved_saliency_chart: {saliency_chart_path}")
     else:
         print("saved_history_chart: disabled (use --save-history-chart)")
 
