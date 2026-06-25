@@ -41,7 +41,7 @@ def parse_args():
     parser.add_argument("--eps", type=int, default=50, help="Number of perturbed pixels")
     parser.add_argument("--p-size", type=float, default=1.0, help="Perturbation step size")
     parser.add_argument("--pc", type=float, default=0.9, help="Crossover ratio")
-    parser.add_argument("--pm", type=float, default=0.9, help="Mutation ratio")
+    parser.add_argument("--pm", type=float, default=0.1, help="Mutation ratio")
     parser.add_argument("--zero-probability", type=float, default=0.3, help="Probability of zero channel perturbation")
     parser.add_argument("--w-margin", type=float, default=0.5)
     parser.add_argument("--w-saliency", type=float, default=0.5)
