@@ -4,6 +4,26 @@ from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 from pytorch_grad_cam.utils.image import show_cam_on_image
 
 
+def _prepare_target_class(output, target_class):
+    # Ensure one class index per sample in the current batch.
+    if target_class is None:
+        return output.argmax(dim=1)
+
+    if not isinstance(target_class, torch.Tensor):
+        target_class = torch.tensor(target_class, device=output.device)
+
+    target_class = target_class.to(device=output.device, dtype=torch.long).view(-1)
+    if target_class.numel() == 1 and output.size(0) > 1:
+        target_class = target_class.expand(output.size(0))
+
+    if target_class.numel() != output.size(0):
+        raise ValueError(
+            f"target_class has {target_class.numel()} elements, expected batch size {output.size(0)}"
+        )
+
+    return target_class
+
+
 
 def simple_gradient_map(model, input_tensor, normalize, target_class=None):
     x = input_tensor.clone().detach()
@@ -12,10 +32,7 @@ def simple_gradient_map(model, input_tensor, normalize, target_class=None):
 
     output = model(normalize(x))
     output_logits = output.detach()
-    print(target_class)
-    # choose class per sample
-    if target_class is None:
-        target_class = output.argmax(dim=1)
+    target_class = _prepare_target_class(output, target_class)
 
     # gather scores for each sample
     score = output.gather(1, target_class.view(-1,1)).sum()
@@ -35,7 +52,7 @@ def simple_gradient_map(model, input_tensor, normalize, target_class=None):
     return saliency.detach(), output_logits
 
 
-def integrated_gradients(model, input_tensor, normalize, target_class=None, steps=100, baseline=None):
+def integrated_gradients(model, input_tensor, normalize, target_class=None, steps=5, baseline=None):
 
     model.eval()
 
@@ -45,9 +62,13 @@ def integrated_gradients(model, input_tensor, normalize, target_class=None, step
     if baseline is None:
         baseline = torch.zeros_like(x)
 
+    with torch.no_grad():
+        output_ref = model(normalize(x))
+
     if target_class is None:
-        with torch.no_grad():
-            target_class = model(normalize(x)).argmax(dim=1)
+        target_class = output_ref.argmax(dim=1)
+
+    target_class = _prepare_target_class(output_ref, target_class)
 
     grads = torch.zeros_like(x)
 

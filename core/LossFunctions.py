@@ -9,7 +9,8 @@ class MarginSalinecy_Fitness:
         # print(x_tensor.shape)
         self.saliency_true, _ = self.explain_method(self.model, x_tensor, self.normalize,  self.y_true)
         # print("Saliency map shape: ", self.saliency_true.shape)
-        
+        # print("Diff clean: ", self.cal_saliency_loss(self.saliency_true, self.saliency_true))
+        # raise
         
     def benchmark(self, xadv_tensors):
         saliency_maps, logits = self.explain_method(self.model, xadv_tensors, self.normalize, self.y_true)

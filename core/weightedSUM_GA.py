@@ -1,6 +1,6 @@
 import torch
 from Solutions import Solution, Population
-from operators import crossover, mutation
+from operators import build_pixel_sampling_probs, generate_offspring, init_population
 from tqdm import tqdm
 
 
@@ -8,32 +8,29 @@ class Weighted_Sum_GA:
     def __init__(self, params):
         self.params = params
         self.device = params.get("device", "cuda" if torch.cuda.is_available() else "cpu")
+        self.operator_strategy = params.get("operator_strategy", "uniform")
+        self.saliency_temperature = params.get("saliency_temperature", 1.0)
+
+        self.pixel_probs = None
+        if self.operator_strategy == "saliency_guided":
+            saliency_true = self.params["fitness"].saliency_true[0]
+            self.pixel_probs = build_pixel_sampling_probs(
+                saliency_true,
+                self.params["all_pixels"],
+                temperature=self.saliency_temperature,
+            )
     
     
     def attack(self):
-        _, _, h, w = self.params["x_tensor"].shape
-        n_pixels = h * w
-        ones_prob = (1 - self.params["zero_probability"]) / 2
-
-        # init population
-        init_solutions = [
-            Solution(
-                torch.randperm(n_pixels, device=self.device)[: self.params["eps"]],
-                torch.tensor([-1, 1, 0], device=self.device)[
-                    torch.multinomial(
-                        torch.tensor(
-                            [ones_prob, ones_prob, self.params["zero_probability"]],
-                            device=self.device,
-                        ),
-                        self.params["eps"] * 3,
-                        replacement=True,
-                    ).view(self.params["eps"], 3)
-                ],
-                self.params["x_tensor"].clone(),
-                self.params["p_size"],
-            )
-            for _ in range(self.params["pop_size"])
-        ]
+        init_solutions = init_population(
+            pop_size=self.params["pop_size"],
+            x_tensor=self.params["x_tensor"],
+            eps=self.params["eps"],
+            p_size=self.params["p_size"],
+            zero_prob=self.params["zero_probability"],
+            all_pixels=self.params["all_pixels"],
+            pixel_probs=self.pixel_probs,
+        )
 
         population = Population(init_solutions, self.params['fitness'])
         pop_margin_losses, pop_saliency_losses, pop_logits = population.evaluate()    # calcuate fitenss    
@@ -105,12 +102,17 @@ class Weighted_Sum_GA:
         return torch.tensor(selected_idxs, device=self.device)
             
     def generate_offpsrings(self, parents):
-        children = []
-        for p1, p2 in parents:
-            child = crossover(p1, p2, self.params["pc"])
-            mutation(child, self.params["pm"], self.params["all_pixels"], self.params["zero_probability"])
-            assert torch.unique(child.pixels).numel() == child.pixels.numel()
-            children.append(child)
-        return children
+        return generate_offspring(
+            parents=parents,
+            pc=self.params["pc"],
+            pm=self.params["pm"],
+            all_pixels=self.params["all_pixels"],
+            zero_prob=self.params["zero_probability"],
+            pixel_probs=self.pixel_probs,
+        )
+    
+    
+    
+
         
 
