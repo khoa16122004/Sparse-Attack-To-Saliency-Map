@@ -92,6 +92,10 @@ def init_population(pop_size, x_tensor, eps, p_size, zero_prob, all_pixels, pixe
 def mutation(soln, pm, all_pixels, zero_prob, pixel_probs=None):
     device = soln.pixels.device
 
+    # Apply mutation only with probability pm.
+    if torch.rand(1, device=device).item() >= pm:
+        return
+
     eps = soln.pixels.numel()
     eps_it = max(int(eps * pm), 1)
 
@@ -151,7 +155,11 @@ def generate_offspring(parents, pc, pm, all_pixels, zero_prob, pixel_probs=None)
     children = []
 
     for p1, p2 in parents:
-        child = crossover(p1, p2, pc, pixel_probs=pixel_probs)
+        child = p1.copy()
+
+        if torch.rand(1, device=child.pixels.device).item() < pc:
+            child = crossover(child, p2, pc, pixel_probs=pixel_probs)
+
         mutation(child, pm, all_pixels, zero_prob, pixel_probs=pixel_probs)
 
         assert torch.unique(child.pixels).numel() == child.pixels.numel()
