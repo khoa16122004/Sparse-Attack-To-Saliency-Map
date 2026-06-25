@@ -9,6 +9,12 @@ import torch
 from explain_method import simple_gradient_map, integrated_gradients
 
 
+def _to_float(value):
+    if torch.is_tensor(value):
+        return float(value.detach().cpu().item())
+    return float(value)
+
+
 _DATASET_NUM_CLASSES = {
     "imagenet": 1000,
     "imagenet1k": 1000,
@@ -96,5 +102,33 @@ def get_intersection(clean_map, adv_map):
     inter = np.minimum(clean_map, adv_map).sum()
     union = np.maximum(clean_map, adv_map).sum() + 1e-12
     return float(inter / union)
+
+
+def save_attack_history_chart(history, output_path, title="Attack score history"):
+    if not history:
+        raise ValueError("history is empty, cannot create chart")
+
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError as exc:
+        raise ImportError("matplotlib is required to save history chart") from exc
+
+    iterations = list(range(len(history)))
+    margin_losses = [_to_float(item["margin_loss"]) for item in history]
+    saliency_losses = [_to_float(item["saliency_loss"]) for item in history]
+    weighted_scores = [_to_float(item["weighted_fitness"]) for item in history]
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(iterations, margin_losses, label="margin_loss", linewidth=2)
+    ax.plot(iterations, saliency_losses, label="saliency_loss", linewidth=2)
+    ax.plot(iterations, weighted_scores, label="weighted_fitness", linewidth=2)
+    ax.set_xlabel("Iteration")
+    ax.set_ylabel("Score")
+    ax.set_title(title)
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=180)
+    plt.close(fig)
 
 
