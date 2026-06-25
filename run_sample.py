@@ -56,7 +56,7 @@ def main():
 
     device = torch.device(args.device)
     model, spatial, normalize = get_torchvision_model(args.model, pretrained=True) 
-    model = model.cuda()
+    model = model.to(device)
     model.eval()
 
 
@@ -89,15 +89,15 @@ def main():
         "pc": args.pc,
         "pm": args.pm,
         "zero_probability": args.zero_probability,
-        "all_pixels": torch.arange(x_tensor.shape[1] * x_tensor.shape[2], device=device),
+        "all_pixels": torch.arange(x_tensor.shape[-2] * x_tensor.shape[-1], device=device),
         "w_margin": args.w_margin,
         "w_saliency": args.w_saliency,
         "device": args.device,
     }
 
     attacker = Weighted_Sum_GA(ga_params)
-    adv_hwc, best_candidate, best_scores, history = attacker.attack()
-    adv_chw = adv_hwc.permute(2, 0, 1).detach().cpu()
+    adv_chw, best_candidate, best_scores, history = attacker.attack()
+    adv_chw = adv_chw.detach().cpu()
 
     os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
     save_image(adv_chw, args.output)
@@ -111,7 +111,7 @@ def main():
     print(f"true_label: {y_true}")
     print(f"clean_pred: {pred}")
     print(f"adv_pred: {adv_pred}")
-    print(f"l0_distance: {int(best_candidate.l0_distance(adv_hwc))}")
+    print(f"l0_distance: {int(best_candidate.l0_distance(adv_chw.to(device)))}")
     print(f"margin_loss: {float(best_scores['margin_loss'])}")
     print(f"saliency_loss: {float(best_scores['saliency_loss'])}")
     print(f"weighted_fitness: {float(best_scores['weighted_fitness'])}")

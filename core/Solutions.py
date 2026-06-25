@@ -26,7 +26,8 @@ class Population:
             pi.saliency_loss = saliency_losses[idx]
             pi.l0 = pi.l0_distance(imgs_adv[idx])
             pi.pred_label = logits[idx].argmax().item()
-            pi.is_adversarial = pi.pred_label != self.fitness.y_true  
+            y_true_item = self.fitness.y_true[0].item() if self.fitness.y_true.numel() == 1 else self.fitness.y_true[idx].item()
+            pi.is_adversarial = pi.pred_label != y_true_item
             
         return margin_losses, saliency_losses, logits  
         
@@ -43,7 +44,8 @@ class Solution:
         self.x = x  # (w x w x 3)
         self.fitnesses = []
         self.is_adversarial = None
-        self.w = x.shape[0]
+        # x is expected to be (1, 3, H, W); use W for linear pixel indexing.
+        self.w = x.shape[-1]
         self.delta = len(self.pixels)
         self.domination_count = None
         self.dominated_solutions = None
@@ -61,7 +63,9 @@ class Solution:
         return np.sum((img - self.x.copy()) ** 2)
 
     def l0_distance(self, img):
-        return torch.any(img != self.x, dim=-1).sum()
+        base = self.x.squeeze(0)
+        # Count pixels where at least one channel changed.
+        return (img != base).any(dim=0).sum()
 
     def generate_adv_image(self):
         x_adv = self.x.clone().squeeze(0) # 3 x w x h
