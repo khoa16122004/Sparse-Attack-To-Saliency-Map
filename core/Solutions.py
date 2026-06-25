@@ -74,7 +74,8 @@ class Solution:
         rows = self.pixels // self.w
         cols = self.pixels % self.w
 
-        x_adv_[rows, cols] += self.values * self.p_size
+        # x_adv_[rows, cols] += self.values * self.p_size
+        x_adv_[rows, cols] -= self.values * self.p_size
         x_adv_ = x_adv_.clamp_(0.0, 1.0)
         x_adv = x_adv_.permute(2, 0, 1) # 3 x w x h
 
