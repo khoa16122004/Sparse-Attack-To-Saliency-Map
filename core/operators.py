@@ -131,47 +131,22 @@ def crossover(soln1, soln2, pc, pixel_probs=None):
 
     offspring = soln1.copy()
 
-    # Pixels unique to Parent B: U_B = M_B \ (M_A ∩ M_B)
-    mask_b = ~torch.isin(soln2.pixels, soln1.pixels)
-    U_B = soln2.pixels[mask_b]
-    U_B_values = soln2.values[mask_b]
+    delta = (~torch.isin(soln2.pixels, soln1.pixels)).nonzero(as_tuple=True)[0] # này là index: U = M_2 \ (M_1 \cap M_2)
 
-    # Pixels unique to Parent A: U_A = M_A \ (M_A ∩ M_B)
-    mask_a = ~torch.isin(soln1.pixels, soln2.pixels)
-    U_A_idx = mask_a.nonzero(as_tuple=True)[0]
+    if delta.numel() > 0:
+        n_take = min(l, delta.numel())
+        if pixel_probs is None:
+            pick = torch.randperm(delta.numel(), device=device)[:n_take]
+            idx = delta[pick]
+        else:
+            delta_pixels = soln2.pixels[delta] # take
+            delta_probs = pixel_probs[delta_pixels]
+            picked_pixels = _sample_pixels_without_replacement(delta_pixels, n_take, delta_probs)
+            picked_mask = torch.isin(soln2.pixels, picked_pixels)
+            idx = picked_mask.nonzero(as_tuple=True)[0]
 
-    # Number of exchanged perturbations
-    n_take = min(l, U_A_idx.numel(), U_B.numel())
-
-    if n_take == 0:
-        return offspring
-
-    # ----------------------------------------------------------
-    # Select n_take perturbations from U_B
-    # ----------------------------------------------------------
-    if pixel_probs is None:
-        pick_b = torch.randperm(U_B.numel(), device=device)[:n_take]
-    else:
-        probs = pixel_probs[U_B]
-        picked_pixels = _sample_pixels_without_replacement(
-            U_B,
-            n_take,
-            probs,
-        )
-        pick_b = torch.isin(U_B, picked_pixels).nonzero(as_tuple=True)[0]
-
-    # ----------------------------------------------------------
-    # Randomly choose n_take locations in U_A to be replaced
-    # ----------------------------------------------------------
-    pick_a = U_A_idx[
-        torch.randperm(U_A_idx.numel(), device=device)[:n_take]
-    ]
-
-    # ----------------------------------------------------------
-    # Replace
-    # ----------------------------------------------------------
-    offspring.pixels[pick_a] = U_B[pick_b]
-    offspring.values[pick_a] = U_B_values[pick_b]
+        offspring.pixels[idx] = soln2.pixels[idx]
+        offspring.values[idx] = soln2.values[idx]
 
     return offspring
 

@@ -55,7 +55,7 @@ python run_batch.py \
     --num_sample 100 \
     --operator-strategy uniform
 
-python run_batch.py \
-    --model-name vgg16 \
-    --num_sample 100 \
-    --operator-strategy saliency_guided
+# python run_batch.py \
+#     --model-name vgg16 \
+#     --num_sample 100 \
+#     --operator-strategy saliency_guided
