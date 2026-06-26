@@ -84,8 +84,7 @@ def _save_saliency_map(saliency_map, output_path):
     Image.fromarray(rgb, mode="RGB").save(output_path)
 
 
-def main():
-    args = parse_args()
+def run_attack(args):
     if args.device == "cuda" and not torch.cuda.is_available():
         print("CUDA is not available, switching to CPU")
         args.device = "cpu"
@@ -219,6 +218,31 @@ def main():
         print(f"saved_saliency_chart: {saliency_chart_path}")
     else:
         print("saved_history_chart: disabled (use --save-history-chart)")
+
+    return {
+        "model": args.model,
+        "image": args.image,
+        "true_label": y_true.detach().cpu().tolist(),
+        "clean_pred": pred.detach().cpu().tolist(),
+        "adv_pred": adv_pred,
+        "l0_distance": int(best_candidate.l0_distance(adv_chw.to(device))),
+        "margin_loss": float(best_scores["margin_loss"]),
+        "saliency_loss": float(best_scores["saliency_loss"]),
+        "weighted_fitness": float(best_scores["weighted_fitness"]),
+        "operator_strategy": args.operator_strategy,
+        "saliency_temperature": args.saliency_temperature,
+        "saved_clean_image": clean_image_path,
+        "saved_adv": args.output,
+        "saved_clean_map": clean_map_path,
+        "saved_adv_map": adv_map_path,
+        "saved_margin_chart": margin_chart_path,
+        "saved_saliency_chart": saliency_chart_path,
+    }
+
+
+def main():
+    args = parse_args()
+    run_attack(args)
 
 
 if __name__ == "__main__":

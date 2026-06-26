@@ -92,9 +92,9 @@ def init_population(pop_size, x_tensor, eps, p_size, zero_prob, all_pixels, pixe
 def mutation(soln, pm, all_pixels, zero_prob, pixel_probs=None):
     device = soln.pixels.device
 
-    # Apply mutation only with probability pm.
-    if torch.rand(1, device=device).item() >= pm:
-        return
+    # # Apply mutation only with probability pm.
+    # if torch.rand(1, device=device).item() >= pm:
+    #     return
 
     eps = soln.pixels.numel()
     eps_it = max(int(eps * pm), 1)
@@ -131,22 +131,47 @@ def crossover(soln1, soln2, pc, pixel_probs=None):
 
     offspring = soln1.copy()
 
-    delta = (~torch.isin(soln2.pixels, soln1.pixels)).nonzero(as_tuple=True)[0]
+    # Pixels unique to Parent B: U_B = M_B \ (M_A ∩ M_B)
+    mask_b = ~torch.isin(soln2.pixels, soln1.pixels)
+    U_B = soln2.pixels[mask_b]
+    U_B_values = soln2.values[mask_b]
 
-    if delta.numel() > 0:
-        n_take = min(l, delta.numel())
-        if pixel_probs is None:
-            pick = torch.randperm(delta.numel(), device=device)[:n_take]
-            idx = delta[pick]
-        else:
-            delta_pixels = soln2.pixels[delta]
-            delta_probs = pixel_probs[delta_pixels]
-            picked_pixels = _sample_pixels_without_replacement(delta_pixels, n_take, delta_probs)
-            picked_mask = torch.isin(soln2.pixels, picked_pixels)
-            idx = picked_mask.nonzero(as_tuple=True)[0]
+    # Pixels unique to Parent A: U_A = M_A \ (M_A ∩ M_B)
+    mask_a = ~torch.isin(soln1.pixels, soln2.pixels)
+    U_A_idx = mask_a.nonzero(as_tuple=True)[0]
 
-        offspring.pixels[idx] = soln2.pixels[idx]
-        offspring.values[idx] = soln2.values[idx]
+    # Number of exchanged perturbations
+    n_take = min(l, U_A_idx.numel(), U_B.numel())
+
+    if n_take == 0:
+        return offspring
+
+    # ----------------------------------------------------------
+    # Select n_take perturbations from U_B
+    # ----------------------------------------------------------
+    if pixel_probs is None:
+        pick_b = torch.randperm(U_B.numel(), device=device)[:n_take]
+    else:
+        probs = pixel_probs[U_B]
+        picked_pixels = _sample_pixels_without_replacement(
+            U_B,
+            n_take,
+            probs,
+        )
+        pick_b = torch.isin(U_B, picked_pixels).nonzero(as_tuple=True)[0]
+
+    # ----------------------------------------------------------
+    # Randomly choose n_take locations in U_A to be replaced
+    # ----------------------------------------------------------
+    pick_a = U_A_idx[
+        torch.randperm(U_A_idx.numel(), device=device)[:n_take]
+    ]
+
+    # ----------------------------------------------------------
+    # Replace
+    # ----------------------------------------------------------
+    offspring.pixels[pick_a] = U_B[pick_b]
+    offspring.values[pick_a] = U_B_values[pick_b]
 
     return offspring
 
@@ -156,9 +181,7 @@ def generate_offspring(parents, pc, pm, all_pixels, zero_prob, pixel_probs=None)
 
     for p1, p2 in parents:
         child = p1.copy()
-
-        if torch.rand(1, device=child.pixels.device).item() < pc:
-            child = crossover(child, p2, pc, pixel_probs=pixel_probs)
+        child = crossover(child, p2, pc, pixel_probs=pixel_probs)
 
         mutation(child, pm, all_pixels, zero_prob, pixel_probs=pixel_probs)
 

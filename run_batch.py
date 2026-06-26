@@ -1,0 +1,435 @@
+import argparse
+import json
+import os
+import sys
+from pathlib import Path
+
+import torch
+from PIL import Image
+from torchvision.utils import save_image
+
+
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+CORE_DIR = os.path.join(ROOT_DIR, "core")
+if CORE_DIR not in sys.path:
+    sys.path.insert(0, CORE_DIR)
+
+from LossFunctions import MarginSalinecy_Fitness
+from util import get_explainable_method, get_torchvision_model, save_attack_two_score_charts
+from weightedSUM_GA import Weighted_Sum_GA
+
+
+DEFAULT_IMAGENET_VAL_ROOT = r"E:\ImageNet1K\imagenet\ImageNet1K\val"
+DEFAULT_REMOTE_VAL_ROOT = "/datastore/elo/quanphm/dataset/ImageNet1K/val"
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Batch attack runner based on run_sample.py (no subprocess calls)"
+    )
+    parser.add_argument(
+        "--selection-file",
+        type=str,
+        default=None,
+        help="Path to *_selection.json file. Default: model_evaluation_results/<model_name>_selection.json",
+    )
+    parser.add_argument(
+        "--model-name",
+        type=str,
+        default=None,
+        help="Model name override. If omitted, inferred from selection filename",
+    )
+    parser.add_argument(
+        "--num_sample",
+        "--num-sample",
+        dest="num_sample",
+        type=int,
+        default=None,
+        help="Number of samples to run from selection file",
+    )
+    parser.add_argument(
+        "--imagenet-val-root",
+        type=str,
+        default=DEFAULT_IMAGENET_VAL_ROOT,
+        help="Local ImageNet val root folder",
+    )
+    parser.add_argument(
+        "--replace-from-root",
+        type=str,
+        default=DEFAULT_REMOTE_VAL_ROOT,
+        help="Old root path in selection json to be replaced at runtime",
+    )
+    parser.add_argument(
+        "--output-root",
+        type=str,
+        default="batch_outputs",
+        help="Root folder for all artifacts",
+    )
+    parser.add_argument(
+        "--replace",
+        action="store_true",
+        help="Overwrite existing outputs. If omitted, existing entries are skipped",
+    )
+
+    parser.add_argument(
+        "--explain-method",
+        type=str,
+        default="simple_gradient",
+        choices=["simple_gradient", "integrated_gradients"],
+        help="Saliency explanation method",
+    )
+    parser.add_argument("--label", type=int, default=None, help="True label index override")
+    parser.add_argument("--pop-size", type=int, default=50)
+    parser.add_argument("--iterations", type=int, default=200)
+    parser.add_argument("--eps", type=int, default=50)
+    parser.add_argument("--p-size", type=float, default=1.0)
+    parser.add_argument("--pc", type=float, default=0.4)
+    parser.add_argument("--pm", type=float, default=0.1)
+    parser.add_argument("--zero-probability", type=float, default=0.3)
+    parser.add_argument("--w-margin", type=float, default=0.5)
+    parser.add_argument("--w-saliency", type=float, default=0.5)
+    parser.add_argument(
+        "--operator-strategy",
+        type=str,
+        default="uniform",
+        choices=["uniform", "saliency_guided"],
+    )
+    parser.add_argument("--saliency-temperature", type=float, default=1.0)
+    parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
+
+    return parser.parse_args()
+
+
+def _save_saliency_map(saliency_map, output_path):
+    map_2d = saliency_map.detach().float().cpu().squeeze()
+    map_min = map_2d.min()
+    map_max = map_2d.max()
+    den = (map_max - map_min).item()
+
+    if den > 1e-12:
+        map_2d = (map_2d - map_min) / (map_max - map_min)
+    else:
+        map_2d = torch.zeros_like(map_2d)
+
+    r = torch.clamp(3.0 * map_2d, 0.0, 1.0)
+    g = torch.clamp(3.0 * map_2d - 1.0, 0.0, 1.0)
+    b = torch.clamp(3.0 * map_2d - 2.0, 0.0, 1.0)
+    rgb = (torch.stack([r, g, b], dim=-1) * 255.0).clamp(0, 255).byte().numpy()
+    Image.fromarray(rgb, mode="RGB").save(output_path)
+
+
+def load_selection_file(selection_file):
+    with open(selection_file, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    if not isinstance(data, dict):
+        raise ValueError(f"Selection file must contain a JSON object: {selection_file}")
+
+    return data
+
+
+def infer_model_name_from_selection_file(selection_file):
+    stem = Path(selection_file).stem
+    suffix = "_selection"
+    if stem.endswith(suffix):
+        return stem[: -len(suffix)]
+    return stem
+
+
+def resolve_image_path(raw_path, class_name, imagenet_val_root, replace_from_root):
+    image_path = Path(raw_path)
+    if image_path.exists():
+        return image_path
+
+    normalized_raw = str(raw_path).replace("\\", "/")
+    normalized_old_root = replace_from_root.replace("\\", "/").rstrip("/")
+
+    if normalized_raw.startswith(normalized_old_root + "/"):
+        suffix = normalized_raw[len(normalized_old_root) + 1 :]
+        candidate = Path(imagenet_val_root) / Path(suffix)
+        if candidate.exists():
+            return candidate
+
+    image_name = Path(raw_path).name
+    fallback = Path(imagenet_val_root) / class_name / image_name
+    return fallback
+
+
+def prepare_output_paths(output_dir):
+    return {
+        "adv": output_dir / "adv.png",
+        "clean": output_dir / "clean.png",
+        "clean_map": output_dir / "clean_map.png",
+        "adv_map": output_dir / "adv_map.png",
+        "history_base": output_dir / "history.png",
+        "summary": output_dir / "summary.json",
+    }
+
+
+def _fmt_num(value):
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, float):
+        text = f"{value:.6g}"
+        return text.replace("+", "")
+    return str(value)
+
+
+def build_approach_tag(args):
+    parts = [
+        f"strategy-{args.operator_strategy}",
+        f"pc-{_fmt_num(args.pc)}",
+        f"pm-{_fmt_num(args.pm)}",
+        f"wm-{_fmt_num(args.w_margin)}",
+        f"ws-{_fmt_num(args.w_saliency)}",
+        f"eps-{_fmt_num(args.eps)}",
+        f"ps-{_fmt_num(args.p_size)}",
+        f"pop-{_fmt_num(args.pop_size)}",
+        f"iter-{_fmt_num(args.iterations)}",
+        f"zp-{_fmt_num(args.zero_probability)}",
+        f"temp-{_fmt_num(args.saliency_temperature)}",
+        f"exp-{args.explain_method}",
+    ]
+    return "__".join(parts)
+
+
+def run_attack_one(image_path, output_paths, model_name, model, spatial, normalize, explain_fn, args, device):
+    image = Image.open(image_path).convert("RGB")
+    x_tensor = spatial(image).to(device).unsqueeze(0)
+
+    with torch.no_grad():
+        pred = model(normalize(x_tensor)).argmax(dim=1)
+
+    y_true = pred if args.label is None else torch.tensor([args.label], device=device)
+
+    fitness = MarginSalinecy_Fitness(
+        model=model,
+        x_tensor=x_tensor,
+        normalize=normalize,
+        y_true=y_true,
+        explain_method=explain_fn,
+    )
+
+    ga_params = {
+        "x_tensor": x_tensor,
+        "normalize": normalize,
+        "fitness": fitness,
+        "pop_size": args.pop_size,
+        "iterations": args.iterations,
+        "eps": args.eps,
+        "p_size": args.p_size,
+        "pc": args.pc,
+        "pm": args.pm,
+        "zero_probability": args.zero_probability,
+        "all_pixels": torch.arange(x_tensor.shape[-2] * x_tensor.shape[-1], device=device),
+        "w_margin": args.w_margin,
+        "w_saliency": args.w_saliency,
+        "operator_strategy": args.operator_strategy,
+        "saliency_temperature": args.saliency_temperature,
+        "device": args.device,
+    }
+
+    attacker = Weighted_Sum_GA(ga_params)
+    adv_chw, best_candidate, best_scores, history = attacker.attack()
+    adv_chw_cpu = adv_chw.detach().cpu()
+
+    save_image(x_tensor[0].detach().cpu(), str(output_paths["clean"]))
+    save_image(adv_chw_cpu, str(output_paths["adv"]))
+
+    with torch.no_grad():
+        adv_pred = model(normalize(adv_chw.unsqueeze(0).to(device))).argmax(dim=1).item()
+
+    clean_saliency_map = fitness.saliency_true[0]
+    adv_saliency_map, _ = explain_fn(model, adv_chw.unsqueeze(0).to(device), normalize, y_true)
+    _save_saliency_map(clean_saliency_map, str(output_paths["clean_map"]))
+    _save_saliency_map(adv_saliency_map[0], str(output_paths["adv_map"]))
+
+    save_attack_two_score_charts(
+        history,
+        margin_output_path=str(output_paths["history_base"]).replace(".png", "_margin.png"),
+        saliency_output_path=str(output_paths["history_base"]).replace(".png", "_saliency.png"),
+    )
+
+    return {
+        "model": model_name,
+        "true_label": int(y_true.item()),
+        "clean_pred": int(pred.item()),
+        "adv_pred": int(adv_pred),
+        "l0_distance": int(best_candidate.l0_distance(adv_chw_cpu.to(device))),
+        "margin_loss": float(best_scores["margin_loss"]),
+        "saliency_loss": float(best_scores["saliency_loss"]),
+        "weighted_fitness": float(best_scores["weighted_fitness"]),
+        "operator_strategy": args.operator_strategy,
+        "saliency_temperature": float(args.saliency_temperature),
+    }
+
+
+def main():
+    args = parse_args()
+
+    if args.num_sample is not None and args.num_sample < 0:
+        raise ValueError("--num_sample must be >= 0")
+
+    if args.selection_file is None:
+        if not args.model_name:
+            raise ValueError("Provide --model-name or --selection-file")
+        selection_file = Path("model_evaluation_results") / f"{args.model_name}_selection.json"
+    else:
+        selection_file = Path(args.selection_file)
+
+    if not selection_file.exists():
+        raise FileNotFoundError(f"Selection file not found: {selection_file}")
+
+    model_name = args.model_name or infer_model_name_from_selection_file(selection_file)
+
+    if args.device == "cuda" and not torch.cuda.is_available():
+        print("CUDA is not available, switching to CPU")
+        args.device = "cpu"
+
+    device = torch.device(args.device)
+
+    print(f"[INFO] selection_file={selection_file}")
+    print(f"[INFO] model={model_name}")
+    print(f"[INFO] device={args.device}")
+
+    model, spatial, normalize = get_torchvision_model(model_name, pretrained=True)
+    model = model.to(device)
+    model.eval()
+
+    explain_fn = get_explainable_method(args.explain_method)
+
+    selections = load_selection_file(selection_file)
+    items = list(selections.items())
+
+    if args.num_sample is not None:
+        items = items[: args.num_sample]
+
+    approach_tag = build_approach_tag(args)
+    run_root = Path(args.output_root) / model_name / approach_tag
+    run_root.mkdir(parents=True, exist_ok=True)
+
+    print(f"[INFO] approach={approach_tag}")
+    print(f"[INFO] output_dir={run_root}")
+
+    all_results = []
+    total_ok = 0
+    total_failed = 0
+    total_skipped = 0
+    total_missing = 0
+
+    for class_name, raw_path in items:
+        image_path = resolve_image_path(
+            raw_path=raw_path,
+            class_name=class_name,
+            imagenet_val_root=args.imagenet_val_root,
+            replace_from_root=args.replace_from_root,
+        )
+
+        image_stem = image_path.stem
+        output_dir = run_root / class_name / image_stem
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        output_paths = prepare_output_paths(output_dir)
+
+        if output_paths["summary"].exists() and not args.replace:
+            result = {
+                "status": "skipped",
+                "reason": "exists",
+                "model": model_name,
+                "class": class_name,
+                "input_raw": raw_path,
+                "resolved_image": str(image_path),
+                "output_dir": str(output_dir),
+            }
+            all_results.append(result)
+            total_skipped += 1
+            print(f"[SKIPPED] class={class_name} image={image_path.name}")
+            continue
+
+        if not image_path.exists():
+            result = {
+                "status": "missing_image",
+                "model": model_name,
+                "class": class_name,
+                "input_raw": raw_path,
+                "resolved_image": str(image_path),
+                "output_dir": str(output_dir),
+            }
+            with open(output_paths["summary"], "w", encoding="utf-8") as f:
+                json.dump(result, f, indent=2, ensure_ascii=False)
+
+            all_results.append(result)
+            total_missing += 1
+            print(f"[MISSING_IMAGE] class={class_name} image={image_path.name}")
+            continue
+
+        try:
+            metrics = run_attack_one(
+                image_path=image_path,
+                output_paths=output_paths,
+                model_name=model_name,
+                model=model,
+                spatial=spatial,
+                normalize=normalize,
+                explain_fn=explain_fn,
+                args=args,
+                device=device,
+            )
+            result = {
+                "status": "ok",
+                "class": class_name,
+                "input_raw": raw_path,
+                "resolved_image": str(image_path),
+                "output_dir": str(output_dir),
+            }
+            result.update(metrics)
+            total_ok += 1
+            print(f"[OK] class={class_name} image={image_path.name}")
+        except Exception as exc:
+            result = {
+                "status": "failed",
+                "model": model_name,
+                "class": class_name,
+                "input_raw": raw_path,
+                "resolved_image": str(image_path),
+                "output_dir": str(output_dir),
+                "error": str(exc),
+            }
+            total_failed += 1
+            print(f"[FAILED] class={class_name} image={image_path.name} error={exc}")
+
+        with open(output_paths["summary"], "w", encoding="utf-8") as f:
+            json.dump(result, f, indent=2, ensure_ascii=False)
+
+        all_results.append(result)
+
+    report = {
+        "selection_file": str(selection_file),
+        "model": model_name,
+        "approach": approach_tag,
+        "num_requested": args.num_sample,
+        "total": len(all_results),
+        "ok": total_ok,
+        "failed": total_failed,
+        "missing_image": total_missing,
+        "skipped": total_skipped,
+        "imagenet_val_root": args.imagenet_val_root,
+        "replace_from_root": args.replace_from_root,
+        "results": all_results,
+    }
+
+    report_path = run_root / "batch_report.json"
+    with open(report_path, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, ensure_ascii=False)
+
+    print("=== Batch summary ===")
+    print(f"report: {report_path}")
+    print(f"total: {report['total']}")
+    print(f"ok: {report['ok']}")
+    print(f"failed: {report['failed']}")
+    print(f"missing_image: {report['missing_image']}")
+    print(f"skipped: {report['skipped']}")
+
+
+if __name__ == "__main__":
+    main()
