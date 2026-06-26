@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --gres=mps:2 # Không khai báo GPU; --gres=mps:l40:2 (card L40); --gres=mps:a100:2 (card A100, ưu tiên các job dùng > 40GB vRAM)
+#SBATCH --gres=mps:A100:2 # Không khai báo GPU; --gres=mps:l40:2 (card L40); --gres=mps:a100:2 (card A100, ưu tiên các job dùng > 40GB vRAM)
 #SBATCH --mem=4G
 #SBATCH --time=72:00:00
 REQUIRED_VRAM=12000  # Quan trọng - Số vRAM cần dùng (để tìm GPU phù hợp)
