@@ -1,23 +1,11 @@
 import argparse
 import json
 import math
-import os
-import sys
 from pathlib import Path
 
 import numpy as np
-import torch
 from PIL import Image
-from torchvision import transforms as T
 from tqdm.auto import tqdm
-
-
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-CORE_DIR = os.path.join(ROOT_DIR, "core")
-if CORE_DIR not in sys.path:
-    sys.path.insert(0, CORE_DIR)
-
-from util import get_explainable_method, get_torchvision_model
 
 
 def parse_args():
@@ -34,20 +22,6 @@ def parse_args():
         help="Path to batch_report.json produced by run_batch.py",
     )
     parser.add_argument(
-        "--device",
-        type=str,
-        default="cuda",
-        choices=["cuda", "cpu"],
-        help="Device for saliency recomputation",
-    )
-    parser.add_argument(
-        "--explain-method",
-        type=str,
-        default=None,
-        choices=["simple_gradient", "integrated_gradients"],
-        help="Override explain method. If omitted, infer from report approach tag",
-    )
-    parser.add_argument(
         "--max-samples",
         type=int,
         default=None,
@@ -60,15 +34,6 @@ def parse_args():
         help="Where to save evaluation JSON. Default: <run_root>/evaluation_summary.json",
     )
     return parser.parse_args()
-
-
-def _extract_explain_method(approach_tag):
-    if not isinstance(approach_tag, str):
-        return None
-    for part in approach_tag.split("__"):
-        if part.startswith("exp-"):
-            return part[len("exp-") :]
-    return None
 
 
 def _rankdata_average_ties(values):
@@ -114,9 +79,9 @@ def _spearman_rank_corr(x, y):
     return float(np.dot(rx, ry) / denom)
 
 
-def _load_image_tensor(image_path):
-    image = Image.open(image_path).convert("RGB")
-    return T.ToTensor()(image).unsqueeze(0)
+def _load_gray_image_array(image_path):
+    image = Image.open(image_path).convert("L")
+    return np.asarray(image, dtype=np.float64)
 
 
 def _safe_mean(values):
@@ -126,30 +91,18 @@ def _safe_mean(values):
     return float(np.mean(valid))
 
 
-def _compute_spearman_for_sample(model, normalize, explain_fn, result, device):
+def _compute_spearman_for_sample(result):
     output_dir = Path(result["output_dir"])
-    clean_path = output_dir / "clean.png"
-    adv_path = output_dir / "adv.png"
+    clean_map_path = output_dir / "clean_map.png"
+    adv_map_path = output_dir / "adv_map.png"
 
-    if not clean_path.exists() or not adv_path.exists():
-        return None, "missing_clean_or_adv_image"
+    if not clean_map_path.exists() or not adv_map_path.exists():
+        return None, "missing_clean_or_adv_map"
 
-    label = int(result.get("true_label", result.get("clean_pred", -1)))
-    if label < 0:
-        return None, "missing_label"
+    clean_map = _load_gray_image_array(clean_map_path)
+    adv_map = _load_gray_image_array(adv_map_path)
 
-    y_true = torch.tensor([label], device=device)
-
-    clean_x = _load_image_tensor(clean_path).to(device)
-    adv_x = _load_image_tensor(adv_path).to(device)
-
-    clean_map, _ = explain_fn(model, clean_x, normalize, y_true)
-    adv_map, _ = explain_fn(model, adv_x, normalize, y_true)
-
-    corr = _spearman_rank_corr(
-        clean_map.detach().float().cpu().numpy(),
-        adv_map.detach().float().cpu().numpy(),
-    )
+    corr = _spearman_rank_corr(clean_map, adv_map)
     return corr, None
 
 
@@ -164,24 +117,6 @@ def main():
         report = json.load(f)
 
     model_name = report.get("model")
-    if not model_name:
-        raise ValueError("batch_report.json is missing 'model'")
-
-    explain_method = args.explain_method or _extract_explain_method(report.get("approach"))
-    if explain_method is None:
-        explain_method = "simple_gradient"
-
-    if args.device == "cuda" and not torch.cuda.is_available():
-        print("[WARN] CUDA is not available, switching to CPU")
-        args.device = "cpu"
-
-    device = torch.device(args.device)
-
-    model, _, normalize = get_torchvision_model(model_name, pretrained=True)
-    model = model.to(device)
-    model.eval()
-
-    explain_fn = get_explainable_method(explain_method)
 
     ok_results = [item for item in report.get("results", []) if item.get("status") == "ok"]
     if args.max_samples is not None:
@@ -206,11 +141,7 @@ def main():
         success_flags.append(int(adv_pred != true_label and true_label >= 0 and adv_pred >= 0))
 
         corr, err = _compute_spearman_for_sample(
-            model=model,
-            normalize=normalize,
-            explain_fn=explain_fn,
             result=result,
-            device=device,
         )
         if err is not None:
             spearman_failed += 1
@@ -225,7 +156,6 @@ def main():
         "report_path": str(report_path),
         "model": model_name,
         "approach": report.get("approach"),
-        "explain_method": explain_method,
         "num_ok_samples_evaluated": len(ok_results),
         "attack_success_rate": attack_success_rate,
         "mean_margin_loss": mean_margin_loss,
@@ -242,7 +172,6 @@ def main():
     print(f"report_path: {summary['report_path']}")
     print(f"model: {summary['model']}")
     print(f"approach: {summary['approach']}")
-    print(f"explain_method: {summary['explain_method']}")
     print(f"num_ok_samples_evaluated: {summary['num_ok_samples_evaluated']}")
     print(f"attack_success_rate: {summary['attack_success_rate']:.6f}")
     print(f"mean_margin_loss: {summary['mean_margin_loss']:.6f}")
