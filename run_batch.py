@@ -7,6 +7,8 @@ from pathlib import Path
 import torch
 from PIL import Image
 from torchvision.utils import save_image
+from tqdm.auto import tqdm
+
 
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -20,8 +22,8 @@ from weightedSUM_GA import Weighted_Sum_GA
 
 
 DEFAULT_IMAGENET_VAL_ROOT = r"E:\ImageNet1K\imagenet\ImageNet1K\val"
-# DEFAULT_REMOTE_VAL_ROOT = "/datastore/elo/quanphm/dataset/ImageNet1K/val"
-DEFAULT_REMOTE_VAL_ROOT = DEFAULT_IMAGENET_VAL_ROOT
+DEFAULT_REMOTE_VAL_ROOT = "/datastore/elo/quanphm/dataset/ImageNet1K/val"
+# DEFAULT_REMOTE_VAL_ROOT = DEFAULT_IMAGENET_VAL_ROOT
 
 
 def parse_args():
@@ -318,7 +320,9 @@ def main():
     total_skipped = 0
     total_missing = 0
 
-    for class_name, raw_path in items:
+    progress = tqdm(items, total=len(items), desc="Running attacks", unit="img")
+
+    for class_name, raw_path in progress:
         image_path = resolve_image_path(
             raw_path=raw_path,
             class_name=class_name,
@@ -344,6 +348,7 @@ def main():
             }
             all_results.append(result)
             total_skipped += 1
+            progress.set_postfix(status="skipped", cls=class_name)
             print(f"[SKIPPED] class={class_name} image={image_path.name}")
             continue
 
@@ -361,6 +366,7 @@ def main():
 
             all_results.append(result)
             total_missing += 1
+            progress.set_postfix(status="missing_image", cls=class_name)
             print(f"[MISSING_IMAGE] class={class_name} image={image_path.name}")
             continue
 
@@ -385,6 +391,7 @@ def main():
             }
             result.update(metrics)
             total_ok += 1
+            progress.set_postfix(status="ok", cls=class_name)
             print(f"[OK] class={class_name} image={image_path.name}")
         except Exception as exc:
             result = {
@@ -397,6 +404,7 @@ def main():
                 "error": str(exc),
             }
             total_failed += 1
+            progress.set_postfix(status="failed", cls=class_name)
             print(f"[FAILED] class={class_name} image={image_path.name} error={exc}")
 
         with open(output_paths["summary"], "w", encoding="utf-8") as f:
