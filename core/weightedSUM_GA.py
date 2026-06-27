@@ -10,8 +10,11 @@ class Weighted_Sum_GA:
         self.device = params.get("device", "cuda" if torch.cuda.is_available() else "cpu")
         self.operator_strategy = params.get("operator_strategy", "uniform")
         self.saliency_temperature = params.get("saliency_temperature", 1.0)
+        self.saliency_mix_start_alpha = float(params.get("saliency_mix_start_alpha", 0.1))
+        self.saliency_mix_end_alpha = float(params.get("saliency_mix_end_alpha", 1.0))
 
         self.pixel_probs = None
+        self.uniform_pixel_probs = None
         if self.operator_strategy == "saliency_guided":
             saliency_true = self.params["fitness"].saliency_true[0]
             self.pixel_probs = build_pixel_sampling_probs(
@@ -19,6 +22,28 @@ class Weighted_Sum_GA:
                 self.params["all_pixels"],
                 temperature=self.saliency_temperature,
             )
+            self.uniform_pixel_probs = torch.full_like(
+                self.pixel_probs,
+                fill_value=1.0 / max(int(self.pixel_probs.numel()), 1),
+            )
+
+    def _generation_pixel_probs(self, generation_idx):
+        if self.operator_strategy != "saliency_guided":
+            return None
+
+        # Keep initialization saliency-guided, then anneal operator sampling toward uniform.
+        total_generations = max(int(self.params["iterations"]) - 1, 1)
+        progress = float(generation_idx) / float(total_generations)
+        progress = min(max(progress, 0.0), 1.0)
+
+        alpha = self.saliency_mix_start_alpha + (
+            self.saliency_mix_end_alpha - self.saliency_mix_start_alpha
+        ) * progress
+        alpha = min(max(alpha, 0.0), 1.0)
+
+        mixed_probs = (1.0 - alpha) * self.pixel_probs + alpha * self.uniform_pixel_probs
+        mixed_probs = mixed_probs / torch.clamp(mixed_probs.sum(), min=1e-12)
+        return mixed_probs
     
     
     def attack(self):
@@ -56,7 +81,8 @@ class Weighted_Sum_GA:
                 for i1, i2 in parent_indices
             ]
             
-            offpsrings = self.generate_offpsrings(parents)
+            generation_pixel_probs = self._generation_pixel_probs(it)
+            offpsrings = self.generate_offpsrings(parents, pixel_probs=generation_pixel_probs)
             offpsrings = Population(offpsrings, self.params['fitness'])
             off_margin_losses, off_saliency_losses, off_logits = offpsrings.evaluate()  # calcuate fitenss
             off_weighted_fitness = self.params['w_margin'] * off_margin_losses + self.params['w_saliency'] * off_saliency_losses
@@ -101,14 +127,14 @@ class Weighted_Sum_GA:
         
         return torch.tensor(selected_idxs, device=self.device)
             
-    def generate_offpsrings(self, parents):
+    def generate_offpsrings(self, parents, pixel_probs=None):
         return generate_offspring(
             parents=parents,
             pc=self.params["pc"],
             pm=self.params["pm"],
             all_pixels=self.params["all_pixels"],
             zero_prob=self.params["zero_probability"],
-            pixel_probs=self.pixel_probs,
+            pixel_probs=pixel_probs,
         )
     
     
