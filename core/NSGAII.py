@@ -3,7 +3,7 @@ from Solutions import Solution, Population
 from weightedSUM_GA import Weighted_Sum_GA
 from operators import build_pixel_sampling_probs, generate_offspring, init_population
 from tqdm import tqdm
-from pymoo import NonDominatedSorting
+from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
 import numpy as np
 
 class NSGAII(Weighted_Sum_GA):
