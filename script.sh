@@ -53,9 +53,35 @@ export CUDA_VISIBLE_DEVICES=$BEST_GPU
 python run_batch.py \
     --model-name vgg16 \
     --num_sample 100 \
-    --operator-strategy uniform
+    --operator-strategy uniform \
+    --eps 10
 
-# python run_batch.py \
-#     --model-name vgg16 \
-#     --num_sample 100 \
-#     --operator-strategy saliency_guided
+python run_batch.py \
+    --model-name vgg16 \
+    --num_sample 100 \
+    --operator-strategy saliency_guided \
+    --eps 10
+
+python run_batch.py \
+    --model-name vgg16 \
+    --num_sample 100 \
+    --operator-strategy uniform \
+    --eps 20
+
+python run_batch.py \
+    --model-name vgg16 \
+    --num_sample 100 \
+    --operator-strategy saliency_guided \
+    --eps 20
+
+python run_batch.py \
+    --model-name vgg16 \
+    --num_sample 100 \
+    --operator-strategy uniform \
+    --eps 30
+
+python run_batch.py \
+    --model-name vgg16 \
+    --num_sample 100 \
+    --operator-strategy saliency_guided \
+    --eps 30
