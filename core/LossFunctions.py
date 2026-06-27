@@ -41,7 +41,7 @@ class MarginSalinecy_Fitness:
         soft_iou = inter / (union + eps)
         return soft_iou
     
-class CrossEntropySaliency_Fitness(MarginSalinecy_Fitness):
+class NegativeCrossEntropySaliency_Fitness(MarginSalinecy_Fitness):
     def benchmark(self, xadv_tensors):
         saliency_maps, logits = self.explain_method(self.model, xadv_tensors, self.normalize, self.y_true)
         negative_ce_loss = self.cal_cross_entropy(logits, self.y_true)
@@ -52,7 +52,7 @@ class CrossEntropySaliency_Fitness(MarginSalinecy_Fitness):
         if y_true.numel() == 1:
             y_true = y_true.expand(logits.size(0))
         log_probs = torch.nn.functional.log_softmax(logits, dim=1)
-        negative_ce_loss = log_probs.gather(1, y_true.unsqueeze(1)).squeeze(1)
+        negative_ce_loss = log_probs.gather(1, y_true.unsqueeze(1)).squeeze(1) + 1e-12
         return negative_ce_loss
     
             

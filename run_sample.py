@@ -12,7 +12,7 @@ CORE_DIR = os.path.join(ROOT_DIR, "core")
 if CORE_DIR not in sys.path:
     sys.path.insert(0, CORE_DIR)
 
-from LossFunctions import MarginSalinecy_Fitness, CrossEntropySaliency_Fitness
+from LossFunctions import MarginSalinecy_Fitness, NegativeCrossEntropySaliency_Fitness
 from util import get_explainable_method, get_torchvision_model, save_attack_two_score_charts
 from weightedSUM_GA import Weighted_Sum_GA
 from NSGAII import NSGAII
@@ -52,7 +52,7 @@ def parse_args():
         "--fitness-function",
         type=str,
         default="margin_saliency",
-        choices=["margin_saliency", "cross_entropy_saliency"],
+        choices=["margin_saliency", "negative_cross_entropy_saliency", "cross_entropy_saliency"],
         help="Fitness function to optimize",
     )
     parser.add_argument(
@@ -116,8 +116,8 @@ def create_fitness(fitness_function, model, x_tensor, normalize, y_true, explain
             y_true=y_true,
             explain_method=explain_fn,
         )
-    if fitness_function == "cross_entropy_saliency":
-        return CrossEntropySaliency_Fitness(
+    if fitness_function in {"negative_cross_entropy_saliency", "cross_entropy_saliency"}:
+        return NegativeCrossEntropySaliency_Fitness(
             model=model,
             x_tensor=x_tensor,
             normalize=normalize,
