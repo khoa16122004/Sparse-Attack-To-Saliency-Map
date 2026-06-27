@@ -44,16 +44,16 @@ class MarginSalinecy_Fitness:
 class CrossEntropySaliency_Fitness(MarginSalinecy_Fitness):
     def benchmark(self, xadv_tensors):
         saliency_maps, logits = self.explain_method(self.model, xadv_tensors, self.normalize, self.y_true)
-        ce_loss = self.cal_cross_entropy(logits, self.y_true)
+        negative_ce_loss = self.cal_cross_entropy(logits, self.y_true)
         saliency_loss = self.cal_saliency_loss(saliency_maps, self.saliency_true)
-        return ce_loss, saliency_loss, logits
+        return negative_ce_loss, saliency_loss, logits
 
     def cal_cross_entropy(self, logits, y_true):
         if y_true.numel() == 1:
             y_true = y_true.expand(logits.size(0))
         log_probs = torch.nn.functional.log_softmax(logits, dim=1)
-        ce_loss = -log_probs.gather(1, y_true.unsqueeze(1)).squeeze(1)
-        return ce_loss
+        negative_ce_loss = log_probs.gather(1, y_true.unsqueeze(1)).squeeze(1)
+        return negative_ce_loss
     
             
             
