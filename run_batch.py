@@ -17,7 +17,7 @@ if CORE_DIR not in sys.path:
     sys.path.insert(0, CORE_DIR)
 
 from LossFunctions import MarginSalinecy_Fitness
-from util import get_explainable_method, get_torchvision_model, save_attack_two_score_charts
+from util import get_explainable_method, get_torchvision_model
 from weightedSUM_GA import Weighted_Sum_GA
 
 
@@ -164,9 +164,33 @@ def prepare_output_paths(output_dir):
         "clean": output_dir / "clean.png",
         "clean_map": output_dir / "clean_map.png",
         "adv_map": output_dir / "adv_map.png",
-        "history_base": output_dir / "history.png",
+        "history_txt": output_dir / "history_scores.txt",
         "summary": output_dir / "summary.json",
     }
+
+
+def _to_float(value):
+    if torch.is_tensor(value):
+        return float(value.detach().cpu().item())
+    return float(value)
+
+
+def save_history_scores_txt(history, output_path):
+    # One line per iteration: "margin_loss saliency_loss"
+    with open(output_path, "w", encoding="utf-8") as f:
+        for item in history:
+            margin = _to_float(item["margin_loss"])
+            saliency = _to_float(item["saliency_loss"])
+            f.write(f"{margin:.12g} {saliency:.12g}\n")
+
+
+def history_to_lists(history):
+    margin = []
+    saliency = []
+    for item in history:
+        margin.append(_to_float(item["margin_loss"]))
+        saliency.append(_to_float(item["saliency_loss"]))
+    return margin, saliency
 
 
 def _fmt_num(value):
@@ -247,11 +271,8 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
     _save_saliency_map(clean_saliency_map, str(output_paths["clean_map"]))
     _save_saliency_map(adv_saliency_map[0], str(output_paths["adv_map"]))
 
-    save_attack_two_score_charts(
-        history,
-        margin_output_path=str(output_paths["history_base"]).replace(".png", "_margin.png"),
-        saliency_output_path=str(output_paths["history_base"]).replace(".png", "_saliency.png"),
-    )
+    save_history_scores_txt(history, str(output_paths["history_txt"]))
+    history_margin, history_saliency = history_to_lists(history)
 
     return {
         "model": model_name,
@@ -264,6 +285,9 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "weighted_fitness": float(best_scores["weighted_fitness"]),
         "operator_strategy": args.operator_strategy,
         "saliency_temperature": float(args.saliency_temperature),
+        "history_scores_file": str(output_paths["history_txt"]),
+        "history_margin": history_margin,
+        "history_saliency": history_saliency,
     }
 
 
