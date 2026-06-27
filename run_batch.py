@@ -16,7 +16,7 @@ CORE_DIR = os.path.join(ROOT_DIR, "core")
 if CORE_DIR not in sys.path:
     sys.path.insert(0, CORE_DIR)
 
-from LossFunctions import MarginSalinecy_Fitness
+from LossFunctions import MarginSalinecy_Fitness, CrossEntropySaliency_Fitness
 from util import get_explainable_method, get_torchvision_model
 from weightedSUM_GA import Weighted_Sum_GA
 from NSGAII import NSGAII
@@ -92,6 +92,13 @@ def parse_args():
     parser.add_argument("--zero-probability", type=float, default=0.3)
     parser.add_argument("--w-margin", type=float, default=0.5)
     parser.add_argument("--w-saliency", type=float, default=0.5)
+    parser.add_argument(
+        "--fitness-function",
+        type=str,
+        default="margin_saliency",
+        choices=["margin_saliency", "cross_entropy_saliency"],
+        help="Fitness function to optimize",
+    )
     parser.add_argument(
         "--algorithm",
         type=str,
@@ -227,6 +234,8 @@ def build_approach_tag(args):
     ]
     if args.algorithm != "weighted_sum_ga":
         parts.append(f"algo-{args.algorithm}")
+    if args.fitness_function != "margin_saliency":
+        parts.append(f"fit-{args.fitness_function}")
     return "__".join(parts)
 
 
@@ -238,6 +247,26 @@ def create_attacker(ga_params, algorithm):
     raise ValueError(f"Unsupported algorithm: {algorithm}")
 
 
+def create_fitness(fitness_function, model, x_tensor, normalize, y_true, explain_fn):
+    if fitness_function == "margin_saliency":
+        return MarginSalinecy_Fitness(
+            model=model,
+            x_tensor=x_tensor,
+            normalize=normalize,
+            y_true=y_true,
+            explain_method=explain_fn,
+        )
+    if fitness_function == "cross_entropy_saliency":
+        return CrossEntropySaliency_Fitness(
+            model=model,
+            x_tensor=x_tensor,
+            normalize=normalize,
+            y_true=y_true,
+            explain_method=explain_fn,
+        )
+    raise ValueError(f"Unsupported fitness function: {fitness_function}")
+
+
 def run_attack_one(image_path, output_paths, model_name, model, spatial, normalize, explain_fn, args, device):
     image = Image.open(image_path).convert("RGB")
     x_tensor = spatial(image).to(device).unsqueeze(0)
@@ -247,12 +276,13 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
 
     y_true = pred if args.label is None else torch.tensor([args.label], device=device)
 
-    fitness = MarginSalinecy_Fitness(
+    fitness = create_fitness(
+        fitness_function=args.fitness_function,
         model=model,
         x_tensor=x_tensor,
         normalize=normalize,
         y_true=y_true,
-        explain_method=explain_fn,
+        explain_fn=explain_fn,
     )
 
     ga_params = {
@@ -305,6 +335,7 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "saliency_loss": float(best_scores["saliency_loss"]),
         "weighted_fitness": float(weighted_fitness),
         "algorithm": args.algorithm,
+        "fitness_function": args.fitness_function,
         "operator_strategy": args.operator_strategy,
         "saliency_temperature": float(args.saliency_temperature),
         "history_scores_file": str(output_paths["history_txt"]),

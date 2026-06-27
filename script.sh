@@ -56,6 +56,7 @@ for EPS in 5 10 20 50; do
             --model-name vgg16 \
             --num_sample 100 \
             --operator-strategy "$STRATEGY" \
-            --eps "$EPS"
+            --eps "$EPS" \
+            --fitness-function "cross_entropy_saliency"
     done
 done

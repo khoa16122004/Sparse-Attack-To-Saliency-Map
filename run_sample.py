@@ -12,7 +12,7 @@ CORE_DIR = os.path.join(ROOT_DIR, "core")
 if CORE_DIR not in sys.path:
     sys.path.insert(0, CORE_DIR)
 
-from LossFunctions import MarginSalinecy_Fitness
+from LossFunctions import MarginSalinecy_Fitness, CrossEntropySaliency_Fitness
 from util import get_explainable_method, get_torchvision_model, save_attack_two_score_charts
 from weightedSUM_GA import Weighted_Sum_GA
 from NSGAII import NSGAII
@@ -48,6 +48,13 @@ def parse_args():
     parser.add_argument("--zero-probability", type=float, default=0.3, help="Probability of zero channel perturbation")
     parser.add_argument("--w-margin", type=float, default=0.5)
     parser.add_argument("--w-saliency", type=float, default=0.5)
+    parser.add_argument(
+        "--fitness-function",
+        type=str,
+        default="margin_saliency",
+        choices=["margin_saliency", "cross_entropy_saliency"],
+        help="Fitness function to optimize",
+    )
     parser.add_argument(
         "--algorithm",
         type=str,
@@ -100,6 +107,26 @@ def create_attacker(ga_params, algorithm):
     raise ValueError(f"Unsupported algorithm: {algorithm}")
 
 
+def create_fitness(fitness_function, model, x_tensor, normalize, y_true, explain_fn):
+    if fitness_function == "margin_saliency":
+        return MarginSalinecy_Fitness(
+            model=model,
+            x_tensor=x_tensor,
+            normalize=normalize,
+            y_true=y_true,
+            explain_method=explain_fn,
+        )
+    if fitness_function == "cross_entropy_saliency":
+        return CrossEntropySaliency_Fitness(
+            model=model,
+            x_tensor=x_tensor,
+            normalize=normalize,
+            y_true=y_true,
+            explain_method=explain_fn,
+        )
+    raise ValueError(f"Unsupported fitness function: {fitness_function}")
+
+
 def run_attack(args):
     if args.device == "cuda" and not torch.cuda.is_available():
         print("CUDA is not available, switching to CPU")
@@ -120,12 +147,13 @@ def run_attack(args):
 
     explain_fn = get_explainable_method(args.explain_method)
 
-    fitness = MarginSalinecy_Fitness(
+    fitness = create_fitness(
+        fitness_function=args.fitness_function,
         model=model,
         x_tensor=x_tensor,
         normalize=normalize,
         y_true=y_true,
-        explain_method=explain_fn,
+        explain_fn=explain_fn,
     )
 
     ga_params = {
@@ -227,6 +255,7 @@ def run_attack(args):
     print(f"saliency_loss: {float(best_scores['saliency_loss'])}")
     print(f"weighted_fitness: {float(weighted_fitness)}")
     print(f"algorithm: {args.algorithm}")
+    print(f"fitness_function: {args.fitness_function}")
     print(f"operator_strategy: {args.operator_strategy}")
     print(f"saliency_temperature: {args.saliency_temperature}")
     print(f"saved_clean_image: {clean_image_path}")
@@ -250,6 +279,7 @@ def run_attack(args):
         "saliency_loss": float(best_scores["saliency_loss"]),
         "weighted_fitness": float(weighted_fitness),
         "algorithm": args.algorithm,
+        "fitness_function": args.fitness_function,
         "operator_strategy": args.operator_strategy,
         "saliency_temperature": args.saliency_temperature,
         "saved_clean_image": clean_image_path,
