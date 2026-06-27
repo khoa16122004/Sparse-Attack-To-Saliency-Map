@@ -10,6 +10,7 @@ class Weighted_Sum_GA:
         self.device = params.get("device", "cuda" if torch.cuda.is_available() else "cpu")
         self.operator_strategy = params.get("operator_strategy", "uniform")
         self.saliency_temperature = params.get("saliency_temperature", 1.0)
+        self.population_aware_beta = float(params.get("population_aware_beta", 0.05))
 
         self.pixel_probs = None
         if self.operator_strategy == "saliency_guided":
@@ -19,6 +20,25 @@ class Weighted_Sum_GA:
                 self.params["all_pixels"],
                 temperature=self.saliency_temperature,
             )
+
+    def _population_aware_probs(self, population):
+        if self.operator_strategy != "saliency_guided" or self.pixel_probs is None:
+            return None
+
+        if self.population_aware_beta <= 0:
+            return self.pixel_probs
+
+        counts = torch.zeros_like(self.pixel_probs)
+        for soln in population.population:
+            counts.index_add_(
+                0,
+                soln.pixels,
+                torch.ones_like(soln.pixels, dtype=counts.dtype),
+            )
+
+        weights = self.pixel_probs * torch.exp(-self.population_aware_beta * counts)
+        den = torch.clamp(weights.sum(), min=1e-12)
+        return weights / den
     
     
     def attack(self):
@@ -56,7 +76,8 @@ class Weighted_Sum_GA:
                 for i1, i2 in parent_indices
             ]
             
-            offpsrings = self.generate_offpsrings(parents)
+            generation_probs = self._population_aware_probs(population)
+            offpsrings = self.generate_offpsrings(parents, pixel_probs=generation_probs)
             offpsrings = Population(offpsrings, self.params['fitness'])
             off_margin_losses, off_saliency_losses, off_logits = offpsrings.evaluate()  # calcuate fitenss
             off_weighted_fitness = self.params['w_margin'] * off_margin_losses + self.params['w_saliency'] * off_saliency_losses
@@ -101,14 +122,14 @@ class Weighted_Sum_GA:
         
         return torch.tensor(selected_idxs, device=self.device)
             
-    def generate_offpsrings(self, parents):
+    def generate_offpsrings(self, parents, pixel_probs=None):
         return generate_offspring(
             parents=parents,
             pc=self.params["pc"],
             pm=self.params["pm"],
             all_pixels=self.params["all_pixels"],
             zero_prob=self.params["zero_probability"],
-            pixel_probs=self.pixel_probs,
+            pixel_probs=pixel_probs,
         )
     
     

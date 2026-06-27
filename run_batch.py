@@ -98,6 +98,12 @@ def parse_args():
         choices=["uniform", "saliency_guided"],
     )
     parser.add_argument("--saliency-temperature", type=float, default=1.0)
+    parser.add_argument(
+        "--population-aware-beta",
+        type=float,
+        default=0.05,
+        help="Penalty strength for frequently selected pixels in saliency_guided sampling",
+    )
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
 
     return parser.parse_args()
@@ -215,6 +221,7 @@ def build_approach_tag(args):
         f"iter-{_fmt_num(args.iterations)}",
         f"zp-{_fmt_num(args.zero_probability)}",
         f"temp-{_fmt_num(args.saliency_temperature)}",
+        f"beta-{_fmt_num(args.population_aware_beta)}",
         f"exp-{args.explain_method}",
     ]
     return "__".join(parts)
@@ -253,6 +260,7 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "w_saliency": args.w_saliency,
         "operator_strategy": args.operator_strategy,
         "saliency_temperature": args.saliency_temperature,
+        "population_aware_beta": args.population_aware_beta,
         "device": args.device,
     }
 
@@ -285,6 +293,7 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "weighted_fitness": float(best_scores["weighted_fitness"]),
         "operator_strategy": args.operator_strategy,
         "saliency_temperature": float(args.saliency_temperature),
+        "population_aware_beta": float(args.population_aware_beta),
         "history_scores_file": str(output_paths["history_txt"]),
         "history_margin": history_margin,
         "history_saliency": history_saliency,
