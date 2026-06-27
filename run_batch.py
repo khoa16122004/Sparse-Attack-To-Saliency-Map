@@ -98,18 +98,6 @@ def parse_args():
         choices=["uniform", "saliency_guided"],
     )
     parser.add_argument("--saliency-temperature", type=float, default=1.0)
-    parser.add_argument(
-        "--saliency-mix-start-alpha",
-        type=float,
-        default=0.1,
-        help="Initial uniform mix ratio for saliency_guided operator sampling",
-    )
-    parser.add_argument(
-        "--saliency-mix-end-alpha",
-        type=float,
-        default=1.0,
-        help="Final uniform mix ratio for saliency_guided operator sampling",
-    )
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
 
     return parser.parse_args()
@@ -265,8 +253,6 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "w_saliency": args.w_saliency,
         "operator_strategy": args.operator_strategy,
         "saliency_temperature": args.saliency_temperature,
-        "saliency_mix_start_alpha": args.saliency_mix_start_alpha,
-        "saliency_mix_end_alpha": args.saliency_mix_end_alpha,
         "device": args.device,
     }
 
@@ -299,8 +285,6 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "weighted_fitness": float(best_scores["weighted_fitness"]),
         "operator_strategy": args.operator_strategy,
         "saliency_temperature": float(args.saliency_temperature),
-        "saliency_mix_start_alpha": float(args.saliency_mix_start_alpha),
-        "saliency_mix_end_alpha": float(args.saliency_mix_end_alpha),
         "history_scores_file": str(output_paths["history_txt"]),
         "history_margin": history_margin,
         "history_saliency": history_saliency,

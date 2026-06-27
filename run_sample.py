@@ -60,18 +60,6 @@ def parse_args():
         default=1.0,
         help="Temperature for saliency-guided pixel sampling (lower is sharper)",
     )
-    parser.add_argument(
-        "--saliency-mix-start-alpha",
-        type=float,
-        default=0.1,
-        help="Initial uniform mix ratio for saliency_guided operator sampling",
-    )
-    parser.add_argument(
-        "--saliency-mix-end-alpha",
-        type=float,
-        default=1.0,
-        help="Final uniform mix ratio for saliency_guided operator sampling",
-    )
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
 
     return parser.parse_args()
@@ -140,8 +128,6 @@ def run_attack(args):
         "w_saliency": args.w_saliency,
         "operator_strategy": args.operator_strategy,
         "saliency_temperature": args.saliency_temperature,
-        "saliency_mix_start_alpha": args.saliency_mix_start_alpha,
-        "saliency_mix_end_alpha": args.saliency_mix_end_alpha,
         "device": args.device,
     }
 
@@ -223,8 +209,6 @@ def run_attack(args):
     print(f"weighted_fitness: {float(best_scores['weighted_fitness'])}")
     print(f"operator_strategy: {args.operator_strategy}")
     print(f"saliency_temperature: {args.saliency_temperature}")
-    print(f"saliency_mix_start_alpha: {args.saliency_mix_start_alpha}")
-    print(f"saliency_mix_end_alpha: {args.saliency_mix_end_alpha}")
     print(f"saved_clean_image: {clean_image_path}")
     print(f"saved_adv: {args.output}")
     print(f"saved_clean_map: {clean_map_path}")
