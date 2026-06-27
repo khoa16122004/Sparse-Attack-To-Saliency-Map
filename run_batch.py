@@ -19,6 +19,7 @@ if CORE_DIR not in sys.path:
 from LossFunctions import MarginSalinecy_Fitness
 from util import get_explainable_method, get_torchvision_model
 from weightedSUM_GA import Weighted_Sum_GA
+from NSGAII import NSGAII
 
 
 DEFAULT_IMAGENET_VAL_ROOT = r"E:\ImageNet1K\imagenet\ImageNet1K\val"
@@ -78,7 +79,7 @@ def parse_args():
         "--explain-method",
         type=str,
         default="simple_gradient",
-        choices=["simple_gradient", "integrated_gradients"],
+        choices=["simple_gradient", "integrated_gradients", 'input_gradient'],
         help="Saliency explanation method",
     )
     parser.add_argument("--label", type=int, default=None, help="True label index override")
@@ -92,18 +93,19 @@ def parse_args():
     parser.add_argument("--w-margin", type=float, default=0.5)
     parser.add_argument("--w-saliency", type=float, default=0.5)
     parser.add_argument(
+        "--algorithm",
+        type=str,
+        default="weighted_sum_ga",
+        choices=["weighted_sum_ga", "nsgaii"],
+        help="Optimization algorithm to run",
+    )
+    parser.add_argument(
         "--operator-strategy",
         type=str,
         default="uniform",
         choices=["uniform", "saliency_guided"],
     )
     parser.add_argument("--saliency-temperature", type=float, default=1.0)
-    parser.add_argument(
-        "--population-aware-beta",
-        type=float,
-        default=0.05,
-        help="Penalty strength for frequently selected pixels in saliency_guided sampling",
-    )
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
 
     return parser.parse_args()
@@ -221,10 +223,19 @@ def build_approach_tag(args):
         f"iter-{_fmt_num(args.iterations)}",
         f"zp-{_fmt_num(args.zero_probability)}",
         f"temp-{_fmt_num(args.saliency_temperature)}",
-        f"beta-{_fmt_num(args.population_aware_beta)}",
         f"exp-{args.explain_method}",
     ]
+    if args.algorithm != "weighted_sum_ga":
+        parts.append(f"algo-{args.algorithm}")
     return "__".join(parts)
+
+
+def create_attacker(ga_params, algorithm):
+    if algorithm == "weighted_sum_ga":
+        return Weighted_Sum_GA(ga_params)
+    if algorithm == "nsgaii":
+        return NSGAII(ga_params)
+    raise ValueError(f"Unsupported algorithm: {algorithm}")
 
 
 def run_attack_one(image_path, output_paths, model_name, model, spatial, normalize, explain_fn, args, device):
@@ -260,11 +271,10 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "w_saliency": args.w_saliency,
         "operator_strategy": args.operator_strategy,
         "saliency_temperature": args.saliency_temperature,
-        "population_aware_beta": args.population_aware_beta,
         "device": args.device,
     }
 
-    attacker = Weighted_Sum_GA(ga_params)
+    attacker = create_attacker(ga_params, args.algorithm)
     adv_chw, best_candidate, best_scores, history = attacker.attack()
     adv_chw_cpu = adv_chw.detach().cpu()
 
@@ -281,6 +291,9 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
 
     save_history_scores_txt(history, str(output_paths["history_txt"]))
     history_margin, history_saliency = history_to_lists(history)
+    weighted_fitness = best_scores.get("weighted_fitness")
+    if weighted_fitness is None:
+        weighted_fitness = args.w_margin * float(best_scores["margin_loss"]) + args.w_saliency * float(best_scores["saliency_loss"])
 
     return {
         "model": model_name,
@@ -290,10 +303,10 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "l0_distance": int(best_candidate.l0_distance(adv_chw_cpu.to(device))),
         "margin_loss": float(best_scores["margin_loss"]),
         "saliency_loss": float(best_scores["saliency_loss"]),
-        "weighted_fitness": float(best_scores["weighted_fitness"]),
+        "weighted_fitness": float(weighted_fitness),
+        "algorithm": args.algorithm,
         "operator_strategy": args.operator_strategy,
         "saliency_temperature": float(args.saliency_temperature),
-        "population_aware_beta": float(args.population_aware_beta),
         "history_scores_file": str(output_paths["history_txt"]),
         "history_margin": history_margin,
         "history_saliency": history_saliency,

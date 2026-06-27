@@ -52,6 +52,34 @@ def simple_gradient_map(model, input_tensor, normalize, target_class=None):
     return saliency.detach(), output_logits
 
 
+def input_gradient_map(model, input_tensor, normalize, target_class=None):
+    x = input_tensor.clone().detach()
+    x.requires_grad_(True) # b x 3 x w x h
+    model.zero_grad()
+
+    output = model(normalize(x))
+    output_logits = output.detach()
+    target_class = _prepare_target_class(output, target_class)
+
+    # gather scores for each sample
+    score = output.gather(1, target_class.view(-1,1)).sum()
+
+    score.backward()
+
+    grad = x.grad
+
+    # sum RGB
+    # x \odot grad
+    saliency = (x * grad).abs().sum(dim=1)    
+
+    H, W = saliency.shape[-2:]
+
+    # normalize per image
+    saliency = (H*W) * saliency / (saliency.view(saliency.size(0), -1).sum(dim=1).view(-1,1,1) + 1e-8)
+
+    return saliency.detach(), output_logits
+
+
 def integrated_gradients(model, input_tensor, normalize, target_class=None, steps=5, baseline=None):
 
     model.eval()

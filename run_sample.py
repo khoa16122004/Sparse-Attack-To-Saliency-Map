@@ -15,6 +15,7 @@ if CORE_DIR not in sys.path:
 from LossFunctions import MarginSalinecy_Fitness
 from util import get_explainable_method, get_torchvision_model, save_attack_two_score_charts
 from weightedSUM_GA import Weighted_Sum_GA
+from NSGAII import NSGAII
 
 
 def parse_args():
@@ -34,7 +35,7 @@ def parse_args():
         "--explain-method",
         type=str,
         default="simple_gradient",
-        choices=["simple_gradient", "integrated_gradients"],
+        choices=["simple_gradient", "integrated_gradients", 'input_gradient'],
         help="Saliency explanation method",
     )
 
@@ -48,6 +49,13 @@ def parse_args():
     parser.add_argument("--w-margin", type=float, default=0.5)
     parser.add_argument("--w-saliency", type=float, default=0.5)
     parser.add_argument(
+        "--algorithm",
+        type=str,
+        default="weighted_sum_ga",
+        choices=["weighted_sum_ga", "nsgaii"],
+        help="Optimization algorithm to run",
+    )
+    parser.add_argument(
         "--operator-strategy",
         type=str,
         default="uniform",
@@ -59,12 +67,6 @@ def parse_args():
         type=float,
         default=1.0,
         help="Temperature for saliency-guided pixel sampling (lower is sharper)",
-    )
-    parser.add_argument(
-        "--population-aware-beta",
-        type=float,
-        default=0.05,
-        help="Penalty strength for frequently selected pixels in saliency_guided sampling",
     )
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
 
@@ -88,6 +90,14 @@ def _save_saliency_map(saliency_map, output_path):
     b = torch.clamp(3.0 * map_2d - 2.0, 0.0, 1.0)
     rgb = (torch.stack([r, g, b], dim=-1) * 255.0).clamp(0, 255).byte().numpy()
     Image.fromarray(rgb, mode="RGB").save(output_path)
+
+
+def create_attacker(ga_params, algorithm):
+    if algorithm == "weighted_sum_ga":
+        return Weighted_Sum_GA(ga_params)
+    if algorithm == "nsgaii":
+        return NSGAII(ga_params)
+    raise ValueError(f"Unsupported algorithm: {algorithm}")
 
 
 def run_attack(args):
@@ -134,13 +144,15 @@ def run_attack(args):
         "w_saliency": args.w_saliency,
         "operator_strategy": args.operator_strategy,
         "saliency_temperature": args.saliency_temperature,
-        "population_aware_beta": args.population_aware_beta,
         "device": args.device,
     }
 
-    attacker = Weighted_Sum_GA(ga_params)
+    attacker = create_attacker(ga_params, args.algorithm)
     adv_chw, best_candidate, best_scores, history = attacker.attack()
     adv_chw = adv_chw.detach().cpu()
+    weighted_fitness = best_scores.get("weighted_fitness")
+    if weighted_fitness is None:
+        weighted_fitness = args.w_margin * float(best_scores["margin_loss"]) + args.w_saliency * float(best_scores["saliency_loss"])
 
     clean_image_path = args.clean_image_output
     if clean_image_path is None:
@@ -213,10 +225,10 @@ def run_attack(args):
     print(f"l0_distance: {int(best_candidate.l0_distance(adv_chw.to(device)))}")
     print(f"margin_loss: {float(best_scores['margin_loss'])}")
     print(f"saliency_loss: {float(best_scores['saliency_loss'])}")
-    print(f"weighted_fitness: {float(best_scores['weighted_fitness'])}")
+    print(f"weighted_fitness: {float(weighted_fitness)}")
+    print(f"algorithm: {args.algorithm}")
     print(f"operator_strategy: {args.operator_strategy}")
     print(f"saliency_temperature: {args.saliency_temperature}")
-    print(f"population_aware_beta: {args.population_aware_beta}")
     print(f"saved_clean_image: {clean_image_path}")
     print(f"saved_adv: {args.output}")
     print(f"saved_clean_map: {clean_map_path}")
@@ -236,7 +248,8 @@ def run_attack(args):
         "l0_distance": int(best_candidate.l0_distance(adv_chw.to(device))),
         "margin_loss": float(best_scores["margin_loss"]),
         "saliency_loss": float(best_scores["saliency_loss"]),
-        "weighted_fitness": float(best_scores["weighted_fitness"]),
+        "weighted_fitness": float(weighted_fitness),
+        "algorithm": args.algorithm,
         "operator_strategy": args.operator_strategy,
         "saliency_temperature": args.saliency_temperature,
         "saved_clean_image": clean_image_path,
