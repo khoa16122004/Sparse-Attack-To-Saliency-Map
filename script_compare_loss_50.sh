@@ -54,7 +54,7 @@ export CUDA_VISIBLE_DEVICES=$BEST_GPU
 # CHAY CODE: SO SANH 2 FITNESS LOSS
 # =========================================================
 OUTPUT_ROOT="compare_loss_50"
-MODEL_NAMES="resnet50 densenet121 vit_b_32"
+MODEL_NAMES="vgg16 resnet50 densnet121 vit_b_32"
 NUM_SAMPLE=50
 STRATEGY="uniform"
 
