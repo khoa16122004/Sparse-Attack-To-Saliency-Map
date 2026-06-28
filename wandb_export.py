@@ -148,27 +148,33 @@ def summarize_report(report):
     }
 
 
-def build_running_asr(ok_items):
+def build_cumulative_asr_by_iteration(primary_curves, success_threshold=0.0):
+    if not primary_curves:
+        return []
+
+    max_len = max(len(curve) for curve in primary_curves)
+    if max_len <= 0:
+        return []
+
+    # success_flags[i] indicates whether sample i has ever succeeded up to current iteration.
+    success_flags = [False] * len(primary_curves)
     series = []
-    success_count = 0
-    processed = 0
 
-    for item in sorted(ok_items, key=lambda x: str(x.get("output_dir", ""))):
-        true_label = item.get("true_label")
-        adv_pred = item.get("adv_pred")
-        if not (isinstance(true_label, int) and isinstance(adv_pred, int)):
-            continue
+    for iteration in range(max_len):
+        for idx, curve in enumerate(primary_curves):
+            if success_flags[idx]:
+                continue
+            if iteration < len(curve) and curve[iteration] <= success_threshold:
+                success_flags[idx] = True
 
-        processed += 1
-        if adv_pred != true_label:
-            success_count += 1
-
-        running_asr = float(success_count / processed)
+        success_count = sum(1 for flag in success_flags if flag)
+        asr_value = float(success_count / len(primary_curves))
         series.append(
             {
-                "sample_index": processed,
-                "running_asr": running_asr,
+                "iteration": iteration,
+                "asr_cumulative": asr_value,
                 "success_count": success_count,
+                "num_samples": len(primary_curves),
             }
         )
 
@@ -318,9 +324,8 @@ def export_approach(args, model_name, approach_dir):
 
     run.define_metric("iteration")
     run.define_metric("curve/*", step_metric="iteration")
-    run.define_metric("sample_index")
-    run.define_metric("asr/*", step_metric="sample_index")
-    run.define_metric("progress/*", step_metric="sample_index")
+    run.define_metric("asr/*", step_metric="iteration")
+    run.define_metric("progress/*", step_metric="iteration")
 
     summary = summarize_report(report)
     for k, v in summary.items():
@@ -351,17 +356,19 @@ def export_approach(args, model_name, approach_dir):
             payload["curve/saliency_mean"] = saliency_mean[i]
         run.log(payload)
 
-    asr_series = build_running_asr(ok_items)
-    run.summary["progress/processed_samples"] = len(asr_series)
+    asr_series = build_cumulative_asr_by_iteration(margin_curves, success_threshold=0.0)
     if asr_series:
-        run.summary["asr/final_running"] = asr_series[-1]["running_asr"]
+        run.summary["asr/final_cumulative"] = asr_series[-1]["asr_cumulative"]
+        run.summary["progress/processed_samples"] = asr_series[-1]["num_samples"]
+    else:
+        run.summary["progress/processed_samples"] = 0
 
     for point in asr_series:
         run.log(
             {
-                "sample_index": point["sample_index"],
-                "asr/running": point["running_asr"],
-                "progress/processed_samples": point["sample_index"],
+                "iteration": point["iteration"],
+                "asr/cumulative": point["asr_cumulative"],
+                "progress/processed_samples": point["num_samples"],
                 "progress/success_count": point["success_count"],
             }
         )
