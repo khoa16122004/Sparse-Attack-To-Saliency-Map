@@ -5,6 +5,7 @@ import json
 import time
 from pathlib import Path
 
+from PIL import Image
 import wandb
 
 
@@ -127,7 +128,68 @@ def safe_mean(values):
     return float(sum(valid) / len(valid))
 
 
-def summarize_report(report):
+def _rankdata(values):
+    indexed = sorted([(v, i) for i, v in enumerate(values)], key=lambda t: t[0])
+    ranks = [0.0] * len(values)
+    idx = 0
+    while idx < len(indexed):
+        j = idx + 1
+        while j < len(indexed) and indexed[j][0] == indexed[idx][0]:
+            j += 1
+        avg_rank = (idx + 1 + j) / 2.0
+        for k in range(idx, j):
+            ranks[indexed[k][1]] = avg_rank
+        idx = j
+    return ranks
+
+
+def _spearman_rank_corr(x, y):
+    if len(x) != len(y):
+        return None
+    n = len(x)
+    if n < 2:
+        return None
+
+    rx = _rankdata(x)
+    ry = _rankdata(y)
+    mean_rx = sum(rx) / n
+    mean_ry = sum(ry) / n
+
+    cov = sum((a - mean_rx) * (b - mean_ry) for a, b in zip(rx, ry))
+    var_x = sum((a - mean_rx) ** 2 for a in rx)
+    var_y = sum((b - mean_ry) ** 2 for b in ry)
+    if var_x <= 1e-12 or var_y <= 1e-12:
+        return None
+    return cov / ((var_x ** 0.5) * (var_y ** 0.5))
+
+
+def _load_gray_flat_image(image_path):
+    try:
+        img = Image.open(image_path).convert("L")
+        return [float(v) for v in img.getdata()]
+    except Exception:
+        return None
+
+
+def compute_spearman_adv_vs_clean_map(item, approach_dir):
+    output_dir = resolve_output_dir(item, approach_dir)
+    if output_dir is None:
+        return None
+
+    clean_map_path = output_dir / "clean_map.png"
+    adv_map_path = output_dir / "adv_map.png"
+    if not clean_map_path.exists() or not adv_map_path.exists():
+        return None
+
+    clean_vals = _load_gray_flat_image(clean_map_path)
+    adv_vals = _load_gray_flat_image(adv_map_path)
+    if clean_vals is None or adv_vals is None:
+        return None
+
+    return _spearman_rank_corr(clean_vals, adv_vals)
+
+
+def summarize_report(report, approach_dir=None):
     ok_items = [item for item in report.get("results", []) if item.get("status") == "ok"]
 
     success_flags = []
@@ -145,6 +207,11 @@ def summarize_report(report):
         saliency_losses.append(item.get("saliency_loss"))
         l0_distances.append(item.get("l0_distance"))
 
+    spearman_values = []
+    if approach_dir is not None:
+        for item in ok_items:
+            spearman_values.append(compute_spearman_adv_vs_clean_map(item, approach_dir))
+
     return {
         "num_ok": len(ok_items),
         "num_total": len(report.get("results", [])),
@@ -152,6 +219,7 @@ def summarize_report(report):
         "mean_margin_loss": safe_mean(margin_losses),
         "mean_saliency_loss": safe_mean(saliency_losses),
         "mean_l0_distance": safe_mean(l0_distances),
+        "mean_spearman_adv_vs_clean_map": safe_mean(spearman_values),
     }
 
 
@@ -268,6 +336,69 @@ def build_run_id(model_name, approach):
     return hashlib.md5(raw).hexdigest()
 
 
+def log_final_summary_table(args, rows):
+    if not rows:
+        return
+
+    run_id_src = f"{args.project}:{args.group}:final_table".encode("utf-8")
+    run_id = hashlib.md5(run_id_src).hexdigest()
+    run_name = f"{args.group}__final_metrics_table"
+
+    run = wandb.init(
+        project=args.project,
+        entity=args.entity,
+        group=args.group,
+        name=run_name,
+        id=run_id,
+        resume="allow",
+        job_type="report_table",
+        tags=args.tags,
+        reinit=True,
+        mode=args.mode,
+    )
+
+    columns = [
+        "model",
+        "approach",
+        "strategy",
+        "eps",
+        "fitness",
+        "algorithm",
+        "num_ok",
+        "num_total",
+        "asr",
+        "mean_margin_loss",
+        "mean_saliency_loss",
+        "mean_l0_distance",
+        "mean_spearman_adv_vs_clean_map",
+        "report_source",
+    ]
+
+    data = []
+    for row in rows:
+        data.append([
+            row.get("model"),
+            row.get("approach"),
+            row.get("strategy"),
+            row.get("eps"),
+            row.get("fitness"),
+            row.get("algorithm"),
+            row.get("num_ok"),
+            row.get("num_total"),
+            row.get("attack_success_rate"),
+            row.get("mean_margin_loss"),
+            row.get("mean_saliency_loss"),
+            row.get("mean_l0_distance"),
+            row.get("mean_spearman_adv_vs_clean_map"),
+            row.get("report_source"),
+        ])
+
+    table = wandb.Table(columns=columns, data=data)
+    run.log({"report/final_metrics_table": table})
+    run.summary["report/num_rows"] = len(rows)
+    run.finish()
+
+
 def compute_approach_signature(approach_dir):
     parts = []
 
@@ -337,7 +468,7 @@ def export_approach(args, model_name, approach_dir):
     run.define_metric("asr/*", step_metric="iteration")
     run.define_metric("progress/*", step_metric="iteration")
 
-    summary = summarize_report(report)
+    summary = summarize_report(report, approach_dir=approach_dir)
     for k, v in summary.items():
         if v is not None:
             run.summary[k] = v
@@ -408,12 +539,22 @@ def export_approach(args, model_name, approach_dir):
         run.log(image_payload)
 
     run.finish()
-    return True
+    return {
+        "model": model_name,
+        "approach": approach,
+        "strategy": strategy,
+        "eps": eps,
+        "fitness": fit,
+        "algorithm": algo,
+        "report_source": source,
+        **summary,
+    }
 
 
 def export_once(args, last_signatures=None):
     exported = 0
     seen = 0
+    summary_rows = []
     model_dirs = sorted([p for p in args.input_root.iterdir() if p.is_dir()])
     for model_dir in model_dirs:
         approach_dirs = sorted([p for p in model_dir.iterdir() if p.is_dir()])
@@ -429,13 +570,17 @@ def export_once(args, last_signatures=None):
                 if prev == signature:
                     continue
 
-            ok = export_approach(args, model_dir.name, approach_dir)
-            if ok:
+            row = export_approach(args, model_dir.name, approach_dir)
+            if row:
                 exported += 1
                 print(f"[OK] exported: {key}")
+                summary_rows.append(row)
 
             if last_signatures is not None:
                 last_signatures[key] = signature
+
+    if summary_rows:
+        log_final_summary_table(args, summary_rows)
 
     return exported, seen
 
