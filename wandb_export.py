@@ -148,6 +148,33 @@ def summarize_report(report):
     }
 
 
+def build_running_asr(ok_items):
+    series = []
+    success_count = 0
+    processed = 0
+
+    for item in sorted(ok_items, key=lambda x: str(x.get("output_dir", ""))):
+        true_label = item.get("true_label")
+        adv_pred = item.get("adv_pred")
+        if not (isinstance(true_label, int) and isinstance(adv_pred, int)):
+            continue
+
+        processed += 1
+        if adv_pred != true_label:
+            success_count += 1
+
+        running_asr = float(success_count / processed)
+        series.append(
+            {
+                "sample_index": processed,
+                "running_asr": running_asr,
+                "success_count": success_count,
+            }
+        )
+
+    return series
+
+
 def resolve_output_dir(item, approach_dir):
     output_dir = item.get("output_dir")
     if not output_dir:
@@ -289,12 +316,20 @@ def export_approach(args, model_name, approach_dir):
         mode=args.mode,
     )
 
+    run.define_metric("iteration")
+    run.define_metric("curve/*", step_metric="iteration")
+    run.define_metric("sample_index")
+    run.define_metric("asr/*", step_metric="sample_index")
+    run.define_metric("progress/*", step_metric="sample_index")
+
     summary = summarize_report(report)
     for k, v in summary.items():
         if v is not None:
             run.summary[k] = v
 
     ok_items = [item for item in report.get("results", []) if item.get("status") == "ok"]
+    run.summary["progress/ok_items"] = len(ok_items)
+    run.summary["progress/total_items"] = len(report.get("results", []))
 
     margin_curves = []
     saliency_curves = []
@@ -315,6 +350,21 @@ def export_approach(args, model_name, approach_dir):
         if i < len(saliency_mean):
             payload["curve/saliency_mean"] = saliency_mean[i]
         run.log(payload)
+
+    asr_series = build_running_asr(ok_items)
+    run.summary["progress/processed_samples"] = len(asr_series)
+    if asr_series:
+        run.summary["asr/final_running"] = asr_series[-1]["running_asr"]
+
+    for point in asr_series:
+        run.log(
+            {
+                "sample_index": point["sample_index"],
+                "asr/running": point["running_asr"],
+                "progress/processed_samples": point["sample_index"],
+                "progress/success_count": point["success_count"],
+            }
+        )
 
     sample_items = sorted(ok_items, key=lambda x: str(x.get("output_dir", "")))[: args.sample_images]
     image_payload = {}
