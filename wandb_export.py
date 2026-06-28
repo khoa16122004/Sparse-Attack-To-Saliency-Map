@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import argparse
+import hashlib
 import json
+import time
 from pathlib import Path
 
 import wandb
@@ -17,6 +19,8 @@ def parse_args():
     parser.add_argument("--sample-images", type=int, default=4)
     parser.add_argument("--mode", type=str, default="online", choices=["online", "offline", "disabled"])
     parser.add_argument("--tags", nargs="*", default=["compare_loss_50", "sparse_attack"])
+    parser.add_argument("--watch", action="store_true", help="Continuously scan folder and sync changed runs")
+    parser.add_argument("--interval", type=int, default=60, help="Watch interval in seconds")
     return parser.parse_args()
 
 
@@ -219,6 +223,33 @@ def mean_curve(curves):
     return out
 
 
+def build_run_id(model_name, approach):
+    raw = f"{model_name}::{approach}".encode("utf-8")
+    return hashlib.md5(raw).hexdigest()
+
+
+def compute_approach_signature(approach_dir):
+    parts = []
+
+    report_path = approach_dir / "batch_report.json"
+    if report_path.exists():
+        stat = report_path.stat()
+        parts.append(f"report:{stat.st_mtime_ns}:{stat.st_size}")
+
+    summary_files = sorted(approach_dir.glob("*/*/summary.json"))
+    parts.append(f"summary_count:{len(summary_files)}")
+    for path in summary_files:
+        stat = path.stat()
+        rel = path.relative_to(approach_dir)
+        parts.append(f"{rel}:{stat.st_mtime_ns}:{stat.st_size}")
+
+    if not parts:
+        return None
+
+    digest_src = "|".join(parts).encode("utf-8")
+    return hashlib.md5(digest_src).hexdigest()
+
+
 def export_approach(args, model_name, approach_dir):
     approach = approach_dir.name
     report, source = load_report_with_fallback(approach_dir)
@@ -231,6 +262,7 @@ def export_approach(args, model_name, approach_dir):
     strategy = parsed.get("strategy", "unknown")
 
     run_name = f"{model_name}__{strategy}__{fit}__{algo}"
+    run_id = build_run_id(model_name, approach)
 
     config = {
         "model": model_name,
@@ -248,6 +280,8 @@ def export_approach(args, model_name, approach_dir):
         entity=args.entity,
         group=args.group,
         name=run_name,
+        id=run_id,
+        resume="allow",
         job_type="export",
         config=config,
         tags=args.tags,
@@ -301,23 +335,54 @@ def export_approach(args, model_name, approach_dir):
     return True
 
 
+def export_once(args, last_signatures=None):
+    exported = 0
+    seen = 0
+    model_dirs = sorted([p for p in args.input_root.iterdir() if p.is_dir()])
+    for model_dir in model_dirs:
+        approach_dirs = sorted([p for p in model_dir.iterdir() if p.is_dir()])
+        for approach_dir in approach_dirs:
+            key = f"{model_dir.name}/{approach_dir.name}"
+            signature = compute_approach_signature(approach_dir)
+            if signature is None:
+                continue
+
+            seen += 1
+            if last_signatures is not None:
+                prev = last_signatures.get(key)
+                if prev == signature:
+                    continue
+
+            ok = export_approach(args, model_dir.name, approach_dir)
+            if ok:
+                exported += 1
+                print(f"[OK] exported: {key}")
+
+            if last_signatures is not None:
+                last_signatures[key] = signature
+
+    return exported, seen
+
+
 def main():
     args = parse_args()
 
     if not args.input_root.exists() or not args.input_root.is_dir():
         raise FileNotFoundError(f"input_root not found: {args.input_root}")
 
-    exported = 0
-    model_dirs = sorted([p for p in args.input_root.iterdir() if p.is_dir()])
-    for model_dir in model_dirs:
-        approach_dirs = sorted([p for p in model_dir.iterdir() if p.is_dir()])
-        for approach_dir in approach_dirs:
-            ok = export_approach(args, model_dir.name, approach_dir)
-            if ok:
-                exported += 1
-                print(f"[OK] exported: {model_dir.name}/{approach_dir.name}")
+    if args.watch and args.interval <= 0:
+        raise ValueError("--interval must be > 0")
 
-    print(f"[DONE] Exported {exported} runs to wandb")
+    if args.watch:
+        print(f"[INFO] Watch mode enabled, interval={args.interval}s")
+        signatures = {}
+        while True:
+            exported, seen = export_once(args, last_signatures=signatures)
+            print(f"[INFO] scan done: seen={seen}, updated={exported}")
+            time.sleep(args.interval)
+    else:
+        exported, seen = export_once(args, last_signatures=None)
+        print(f"[DONE] Exported {exported} runs to wandb (seen={seen})")
 
 
 if __name__ == "__main__":
