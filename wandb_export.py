@@ -56,6 +56,13 @@ def normalize_algo(value):
     return value
 
 
+def to_float(value, default=None):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def load_json(path):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
@@ -293,6 +300,8 @@ def export_approach(args, model_name, approach_dir):
     fit = normalize_fit(parsed.get("fit"))
     algo = normalize_algo(parsed.get("algo"))
     strategy = parsed.get("strategy", "unknown")
+    wm = to_float(parsed.get("wm"), default=None)
+    ws = to_float(parsed.get("ws"), default=None)
 
     run_name = f"{model_name}__{strategy}__{fit}__{algo}"
     run_id = build_run_id(model_name, approach)
@@ -338,22 +347,31 @@ def export_approach(args, model_name, approach_dir):
 
     margin_curves = []
     saliency_curves = []
+    weighted_curves = []
     for item in ok_items:
         margin, saliency = load_item_history(item, approach_dir)
         if margin is not None and saliency is not None:
             margin_curves.append(margin)
             saliency_curves.append(saliency)
 
+            if wm is not None and ws is not None:
+                weighted_curves.append([
+                    wm * m + ws * s for m, s in zip(margin, saliency)
+                ])
+
     margin_mean = mean_curve(margin_curves)
     saliency_mean = mean_curve(saliency_curves)
+    weighted_mean = mean_curve(weighted_curves)
 
-    max_len = max(len(margin_mean), len(saliency_mean)) if (margin_mean or saliency_mean) else 0
+    max_len = max(len(margin_mean), len(saliency_mean), len(weighted_mean)) if (margin_mean or saliency_mean or weighted_mean) else 0
     for i in range(max_len):
         payload = {"iteration": i}
         if i < len(margin_mean):
             payload["curve/margin_mean"] = margin_mean[i]
         if i < len(saliency_mean):
             payload["curve/saliency_mean"] = saliency_mean[i]
+        if i < len(weighted_mean):
+            payload["curve/weighted_mean"] = weighted_mean[i]
         run.log(payload)
 
     asr_series = build_cumulative_asr_by_iteration(margin_curves, success_threshold=0.0)
