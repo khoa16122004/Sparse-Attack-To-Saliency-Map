@@ -67,7 +67,9 @@ for EPS in 5 10 20 50; do
             --operator-strategy "$STRATEGY" \
             --eps "$EPS" \
             --fitness-function "$FITNESS" \
-            --output-root "$OUTPUT_ROOT"
+            --output-root "$OUTPUT_ROOT" \
+            --algorithm nsgaii
+
     done
 done
 
