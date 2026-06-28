@@ -35,12 +35,14 @@ class Weighted_Sum_GA:
         population = Population(init_solutions, self.params['fitness'])
         pop_margin_losses, pop_saliency_losses, pop_logits = population.evaluate()    # calcuate fitenss    
         pop_weighted_fitness = self.params['w_margin'] * pop_margin_losses + self.params['w_saliency'] * pop_saliency_losses
+        first_success_iteration = 0 if any(pi.is_adversarial for pi in population.population) else None
         best_candidate_id = torch.argmin(pop_weighted_fitness)
         best_candidate = population.population[best_candidate_id].copy()
         best_scores = {
             'margin_loss': pop_margin_losses[best_candidate_id],
             'saliency_loss': pop_saliency_losses[best_candidate_id],
             'weighted_fitness': pop_weighted_fitness[best_candidate_id],
+            'first_success_iteration': first_success_iteration,
         }
         history = [best_scores]
 
@@ -71,6 +73,9 @@ class Weighted_Sum_GA:
             pop_margin_losses = pool_margin_losses[winner_idxs]
             pop_saliency_losses = pool_saliency_losses[winner_idxs]
             pop_weighted_fitness = pool_weighted_fitness[winner_idxs]
+
+            if first_success_iteration is None and any(pi.is_adversarial for pi in population.population):
+                first_success_iteration = it
             
             best_candidate_id = torch.argmin(pop_weighted_fitness)
             best_candidate = population.population[best_candidate_id].copy()
@@ -78,6 +83,7 @@ class Weighted_Sum_GA:
                 'margin_loss': pop_margin_losses[best_candidate_id],
                 'saliency_loss': pop_saliency_losses[best_candidate_id],
                 'weighted_fitness': pop_weighted_fitness[best_candidate_id],
+                'first_success_iteration': first_success_iteration,
             }
             history.append(best_scores)
             print(f"Iteration {it}: best weighted fitness = {best_scores['weighted_fitness']:.4f}, margin loss = {best_scores['margin_loss']:.4f}, saliency loss = {best_scores['saliency_loss']:.4f}")

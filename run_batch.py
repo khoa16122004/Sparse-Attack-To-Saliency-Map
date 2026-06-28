@@ -337,6 +337,7 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "margin_loss": float(best_scores["margin_loss"]),
         "saliency_loss": float(best_scores["saliency_loss"]),
         "weighted_fitness": float(weighted_fitness),
+        "first_success_iteration": best_scores.get("first_success_iteration"),
         "algorithm": args.algorithm,
         "fitness_function": args.fitness_function,
         "operator_strategy": args.operator_strategy,

@@ -10,6 +10,12 @@ class NSGAII(Weighted_Sum_GA):
     def __init__(self, params):
         super().__init__(params)
         self.nds = NonDominatedSorting()
+
+    def _pick_best_candidate_idx(self, population, pop_saliency_losses):
+        success_indices = [i for i, sol in enumerate(population.population) if sol.is_adversarial]
+        if success_indices:
+            return min(success_indices, key=lambda idx: float(pop_saliency_losses[idx].detach().cpu().item()))
+        return min(range(len(population.population)), key=lambda idx: int(population.population[idx].l0.item()))
         
     def attack(self):
         init_solutions = init_population(
@@ -29,12 +35,14 @@ class NSGAII(Weighted_Sum_GA):
         population = Population([population.population[i] for i in selected_idxs], self.params['fitness'])
         pop_margin_losses = pop_margin_losses[selected_idxs]
         pop_saliency_losses = pop_saliency_losses[selected_idxs]
+        first_success_iteration = 0 if any(pi.is_adversarial for pi in population.population) else None
 
-        # Best is defined as: rank-0 individual with highest crowding distance.
-        best_candidate = population.population[0].copy()
+        best_candidate_id = self._pick_best_candidate_idx(population, pop_saliency_losses)
+        best_candidate = population.population[best_candidate_id].copy()
         best_scores = {
-            'margin_loss': pop_margin_losses[0],
-            'saliency_loss': pop_saliency_losses[0],
+            'margin_loss': pop_margin_losses[best_candidate_id],
+            'saliency_loss': pop_saliency_losses[best_candidate_id],
+            'first_success_iteration': first_success_iteration,
         }
         history = [best_scores]
 
@@ -61,12 +69,17 @@ class NSGAII(Weighted_Sum_GA):
             population = Population([pool_solutions[i] for i in winner_idxs], self.params['fitness'])
             pop_margin_losses = pool_margin_losses[winner_idxs]
             pop_saliency_losses = pool_saliency_losses[winner_idxs]
+
+            if first_success_iteration is None and any(pi.is_adversarial for pi in population.population):
+                first_success_iteration = it
             
-            best_candidate = population.population[0].copy()  # The best candidate is the first one in the sorted population
+            best_candidate_id = self._pick_best_candidate_idx(population, pop_saliency_losses)
+            best_candidate = population.population[best_candidate_id].copy()
             
             best_scores = {
-                'margin_loss': pop_margin_losses[0],
-                'saliency_loss': pop_saliency_losses[0],
+                'margin_loss': pop_margin_losses[best_candidate_id],
+                'saliency_loss': pop_saliency_losses[best_candidate_id],
+                'first_success_iteration': first_success_iteration,
             }
             history.append(best_scores)
             print(f"Iteration {it}: Best margin_loss={best_scores['margin_loss']:.4f}, Best saliency_loss={best_scores['saliency_loss']:.4f}")

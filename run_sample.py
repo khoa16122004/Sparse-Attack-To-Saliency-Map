@@ -254,6 +254,7 @@ def run_attack(args):
     print(f"margin_loss: {float(best_scores['margin_loss'])}")
     print(f"saliency_loss: {float(best_scores['saliency_loss'])}")
     print(f"weighted_fitness: {float(weighted_fitness)}")
+    print(f"first_success_iteration: {best_scores.get('first_success_iteration')}")
     print(f"algorithm: {args.algorithm}")
     print(f"fitness_function: {args.fitness_function}")
     print(f"operator_strategy: {args.operator_strategy}")
@@ -278,6 +279,7 @@ def run_attack(args):
         "margin_loss": float(best_scores["margin_loss"]),
         "saliency_loss": float(best_scores["saliency_loss"]),
         "weighted_fitness": float(weighted_fitness),
+        "first_success_iteration": best_scores.get("first_success_iteration"),
         "algorithm": args.algorithm,
         "fitness_function": args.fitness_function,
         "operator_strategy": args.operator_strategy,
