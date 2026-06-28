@@ -336,6 +336,11 @@ def build_run_id(model_name, approach):
     return hashlib.md5(raw).hexdigest()
 
 
+def build_run_revision_id(model_name, approach, signature):
+    raw = f"{model_name}::{approach}::{signature}".encode("utf-8")
+    return hashlib.md5(raw).hexdigest()
+
+
 def log_final_summary_table(args, rows):
     if not rows:
         return
@@ -421,7 +426,7 @@ def compute_approach_signature(approach_dir):
     return hashlib.md5(digest_src).hexdigest()
 
 
-def export_approach(args, model_name, approach_dir, progress_cache=None):
+def export_approach(args, model_name, approach_dir, signature=None):
     approach = approach_dir.name
     report, source = load_report_with_fallback(approach_dir)
     if report is None:
@@ -437,7 +442,12 @@ def export_approach(args, model_name, approach_dir, progress_cache=None):
 
     run_name = f"{model_name}__eps-{eps}__{strategy}__{fit}__{algo}"
     run_id = build_run_id(model_name, approach)
-    cache_key = f"{model_name}/{approach}"
+    resume_mode = "allow"
+    if args.watch and signature:
+        rev = signature[:8]
+        run_name = f"{run_name}__rev-{rev}"
+        run_id = build_run_revision_id(model_name, approach, signature)
+        resume_mode = "never"
 
     config = {
         "model": model_name,
@@ -456,7 +466,7 @@ def export_approach(args, model_name, approach_dir, progress_cache=None):
         group=args.group,
         name=run_name,
         id=run_id,
-        resume="allow",
+        resume=resume_mode,
         job_type="export",
         config=config,
         tags=args.tags,
@@ -497,11 +507,7 @@ def export_approach(args, model_name, approach_dir, progress_cache=None):
     weighted_mean = mean_curve(weighted_curves)
 
     max_len = max(len(margin_mean), len(saliency_mean), len(weighted_mean)) if (margin_mean or saliency_mean or weighted_mean) else 0
-    curve_start = 0
-    if progress_cache is not None:
-        curve_start = int(progress_cache.get(cache_key, {}).get("curve_next_iter", 0))
-
-    for i in range(curve_start, max_len):
+    for i in range(max_len):
         payload = {"iteration": i}
         if i < len(margin_mean):
             payload["curve/margin_mean"] = margin_mean[i]
@@ -518,11 +524,7 @@ def export_approach(args, model_name, approach_dir, progress_cache=None):
     else:
         run.summary["progress/processed_samples"] = 0
 
-    asr_start = 0
-    if progress_cache is not None:
-        asr_start = int(progress_cache.get(cache_key, {}).get("asr_next_iter", 0))
-
-    for point in asr_series[asr_start:]:
+    for point in asr_series:
         run.log(
             {
                 "iteration": point["iteration"],
@@ -547,12 +549,6 @@ def export_approach(args, model_name, approach_dir, progress_cache=None):
     if image_payload:
         run.log(image_payload)
 
-    if progress_cache is not None:
-        progress_cache[cache_key] = {
-            "curve_next_iter": max_len,
-            "asr_next_iter": len(asr_series),
-        }
-
     run.finish()
     return {
         "model": model_name,
@@ -566,7 +562,7 @@ def export_approach(args, model_name, approach_dir, progress_cache=None):
     }
 
 
-def export_once(args, last_signatures=None, progress_cache=None):
+def export_once(args, last_signatures=None):
     exported = 0
     seen = 0
     summary_rows = []
@@ -585,7 +581,7 @@ def export_once(args, last_signatures=None, progress_cache=None):
                 if prev == signature:
                     continue
 
-            row = export_approach(args, model_dir.name, approach_dir, progress_cache=progress_cache)
+            row = export_approach(args, model_dir.name, approach_dir, signature=signature)
             if row:
                 exported += 1
                 print(f"[OK] exported: {key}")
@@ -612,13 +608,12 @@ def main():
     if args.watch:
         print(f"[INFO] Watch mode enabled, interval={args.interval}s")
         signatures = {}
-        progress_cache = {}
         while True:
-            exported, seen = export_once(args, last_signatures=signatures, progress_cache=progress_cache)
+            exported, seen = export_once(args, last_signatures=signatures)
             print(f"[INFO] scan done: seen={seen}, updated={exported}")
             time.sleep(args.interval)
     else:
-        exported, seen = export_once(args, last_signatures=None, progress_cache=None)
+        exported, seen = export_once(args, last_signatures=None)
         print(f"[DONE] Exported {exported} runs to wandb (seen={seen})")
 
 
