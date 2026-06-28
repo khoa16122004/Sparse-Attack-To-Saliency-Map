@@ -356,7 +356,8 @@ def main():
     if args.selection_file is None:
         if not args.model_name:
             raise ValueError("Provide --model-name or --selection-file")
-        selection_file = Path("model_evaluation_results") / f"{args.model_name}_selection.json"
+        # selection_file = Path("model_evaluation_results") / f"{args.model_name}_selection.json"
+        selection_file = Path("model_evaluation_results") / f"{args.model_name}_selection_random50.json"
     else:
         selection_file = Path(args.selection_file)
 
