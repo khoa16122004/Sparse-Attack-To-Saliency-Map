@@ -300,10 +300,11 @@ def export_approach(args, model_name, approach_dir):
     fit = normalize_fit(parsed.get("fit"))
     algo = normalize_algo(parsed.get("algo"))
     strategy = parsed.get("strategy", "unknown")
+    eps = parsed.get("eps", "na")
     wm = to_float(parsed.get("wm"), default=None)
     ws = to_float(parsed.get("ws"), default=None)
 
-    run_name = f"{model_name}__{strategy}__{fit}__{algo}"
+    run_name = f"{model_name}__eps-{eps}__{strategy}__{fit}__{algo}"
     run_id = build_run_id(model_name, approach)
 
     config = {
