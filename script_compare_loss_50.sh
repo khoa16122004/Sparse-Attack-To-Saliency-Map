@@ -68,7 +68,7 @@ for MODEL_NAME in $MODEL_NAMES; do
                 --operator-strategy "$STRATEGY" \
                 --eps 50 \
                 --fitness-function "$FITNESS" \
-                --output-root "$OUTPUT_ROOT" \
+                --output-root "$OUTPUT_ROOT"
         done
     done
 done
