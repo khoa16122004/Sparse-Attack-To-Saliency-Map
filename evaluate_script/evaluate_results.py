@@ -105,7 +105,16 @@ def _print_latex_rows_from_report_dir(report_dir):
         with open(summary_path, "r", encoding="utf-8") as f:
             summary = json.load(f)
 
-        eps_value, loss_type = _extract_eps_and_loss_type(summary.get("approach", ""))
+        approach = summary.get("approach", "")
+        eps_value, loss_type = _extract_eps_and_loss_type(approach)
+        if eps_value is None or loss_type is None:
+            report_path = run_dir / "batch_report.json"
+            if report_path.exists():
+                with open(report_path, "r", encoding="utf-8") as f:
+                    report = json.load(f)
+                approach = report.get("approach", "")
+                eps_value, loss_type = _extract_eps_and_loss_type(approach)
+
         if eps_value is None or loss_type is None:
             continue
 
@@ -120,10 +129,10 @@ def _print_latex_rows_from_report_dir(report_dir):
         }
 
     if not rows_by_eps:
-        raise ValueError(
-            "No evaluation_summary.json found with parseable epsilon in approach"
-        )
+        print("[WARN] No evaluation_summary/batch_report with parseable epsilon in approach")
+        return
 
+    printed = 0
     for eps_value in sorted(rows_by_eps.keys(), key=float):
         pair = rows_by_eps[eps_value]
         margin = pair.get("margin")
@@ -154,6 +163,10 @@ def _print_latex_rows_from_report_dir(report_dir):
             f"& {eps_value} & {margin_asr_txt} & {margin_spearman_txt} "
             f"& {ce_asr_txt} & {ce_spearman_txt} \\\\"
         )
+        printed += 1
+
+    if printed == 0:
+        print("[WARN] No complete margin/cross_entropy pairs for LaTeX rows")
 
 
 def _rankdata_average_ties(values):
