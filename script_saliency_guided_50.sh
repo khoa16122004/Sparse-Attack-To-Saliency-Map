@@ -69,7 +69,8 @@ for MODEL_NAME in $MODEL_NAMES; do
                 --operator-strategy "saliency_guided" \
                 --eps "$EPS" \
                 --fitness-function "$FITNESS" \
-                --output-root "$OUTPUT_ROOT"
+                --output-root "$OUTPUT_ROOT" \
+                --algorithm "nsgaii"
         done
     done
 done
