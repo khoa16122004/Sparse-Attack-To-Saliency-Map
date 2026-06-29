@@ -25,7 +25,7 @@ class NSGAII(Weighted_Sum_GA):
             p_size=self.params["p_size"],
             zero_prob=self.params["zero_probability"],
             all_pixels=self.params["all_pixels"],
-            pixel_probs=self.pixel_probs,
+            pixel_probs=self.init_pixel_probs,
         )
 
         population = Population(init_solutions, self.params['fitness'])

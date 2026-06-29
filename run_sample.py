@@ -67,7 +67,7 @@ def parse_args():
         type=str,
         default="uniform",
         choices=["uniform", "saliency_guided"],
-        help="Genetic operator strategy for init/crossover/mutation",
+        help="Population initialization strategy (saliency_guided affects init only)",
     )
     parser.add_argument(
         "--saliency-temperature",

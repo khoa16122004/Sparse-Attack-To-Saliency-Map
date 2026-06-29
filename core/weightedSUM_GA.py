@@ -11,10 +11,11 @@ class Weighted_Sum_GA:
         self.operator_strategy = params.get("operator_strategy", "uniform")
         self.saliency_temperature = params.get("saliency_temperature", 1.0)
 
-        self.pixel_probs = None
+        # Saliency-guided strategy is used for initialization only.
+        self.init_pixel_probs = None
         if self.operator_strategy == "saliency_guided":
             saliency_true = self.params["fitness"].saliency_true[0]
-            self.pixel_probs = build_pixel_sampling_probs(
+            self.init_pixel_probs = build_pixel_sampling_probs(
                 saliency_true,
                 self.params["all_pixels"],
                 temperature=self.saliency_temperature,
@@ -29,7 +30,7 @@ class Weighted_Sum_GA:
             p_size=self.params["p_size"],
             zero_prob=self.params["zero_probability"],
             all_pixels=self.params["all_pixels"],
-            pixel_probs=self.pixel_probs,
+            pixel_probs=self.init_pixel_probs,
         )
 
         population = Population(init_solutions, self.params['fitness'])
@@ -114,7 +115,8 @@ class Weighted_Sum_GA:
             pm=self.params["pm"],
             all_pixels=self.params["all_pixels"],
             zero_prob=self.params["zero_probability"],
-            pixel_probs=self.pixel_probs,
+            # Keep crossover and mutation uniform for both strategies.
+            pixel_probs=None,
         )
     
     
