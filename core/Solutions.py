@@ -19,7 +19,7 @@ class Population:
             [pi.generate_adv_image() for pi in self.population],
             dim=0
         )
-        print("imgs_adv shape: ", imgs_adv.shape)
+        # print("imgs_adv shape: ", imgs_adv.shape)
         margin_losses, saliency_losses, logits =  self.fitness.benchmark(imgs_adv)
         for idx, pi in enumerate(self.population):
             pi.margin_loss = margin_losses[idx]

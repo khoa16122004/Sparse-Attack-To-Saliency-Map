@@ -82,7 +82,7 @@ class NSGAII(Weighted_Sum_GA):
                 'first_success_iteration': first_success_iteration,
             }
             history.append(best_scores)
-            print(f"Iteration {it}: Best margin_loss={best_scores['margin_loss']:.4f}, Best saliency_loss={best_scores['saliency_loss']:.4f}")
+            # print(f"Iteration {it}: Best margin_loss={best_scores['margin_loss']:.4f}, Best saliency_loss={best_scores['saliency_loss']:.4f}")
         
         return best_candidate.generate_adv_image(), best_candidate, best_scores, history
         
