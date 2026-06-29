@@ -1,6 +1,7 @@
 import argparse
 import json
 import math
+import re
 from pathlib import Path
 
 import numpy as np
@@ -12,14 +13,31 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description=(
             "Evaluate batch attack outputs with mean Attack Success Rate, "
-            "Margin Loss, Saliency Loss, and Spearman rank correlation"
+            "Margin L-oss, Saliency Loss, and Spearman rank correlation"
         )
     )
     parser.add_argument(
         "--report-path",
         type=str,
-        required=True,
+        default=None,
         help="Path to batch_report.json produced by run_batch.py",
+    )
+    parser.add_argument(
+        "--report-dir",
+        type=str,
+        default=None,
+        help=(
+            "Path to directory containing multiple run folders with "
+            "evaluation_summary.json"
+        ),
+    )
+    parser.add_argument(
+        "--print-latex-lines",
+        action="store_true",
+        help=(
+            "Print one LaTeX row per epsilon in format: "
+            "& eps & margin_asr & margin_spearman & ce_asr & ce_spearman \\\\"
+        ),
     )
     parser.add_argument(
         "--max-samples",
@@ -34,6 +52,106 @@ def parse_args():
         help="Where to save evaluation JSON. Default: <run_root>/evaluation_summary.json",
     )
     return parser.parse_args()
+
+
+def _extract_eps_and_loss_type(approach):
+    if not approach:
+        return None, None
+
+    eps_match = re.search(r"__eps-([0-9]+(?:\.[0-9]+)?)__", approach)
+    if not eps_match:
+        return None, None
+
+    eps_value = float(eps_match.group(1))
+    if eps_value.is_integer():
+        eps_value = int(eps_value)
+
+    if "fit-negative_cross_entropy_saliency" in approach:
+        loss_type = "cross_entropy"
+    else:
+        loss_type = "margin"
+
+    return eps_value, loss_type
+
+
+def _format_asr_percent(asr):
+    return f"{(float(asr) * 100.0):.2f}"
+
+
+def _format_spearman(score):
+    return f"{float(score):.4f}"
+
+
+def _latex_bold(text, should_bold):
+    if should_bold:
+        return f"\\textbf{{{text}}}"
+    return text
+
+
+def _print_latex_rows_from_report_dir(report_dir):
+    root = Path(report_dir)
+    if not root.exists() or not root.is_dir():
+        raise FileNotFoundError(f"report directory not found: {root}")
+
+    rows_by_eps = {}
+    for run_dir in sorted(root.iterdir()):
+        if not run_dir.is_dir():
+            continue
+
+        summary_path = run_dir / "evaluation_summary.json"
+        if not summary_path.exists():
+            continue
+
+        with open(summary_path, "r", encoding="utf-8") as f:
+            summary = json.load(f)
+
+        eps_value, loss_type = _extract_eps_and_loss_type(summary.get("approach", ""))
+        if eps_value is None or loss_type is None:
+            continue
+
+        rows_by_eps.setdefault(eps_value, {})
+        if loss_type in rows_by_eps[eps_value]:
+            # Keep the first one in sorted order to make output deterministic.
+            continue
+
+        rows_by_eps[eps_value][loss_type] = {
+            "asr": float(summary.get("attack_success_rate", float("nan"))),
+            "spearman": float(summary.get("mean_spearman_adv_vs_clean_saliency", float("nan"))),
+        }
+
+    if not rows_by_eps:
+        raise ValueError(
+            "No evaluation_summary.json found with parseable epsilon in approach"
+        )
+
+    for eps_value in sorted(rows_by_eps.keys(), key=float):
+        pair = rows_by_eps[eps_value]
+        margin = pair.get("margin")
+        cross_entropy = pair.get("cross_entropy")
+        if margin is None or cross_entropy is None:
+            continue
+
+        margin_asr = _format_asr_percent(margin["asr"])
+        margin_spearman = _format_spearman(margin["spearman"])
+        ce_asr = _format_asr_percent(cross_entropy["asr"])
+        ce_spearman = _format_spearman(cross_entropy["spearman"])
+
+        margin_asr_val = float(margin_asr)
+        ce_asr_val = float(ce_asr)
+        margin_spearman_val = float(margin_spearman)
+        ce_spearman_val = float(ce_spearman)
+
+        margin_asr_txt = _latex_bold(margin_asr, margin_asr_val >= ce_asr_val)
+        ce_asr_txt = _latex_bold(ce_asr, ce_asr_val >= margin_asr_val)
+        margin_spearman_txt = _latex_bold(
+            margin_spearman, margin_spearman_val <= ce_spearman_val
+        )
+        ce_spearman_txt = _latex_bold(ce_spearman, ce_spearman_val <= margin_spearman_val)
+
+        print(
+            f"& {eps_value} & {margin_asr_txt} & {margin_spearman_txt} "
+            f"& {ce_asr_txt} & {ce_spearman_txt} \\\\"
+        )
 
 
 def _rankdata_average_ties(values):
@@ -108,6 +226,13 @@ def _compute_spearman_for_sample(result):
 
 def main():
     args = parse_args()
+
+    if args.report_dir and args.print_latex_lines:
+        _print_latex_rows_from_report_dir(args.report_dir)
+        return
+
+    if not args.report_path:
+        raise ValueError("Please provide --report-path for single evaluation")
 
     report_path = Path(args.report_path)
     if not report_path.exists():
