@@ -54,7 +54,7 @@ export CUDA_VISIBLE_DEVICES=$BEST_GPU
 # CHAY CODE: SO SANH 2 FITNESS LOSS
 # =========================================================
 OUTPUT_ROOT="compare_loss_50"
-MODEL_NAMES="vgg16 resnet50 densenet121 vit_b_32"
+MODEL_NAMES="resnet50 densenet121 vit_b_32"
 NUM_SAMPLE=50
 EPSILONS="5 10 20 50"
 
@@ -70,7 +70,6 @@ for MODEL_NAME in $MODEL_NAMES; do
                     --eps "$EPS" \
                     --fitness-function "$FITNESS" \
                     --output-root "$OUTPUT_ROOT" \
-                    --algorithm "nsgaii"
             done
         done
     done
