@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import argparse
+import hashlib
 import json
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -16,6 +18,11 @@ class ApproachCurves:
     label: str
     model: str
     approach: str
+    eps: str
+    strategy: str
+    fitness: str
+    algorithm: str
+    combo_key: str
     source_root: str
     num_ok: int
     num_total: int
@@ -56,7 +63,65 @@ def parse_args():
         default=["dashboard", "iteration", "sparse_attack"],
         help="W&B tags",
     )
+    parser.add_argument(
+        "--watch",
+        action="store_true",
+        help="Continuously refresh dashboard by rescanning input roots",
+    )
+    parser.add_argument(
+        "--interval",
+        type=int,
+        default=120,
+        help="Refresh interval in seconds when --watch is enabled",
+    )
     return parser.parse_args()
+
+
+def parse_approach_tag(tag: str) -> Dict[str, str]:
+    parsed: Dict[str, str] = {}
+    for part in tag.split("__"):
+        if "-" not in part:
+            continue
+        key, value = part.split("-", 1)
+        parsed[key] = value
+    return parsed
+
+
+def normalize_fitness(value: Optional[str]) -> str:
+    if not value:
+        return "margin_saliency"
+    value = str(value).strip().lower()
+    if value in {"margin", "margin_loss", "margin_saliency"}:
+        return "margin_saliency"
+    if value in {"cross_entropy_saliency", "negative_cross_entropy_saliency"}:
+        return "cross_entropy_saliency"
+    return value
+
+
+def normalize_algorithm(value: Optional[str]) -> str:
+    if not value:
+        return "weighted_sum_ga"
+    value = str(value).strip().lower()
+    if value in {"weighted_sum_ga", "weighted_sum", "ga", "default"}:
+        return "weighted_sum_ga"
+    if value in {"nsgaii", "nsga2", "nsga_ii"}:
+        return "nsgaii"
+    return value
+
+
+def fitness_display_name(value: str) -> str:
+    if value == "margin_saliency":
+        return "marginloss"
+    if value == "cross_entropy_saliency":
+        return "crossentropy"
+    return value
+
+
+def _eps_sort_key(eps: str):
+    try:
+        return (0, float(eps))
+    except (TypeError, ValueError):
+        return (1, str(eps))
 
 
 def _load_json(path: Path):
@@ -73,7 +138,6 @@ def _resolve_output_dir(item: dict, approach_dir: Path) -> Optional[Path]:
     if candidate.is_absolute():
         return candidate
 
-    # output_dir is usually rooted at <root>/<model>/<approach>/...
     root_dir = approach_dir.parent.parent
     return root_dir / candidate
 
@@ -241,14 +305,23 @@ def _collect_from_approach(model_name: str, source_root: Path, approach_dir: Pat
     n_iters = max(len(margin_mean), len(saliency_mean))
     asr_cumulative, success_count = _asr_curve(first_success_iters, n_iters)
 
-    root_name = source_root.name
-    approach_label = f"{root_name}/{approach_dir.name}"
+    parsed = parse_approach_tag(approach_dir.name)
+    eps = parsed.get("eps", "unknown")
+    strategy = parsed.get("strategy", "unknown")
+    fitness = normalize_fitness(parsed.get("fit"))
+    algorithm = normalize_algorithm(parsed.get("algo"))
+    combo_key = f"{algorithm}+{strategy}+{fitness_display_name(fitness)}"
 
     return ApproachCurves(
-        label=approach_label,
+        label=f"{combo_key}@{source_root.name}",
         model=model_name,
         approach=approach_dir.name,
-        source_root=root_name,
+        eps=eps,
+        strategy=strategy,
+        fitness=fitness,
+        algorithm=algorithm,
+        combo_key=combo_key,
+        source_root=source_root.name,
         num_ok=len(ok_items),
         num_total=len(report.get("results", [])),
         margin_mean=margin_mean,
@@ -259,8 +332,8 @@ def _collect_from_approach(model_name: str, source_root: Path, approach_dir: Pat
     )
 
 
-def collect_all_models(input_roots: List[Path]) -> Dict[str, List[ApproachCurves]]:
-    model_to_curves: Dict[str, List[ApproachCurves]] = {}
+def collect_all_models(input_roots: List[Path]) -> Dict[str, Dict[str, List[ApproachCurves]]]:
+    model_eps_to_curves: Dict[str, Dict[str, List[ApproachCurves]]] = {}
 
     for root in input_roots:
         for model_dir in sorted([path for path in root.iterdir() if path.is_dir()]):
@@ -269,9 +342,10 @@ def collect_all_models(input_roots: List[Path]) -> Dict[str, List[ApproachCurves
                 curves = _collect_from_approach(model_name, root, approach_dir)
                 if curves is None:
                     continue
-                model_to_curves.setdefault(model_name, []).append(curves)
+                model_eps_to_curves.setdefault(model_name, {})
+                model_eps_to_curves[model_name].setdefault(curves.eps, []).append(curves)
 
-    return model_to_curves
+    return model_eps_to_curves
 
 
 def _pad_to(values: List[float], size: int) -> List[float]:
@@ -280,19 +354,77 @@ def _pad_to(values: List[float], size: int) -> List[float]:
     return values + [float("nan")] * (size - len(values))
 
 
+def _merge_curves_by_combo(approaches: List[ApproachCurves]) -> List[ApproachCurves]:
+    grouped: Dict[str, List[ApproachCurves]] = {}
+    for item in approaches:
+        grouped.setdefault(item.combo_key, []).append(item)
+
+    merged: List[ApproachCurves] = []
+    for combo_key, items in grouped.items():
+        margin_mean = _mean_curve([it.margin_mean for it in items])
+        saliency_mean = _mean_curve([it.saliency_mean for it in items])
+        max_len = max(len(margin_mean), len(saliency_mean)) if (margin_mean or saliency_mean) else 0
+
+        asr_values = []
+        success_values = []
+        for idx in range(max_len):
+            asr_i = [it.asr_cumulative[idx] for it in items if idx < len(it.asr_cumulative)]
+            success_i = [it.success_count[idx] for it in items if idx < len(it.success_count)]
+            asr_values.append(float(sum(asr_i) / len(asr_i)) if asr_i else float("nan"))
+            success_values.append(int(round(sum(success_i) / len(success_i))) if success_i else 0)
+
+        num_ok = sum(it.num_ok for it in items)
+        num_total = sum(it.num_total for it in items)
+        num_curve_samples = sum(it.num_curve_samples for it in items)
+        source_root = "+".join(sorted(set(it.source_root for it in items)))
+
+        first = items[0]
+        merged.append(
+            ApproachCurves(
+                label=combo_key,
+                model=first.model,
+                approach=first.approach,
+                eps=first.eps,
+                strategy=first.strategy,
+                fitness=first.fitness,
+                algorithm=first.algorithm,
+                combo_key=combo_key,
+                source_root=source_root,
+                num_ok=num_ok,
+                num_total=num_total,
+                margin_mean=margin_mean,
+                saliency_mean=saliency_mean,
+                asr_cumulative=asr_values,
+                success_count=success_values,
+                num_curve_samples=num_curve_samples,
+            )
+        )
+
+    return sorted(merged, key=lambda x: x.combo_key)
+
+
 def log_model_dashboard(
     args,
     model_name: str,
+    eps: str,
     approaches: List[ApproachCurves],
+    scan_index: Optional[int] = None,
 ):
+    approaches = _merge_curves_by_combo(approaches)
+    run_id_src = f"{args.project}:{args.group}:{model_name}:eps-{eps}:dashboard".encode("utf-8")
+    run_id = hashlib.md5(run_id_src).hexdigest()
+
     run = wandb.init(
         project=args.project,
         entity=args.entity,
         group=args.group,
-        name=f"dashboard__{model_name}",
+        name=f"dashboard__{model_name}__eps-{eps}",
+        id=run_id,
+        resume="allow",
         job_type="dashboard",
         config={
             "model": model_name,
+            "eps": eps,
             "input_roots": [str(path) for path in args.input_roots],
             "num_approaches": len(approaches),
         },
@@ -303,6 +435,10 @@ def log_model_dashboard(
 
     columns = [
         "approach_label",
+        "algorithm",
+        "strategy",
+        "fitness",
+        "eps",
         "source_root",
         "approach",
         "num_ok",
@@ -316,6 +452,10 @@ def log_model_dashboard(
     for item in approaches:
         data.append([
             item.label,
+            item.algorithm,
+            item.strategy,
+            item.fitness,
+            item.eps,
             item.source_root,
             item.approach,
             item.num_ok,
@@ -327,6 +467,9 @@ def log_model_dashboard(
         ])
 
     run.log({"summary/table": wandb.Table(columns=columns, data=data)})
+
+    if scan_index is not None:
+        run.summary["dashboard/scan_index"] = scan_index
 
     max_len = max(
         max((len(a.asr_cumulative) for a in approaches), default=0),
@@ -348,21 +491,21 @@ def log_model_dashboard(
                     xs=xs,
                     ys=asr_ys,
                     keys=keys,
-                    title=f"{model_name} - ASR by Iteration",
+                    title=f"{model_name} (eps={eps}) - ASR by Iteration",
                     xname="Iteration",
                 ),
                 "chart/margin_mean_by_iteration": wandb.plot.line_series(
                     xs=xs,
                     ys=margin_ys,
                     keys=keys,
-                    title=f"{model_name} - Mean Margin Loss by Iteration",
+                    title=f"{model_name} (eps={eps}) - Mean Margin Loss by Iteration",
                     xname="Iteration",
                 ),
                 "chart/saliency_mean_by_iteration": wandb.plot.line_series(
                     xs=xs,
                     ys=saliency_ys,
                     keys=keys,
-                    title=f"{model_name} - Mean Saliency Loss by Iteration",
+                    title=f"{model_name} (eps={eps}) - Mean Saliency Loss by Iteration",
                     xname="Iteration",
                 ),
             }
@@ -389,18 +532,34 @@ def main():
         if not root.exists() or not root.is_dir():
             raise FileNotFoundError(f"input root not found: {root}")
 
-    model_to_curves = collect_all_models(args.input_roots)
-    if not model_to_curves:
-        raise ValueError("No valid approach data found in given input roots")
+    if args.watch and args.interval <= 0:
+        raise ValueError("--interval must be > 0 when --watch is enabled")
 
-    print(f"[INFO] models discovered: {', '.join(sorted(model_to_curves.keys()))}")
+    scan_index = 0
+    while True:
+        model_to_curves = collect_all_models(args.input_roots)
+        if not model_to_curves:
+            raise ValueError("No valid approach data found in given input roots")
 
-    for model_name in sorted(model_to_curves.keys()):
-        approaches = model_to_curves[model_name]
-        print(f"[INFO] logging dashboard for model={model_name} approaches={len(approaches)}")
-        log_model_dashboard(args, model_name, approaches)
+        print(f"[INFO] models discovered: {', '.join(sorted(model_to_curves.keys()))}")
 
-    print("[DONE] W&B dashboard logging completed")
+        for model_name in sorted(model_to_curves.keys()):
+            eps_map = model_to_curves[model_name]
+            for eps in sorted(eps_map.keys(), key=_eps_sort_key):
+                approaches = eps_map[eps]
+                print(
+                    f"[INFO] logging dashboard for model={model_name} eps={eps} "
+                    f"approaches={len(approaches)}"
+                )
+                log_model_dashboard(args, model_name, eps, approaches, scan_index=scan_index)
+
+        if not args.watch:
+            print("[DONE] W&B dashboard logging completed")
+            break
+
+        scan_index += 1
+        print(f"[INFO] waiting {args.interval}s before next refresh")
+        time.sleep(args.interval)
 
 
 if __name__ == "__main__":
