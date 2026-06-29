@@ -58,8 +58,6 @@ MODEL_NAMES="vgg16 resnet50 densenet121 vit_b_32"
 NUM_SAMPLE=50
 EPSILONS="5 10 20 50"
 
-for EPS in $EPSILONS; do
-
 for MODEL_NAME in $MODEL_NAMES; do
     for STRATEGY in uniform saliency_guided; do
         for EPS in $EPSILONS; do
