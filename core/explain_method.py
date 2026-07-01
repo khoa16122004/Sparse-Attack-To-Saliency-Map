@@ -47,7 +47,7 @@ def simple_gradient_map(model, input_tensor, normalize, target_class=None):
     H, W = saliency.shape[-2:]
 
     # normalize per image
-    saliency = (H*W) * saliency / (saliency.view(saliency.size(0), -1).sum(dim=1).view(-1,1,1) + 1e-8)
+    # saliency = (H*W) * saliency / (saliency.view(saliency.size(0), -1).sum(dim=1).view(-1,1,1) + 1e-8)
 
     return saliency.detach(), output_logits
 
@@ -75,7 +75,7 @@ def input_gradient_map(model, input_tensor, normalize, target_class=None):
     H, W = saliency.shape[-2:]
 
     # normalize per image
-    saliency = (H*W) * saliency / (saliency.view(saliency.size(0), -1).sum(dim=1).view(-1,1,1) + 1e-8)
+    # saliency = (H*W) * saliency / (saliency.view(saliency.size(0), -1).sum(dim=1).view(-1,1,1) + 1e-8)
 
     return saliency.detach(), output_logits
 
@@ -126,7 +126,7 @@ def integrated_gradients(model, input_tensor, normalize, target_class=None, step
 
     H, W = saliency.shape[-2:]
 
-    saliency = (H*W) * saliency / (saliency.view(B,-1).sum(dim=1).view(-1,1,1) + 1e-8)
+    # saliency = (H*W) * saliency / (saliency.view(B,-1).sum(dim=1).view(-1,1,1) + 1e-8)
 
     return saliency.detach(), output_logits
 
