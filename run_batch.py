@@ -220,14 +220,10 @@ def _fmt_num(value):
 def build_approach_tag(args):
     parts = [
         f"strategy-{args.operator_strategy}",
-        f"pc-{_fmt_num(args.pc)}",
-        f"pm-{_fmt_num(args.pm)}",
         f"wm-{_fmt_num(args.w_margin)}",
         f"ws-{_fmt_num(args.w_saliency)}",
         f"eps-{_fmt_num(args.eps)}",
         f"ps-{_fmt_num(args.p_size)}",
-        f"pop-{_fmt_num(args.pop_size)}",
-        f"iter-{_fmt_num(args.iterations)}",
         f"zp-{_fmt_num(args.zero_probability)}",
         f"temp-{_fmt_num(args.saliency_temperature)}",
         f"exp-{args.explain_method}",
@@ -357,8 +353,8 @@ def main():
     if args.selection_file is None:
         if not args.model_name:
             raise ValueError("Provide --model-name or --selection-file")
-        # selection_file = Path("model_evaluation_results") / f"{args.model_name}_selection.json"
-        selection_file = Path("model_evaluation_results") / f"{args.model_name}_selection_random50.json"
+        selection_file = Path("model_evaluation_results") / f"{args.model_name}_selection.json"
+        # selection_file = Path("model_evaluation_results") / f"{args.model_name}_selection_random50.json"
     else:
         selection_file = Path(args.selection_file)
 

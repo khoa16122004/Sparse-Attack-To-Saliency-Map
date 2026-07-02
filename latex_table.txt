@@ -1,0 +1,73 @@
+\begin{table*}[t]
+\centering
+\caption{GA, $\lambda=0.5, |P|=50, N=200, p_c=0.4, p_m=0.1$}
+\label{tab:placeholder}
+
+\begin{tabular}{ccc|cc|cc}
+\toprule
+\multirow{2}{*}{Model} &
+\multirow{2}{*}{$\epsilon$} &
+\multirow{2}{*}{Initialization} &
+\multicolumn{2}{c|}{\textbf{Margin Loss}} &
+\multicolumn{2}{c}{\textbf{Negative-Cross-Entropy}} \\
+\cmidrule(lr){4-5}
+\cmidrule(lr){6-7}
+&
+&
+&
+ASR$\uparrow$ &
+SRO$\downarrow$ &
+ASR$\uparrow$ &
+SRO$\downarrow$ \\
+\midrule
+
+\multirow{8}{*}{}
+
+& \multirow{2}{*}{}
+& 
+&  & 
+&  &  \\
+
+&
+& 
+&  & 
+&  &  \\
+\cmidrule(lr){2-7}
+
+& \multirow{2}{*}{}
+& 
+&  & 
+&  &  \\
+
+&
+& 
+&  & 
+&  &  \\
+
+\cmidrule(lr){2-7}
+
+& \multirow{2}{*}{}
+& 
+&  & 
+&  &  \\
+
+&
+& 
+&  & 
+&  &  \\
+
+\cmidrule(lr){2-7}
+
+& \multirow{2}{*}{}
+& 
+&  & 
+&  &  \\
+
+&
+& 
+&  & 
+&  &  \\
+
+\bottomrule
+\end{tabular}
+\end{table*}
