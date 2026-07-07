@@ -23,8 +23,6 @@ python run_sample.py \
 ```
 
 
-### 3) Output files
-
 The command above creates these main files:
 
 - `outputs/sample_vgg16/clean.png`: clean image after resize/crop.
