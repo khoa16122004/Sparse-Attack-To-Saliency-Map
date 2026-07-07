@@ -10,6 +10,8 @@ python run_sample.py \
 	--model vgg16 \
 	--algorithm weighted_sum_ga \
 	--fitness-function margin_saliency \
+	--w-margin 0.5 \  
+	--w-saliency 0.5 \
 	--operator-strategy saliency_guided \
 	--eps 50 \
 	--iterations 50 \
@@ -21,6 +23,7 @@ python run_sample.py \
 	--save-history-chart \
 	--history-chart-output outputs/sample_vgg16/history.png
 ```
+
 
 
 The command above creates these main files:
