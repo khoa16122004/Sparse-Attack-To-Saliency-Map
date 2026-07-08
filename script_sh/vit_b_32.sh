@@ -62,8 +62,8 @@ EPSILONS="100 50 20"
 # Example:
 #   W_MARGIN=0.7 W_SALIENCY=0.3 sbatch vit_b_32.sh
 #   sbatch vit_b_32.sh 0.7 0.3
-W_MARGIN="${W_MARGIN:-1.0}"
-W_SALIENCY="${W_SALIENCY:-0.0}"
+W_MARGIN="${W_MARGIN:-0.0}"
+W_SALIENCY="${W_SALIENCY:-1.0}"
 if [ $# -ge 1 ]; then
     W_MARGIN="$1"
 fi
