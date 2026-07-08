@@ -24,9 +24,13 @@ class RunStats:
     explain_method: str
     algorithm: str
     loss_type: str
+    w_m: Optional[float]
+    w_s: Optional[float]
     asr: float
     spearman: float
     spearman_failed_samples: int
+    num_samples_total: int
+    num_samples_ok: int
     asr_curve: List[float]
     saliency_curve: List[float]
 
@@ -210,6 +214,33 @@ def parse_args() -> argparse.Namespace:
         help="Keep only this explain method. Use 'all' to keep all.",
     )
     parser.add_argument(
+        "--w-m",
+        type=str,
+        default="all",
+        help="Filter by w_m (margin weight). Use numeric value or 'all'.",
+    )
+    parser.add_argument(
+        "--w-c",
+        type=str,
+        default="all",
+        help="[Backward-compatible alias] Same as --w-s.",
+    )
+    parser.add_argument(
+        "--w-s",
+        type=str,
+        default="all",
+        help="Filter by ws (saliency weight). Use numeric value or 'all'.",
+    )
+    parser.add_argument(
+        "--weight-pairs",
+        type=str,
+        default=None,
+        help=(
+            "Comma-separated wm:ws pairs, e.g. '0.5:0.5,1:0'. "
+            "When set, only runs that match at least one pair are kept."
+        ),
+    )
+    parser.add_argument(
         "--print-latex",
         action="store_true",
         help="Print compact LaTeX rows for the table in latex_table.txt",
@@ -243,6 +274,8 @@ def _parse_approach(approach: str) -> Dict[str, object]:
         "explain_method": "unknown",
         "algorithm": "weighted_sum_ga",
         "loss_type": "margin_loss",
+        "w_m": None,
+        "w_s": None,
     }
     if not approach:
         return fields
@@ -258,10 +291,71 @@ def _parse_approach(approach: str) -> Dict[str, object]:
             fields["explain_method"] = token[len("exp-") :]
         elif token.startswith("algo-"):
             fields["algorithm"] = _normalize_algorithm(token[len("algo-") :])
+        elif token.startswith("wm-"):
+            fields["w_m"] = _safe_float(token[len("wm-") :], default=float("nan"))
+        elif token.startswith("w_m-"):
+            fields["w_m"] = _safe_float(token[len("w_m-") :], default=float("nan"))
+        elif token.startswith("ws-"):
+            fields["w_s"] = _safe_float(token[len("ws-") :], default=float("nan"))
+        elif token.startswith("w_s-"):
+            fields["w_s"] = _safe_float(token[len("w_s-") :], default=float("nan"))
+        elif token.startswith("wc-"):
+            fields["w_s"] = _safe_float(token[len("wc-") :], default=float("nan"))
+        elif token.startswith("w_c-"):
+            fields["w_s"] = _safe_float(token[len("w_c-") :], default=float("nan"))
         elif token.startswith("fit-negative_cross_entropy_saliency"):
             fields["loss_type"] = "negative_cross_entropy_saliency"
 
+    if fields["w_m"] is not None and math.isnan(float(fields["w_m"])):
+        fields["w_m"] = None
+    if fields["w_s"] is not None and math.isnan(float(fields["w_s"])):
+        fields["w_s"] = None
+
     return fields
+
+
+def _parse_optional_float_arg(raw: str, arg_name: str) -> Optional[float]:
+    text = str(raw or "").strip().lower()
+    if text in {"", "all"}:
+        return None
+    try:
+        return float(text)
+    except ValueError as exc:
+        raise ValueError(f"Invalid value for {arg_name}: {raw}. Use a number or 'all'.") from exc
+
+
+def _parse_weight_pairs(raw: Optional[str]) -> Optional[List[Tuple[float, float]]]:
+    if raw is None:
+        return None
+
+    text = str(raw).strip()
+    if not text:
+        return None
+
+    pairs: List[Tuple[float, float]] = []
+    for part in text.split(","):
+        item = part.strip()
+        if not item:
+            continue
+        if ":" not in item:
+            raise ValueError(
+                f"Invalid weight pair '{item}'. Expected format wm:ws, e.g. 0.5:0.5"
+            )
+        left, right = item.split(":", 1)
+        try:
+            pairs.append((float(left.strip()), float(right.strip())))
+        except ValueError as exc:
+            raise ValueError(
+                f"Invalid weight pair '{item}'. Both wm and ws must be numbers."
+            ) from exc
+
+    return pairs or None
+
+
+def _is_close(a: Optional[float], b: float, tol: float = 1e-9) -> bool:
+    if a is None:
+        return False
+    return abs(float(a) - float(b)) <= tol
 
 
 def _curve_mean_with_last_padding(histories: List[List[float]]) -> List[float]:
@@ -311,10 +405,13 @@ def _extract_run_stats(run_dir: Path, model_name: str) -> Optional[RunStats]:
     explain_method = str(meta["explain_method"])
     algorithm = str(meta["algorithm"])
     loss_type = str(meta["loss_type"])
+    w_m = meta["w_m"]
+    w_s = meta["w_s"]
     if eps is None:
         return None
 
-    results = [r for r in report.get("results", []) if r.get("status") == "ok"]
+    all_results = report.get("results", [])
+    results = [r for r in all_results if r.get("status") == "ok"]
     if not results:
         return None
 
@@ -382,9 +479,13 @@ def _extract_run_stats(run_dir: Path, model_name: str) -> Optional[RunStats]:
         explain_method=explain_method,
         algorithm=algorithm,
         loss_type=loss_type,
+        w_m=w_m,
+        w_s=w_s,
         asr=asr,
         spearman=spearman,
         spearman_failed_samples=spearman_failed_samples,
+        num_samples_total=len(all_results),
+        num_samples_ok=len(results),
         asr_curve=asr_curve,
         saliency_curve=saliency_curve,
     )
@@ -802,6 +903,22 @@ def main() -> None:
     if args.explain_method.lower() != "all":
         filtered = [r for r in filtered if r.explain_method == args.explain_method]
 
+    target_w_m = _parse_optional_float_arg(args.w_m, "--w-m")
+    raw_w_s = args.w_s if str(args.w_s).strip().lower() != "all" else args.w_c
+    target_w_s = _parse_optional_float_arg(raw_w_s, "--w-s")
+    target_pairs = _parse_weight_pairs(args.weight_pairs)
+
+    if target_w_m is not None:
+        filtered = [r for r in filtered if _is_close(r.w_m, target_w_m)]
+    if target_w_s is not None:
+        filtered = [r for r in filtered if _is_close(r.w_s, target_w_s)]
+    if target_pairs:
+        filtered = [
+            r
+            for r in filtered
+            if any(_is_close(r.w_m, wm) and _is_close(r.w_s, ws) for wm, ws in target_pairs)
+        ]
+
     if not filtered:
         raise ValueError("No run left after filtering")
 
@@ -832,6 +949,9 @@ def main() -> None:
     print(f"Overall compare_init pairs: {overall_compare_init['num_pairs']}")
     total_spearman_failed = sum(r.spearman_failed_samples for r in filtered)
     print(f"Spearman failed samples: {total_spearman_failed}")
+    print("Samples per folder (ok/total):")
+    for run in sorted(filtered, key=lambda r: str(r.run_dir)):
+        print(f"  - {run.run_dir}: {run.num_samples_ok}/{run.num_samples_total}")
     print(f"Output dir: {output_dir}")
 
     if args.print_latex:
