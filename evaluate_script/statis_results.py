@@ -437,6 +437,7 @@ def _extract_run_stats(
     else:
         fallback_results = _load_results_from_run_folder(run_dir)
         if not fallback_results:
+            print("[SKIP] No summary.json files found in run folder:", run_dir)
             return None
         report = {
             "model": model_name,
