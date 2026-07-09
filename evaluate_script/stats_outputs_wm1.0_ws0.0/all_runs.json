@@ -1,6 +1,6 @@
 [
   {
-    "run_dir": "server_run/resnet18/strategy-saliency_guided__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient",
+    "run_dir": "server_run\\resnet18\\strategy-saliency_guided__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient",
     "model": "resnet18",
     "strategy": "saliency_guided",
     "eps": 100,
@@ -420,7 +420,7 @@
     ]
   },
   {
-    "run_dir": "server_run/resnet18/strategy-saliency_guided__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
+    "run_dir": "server_run\\resnet18\\strategy-saliency_guided__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
     "model": "resnet18",
     "strategy": "saliency_guided",
     "eps": 100,
@@ -840,7 +840,7 @@
     ]
   },
   {
-    "run_dir": "server_run/resnet18/strategy-saliency_guided__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient",
+    "run_dir": "server_run\\resnet18\\strategy-saliency_guided__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient",
     "model": "resnet18",
     "strategy": "saliency_guided",
     "eps": 20,
@@ -1260,7 +1260,7 @@
     ]
   },
   {
-    "run_dir": "server_run/resnet18/strategy-saliency_guided__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
+    "run_dir": "server_run\\resnet18\\strategy-saliency_guided__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
     "model": "resnet18",
     "strategy": "saliency_guided",
     "eps": 20,
@@ -1680,7 +1680,7 @@
     ]
   },
   {
-    "run_dir": "server_run/resnet18/strategy-saliency_guided__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient",
+    "run_dir": "server_run\\resnet18\\strategy-saliency_guided__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient",
     "model": "resnet18",
     "strategy": "saliency_guided",
     "eps": 50,
@@ -2100,7 +2100,7 @@
     ]
   },
   {
-    "run_dir": "server_run/resnet18/strategy-saliency_guided__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
+    "run_dir": "server_run\\resnet18\\strategy-saliency_guided__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
     "model": "resnet18",
     "strategy": "saliency_guided",
     "eps": 50,
@@ -2520,7 +2520,7 @@
     ]
   },
   {
-    "run_dir": "server_run/resnet18/strategy-uniform__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient",
+    "run_dir": "server_run\\resnet18\\strategy-uniform__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient",
     "model": "resnet18",
     "strategy": "uniform",
     "eps": 100,
@@ -2940,7 +2940,7 @@
     ]
   },
   {
-    "run_dir": "server_run/resnet18/strategy-uniform__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
+    "run_dir": "server_run\\resnet18\\strategy-uniform__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
     "model": "resnet18",
     "strategy": "uniform",
     "eps": 100,
@@ -3360,7 +3360,7 @@
     ]
   },
   {
-    "run_dir": "server_run/resnet18/strategy-uniform__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient",
+    "run_dir": "server_run\\resnet18\\strategy-uniform__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient",
     "model": "resnet18",
     "strategy": "uniform",
     "eps": 20,
@@ -3780,7 +3780,7 @@
     ]
   },
   {
-    "run_dir": "server_run/resnet18/strategy-uniform__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
+    "run_dir": "server_run\\resnet18\\strategy-uniform__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
     "model": "resnet18",
     "strategy": "uniform",
     "eps": 20,
@@ -4200,7 +4200,7 @@
     ]
   },
   {
-    "run_dir": "server_run/resnet18/strategy-uniform__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient",
+    "run_dir": "server_run\\resnet18\\strategy-uniform__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient",
     "model": "resnet18",
     "strategy": "uniform",
     "eps": 50,
@@ -4620,7 +4620,7 @@
     ]
   },
   {
-    "run_dir": "server_run/resnet18/strategy-uniform__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
+    "run_dir": "server_run\\resnet18\\strategy-uniform__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
     "model": "resnet18",
     "strategy": "uniform",
     "eps": 50,
@@ -5040,7 +5040,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vgg16/strategy-saliency_guided__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient",
+    "run_dir": "server_run\\vgg16\\strategy-saliency_guided__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient",
     "model": "vgg16",
     "strategy": "saliency_guided",
     "eps": 100,
@@ -5460,7 +5460,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vgg16/strategy-saliency_guided__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
+    "run_dir": "server_run\\vgg16\\strategy-saliency_guided__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
     "model": "vgg16",
     "strategy": "saliency_guided",
     "eps": 100,
@@ -5880,7 +5880,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vgg16/strategy-saliency_guided__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient",
+    "run_dir": "server_run\\vgg16\\strategy-saliency_guided__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient",
     "model": "vgg16",
     "strategy": "saliency_guided",
     "eps": 20,
@@ -6300,7 +6300,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vgg16/strategy-saliency_guided__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
+    "run_dir": "server_run\\vgg16\\strategy-saliency_guided__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
     "model": "vgg16",
     "strategy": "saliency_guided",
     "eps": 20,
@@ -6720,7 +6720,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vgg16/strategy-saliency_guided__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient",
+    "run_dir": "server_run\\vgg16\\strategy-saliency_guided__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient",
     "model": "vgg16",
     "strategy": "saliency_guided",
     "eps": 50,
@@ -7140,7 +7140,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vgg16/strategy-saliency_guided__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
+    "run_dir": "server_run\\vgg16\\strategy-saliency_guided__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
     "model": "vgg16",
     "strategy": "saliency_guided",
     "eps": 50,
@@ -7560,7 +7560,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vgg16/strategy-uniform__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient",
+    "run_dir": "server_run\\vgg16\\strategy-uniform__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient",
     "model": "vgg16",
     "strategy": "uniform",
     "eps": 100,
@@ -7980,7 +7980,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vgg16/strategy-uniform__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
+    "run_dir": "server_run\\vgg16\\strategy-uniform__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
     "model": "vgg16",
     "strategy": "uniform",
     "eps": 100,
@@ -8400,7 +8400,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vgg16/strategy-uniform__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient",
+    "run_dir": "server_run\\vgg16\\strategy-uniform__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient",
     "model": "vgg16",
     "strategy": "uniform",
     "eps": 20,
@@ -8820,7 +8820,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vgg16/strategy-uniform__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
+    "run_dir": "server_run\\vgg16\\strategy-uniform__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
     "model": "vgg16",
     "strategy": "uniform",
     "eps": 20,
@@ -9240,7 +9240,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vgg16/strategy-uniform__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient",
+    "run_dir": "server_run\\vgg16\\strategy-uniform__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient",
     "model": "vgg16",
     "strategy": "uniform",
     "eps": 50,
@@ -9660,7 +9660,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vgg16/strategy-uniform__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
+    "run_dir": "server_run\\vgg16\\strategy-uniform__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
     "model": "vgg16",
     "strategy": "uniform",
     "eps": 50,
@@ -10080,7 +10080,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vit_b_32/strategy-saliency_guided__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient",
+    "run_dir": "server_run\\vit_b_32\\strategy-saliency_guided__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient",
     "model": "vit_b_32",
     "strategy": "saliency_guided",
     "eps": 100,
@@ -10500,7 +10500,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vit_b_32/strategy-saliency_guided__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
+    "run_dir": "server_run\\vit_b_32\\strategy-saliency_guided__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
     "model": "vit_b_32",
     "strategy": "saliency_guided",
     "eps": 100,
@@ -10920,7 +10920,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vit_b_32/strategy-saliency_guided__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient",
+    "run_dir": "server_run\\vit_b_32\\strategy-saliency_guided__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient",
     "model": "vit_b_32",
     "strategy": "saliency_guided",
     "eps": 20,
@@ -11340,7 +11340,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vit_b_32/strategy-saliency_guided__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
+    "run_dir": "server_run\\vit_b_32\\strategy-saliency_guided__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
     "model": "vit_b_32",
     "strategy": "saliency_guided",
     "eps": 20,
@@ -11760,7 +11760,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vit_b_32/strategy-saliency_guided__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient",
+    "run_dir": "server_run\\vit_b_32\\strategy-saliency_guided__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient",
     "model": "vit_b_32",
     "strategy": "saliency_guided",
     "eps": 50,
@@ -12180,7 +12180,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vit_b_32/strategy-saliency_guided__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
+    "run_dir": "server_run\\vit_b_32\\strategy-saliency_guided__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
     "model": "vit_b_32",
     "strategy": "saliency_guided",
     "eps": 50,
@@ -12600,7 +12600,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vit_b_32/strategy-uniform__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient",
+    "run_dir": "server_run\\vit_b_32\\strategy-uniform__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient",
     "model": "vit_b_32",
     "strategy": "uniform",
     "eps": 100,
@@ -13020,7 +13020,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vit_b_32/strategy-uniform__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
+    "run_dir": "server_run\\vit_b_32\\strategy-uniform__wm-1__ws-0__eps-100__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
     "model": "vit_b_32",
     "strategy": "uniform",
     "eps": 100,
@@ -13440,7 +13440,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vit_b_32/strategy-uniform__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient",
+    "run_dir": "server_run\\vit_b_32\\strategy-uniform__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient",
     "model": "vit_b_32",
     "strategy": "uniform",
     "eps": 20,
@@ -13860,7 +13860,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vit_b_32/strategy-uniform__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
+    "run_dir": "server_run\\vit_b_32\\strategy-uniform__wm-1__ws-0__eps-20__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
     "model": "vit_b_32",
     "strategy": "uniform",
     "eps": 20,
@@ -14280,7 +14280,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vit_b_32/strategy-uniform__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient",
+    "run_dir": "server_run\\vit_b_32\\strategy-uniform__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient",
     "model": "vit_b_32",
     "strategy": "uniform",
     "eps": 50,
@@ -14700,7 +14700,7 @@
     ]
   },
   {
-    "run_dir": "server_run/vit_b_32/strategy-uniform__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
+    "run_dir": "server_run\\vit_b_32\\strategy-uniform__wm-1__ws-0__eps-50__ps-1__zp-0.3__temp-1__exp-simple_gradient__fit-negative_cross_entropy_saliency",
     "model": "vit_b_32",
     "strategy": "uniform",
     "eps": 50,

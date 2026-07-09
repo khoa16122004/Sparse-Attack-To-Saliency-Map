@@ -196,6 +196,15 @@ def parse_args() -> argparse.Namespace:
         help="Root folder that contains model folders and run folders",
     )
     parser.add_argument(
+        "--all-runs-json",
+        type=str,
+        default=None,
+        help=(
+            "Optional path to precomputed all_runs.json. "
+            "When provided, skip scanning root and reuse this file."
+        ),
+    )
+    parser.add_argument(
         "--output-dir",
         type=str,
         default="evaluate_script/stats_outputs",
@@ -248,7 +257,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--make-plots",
         action="store_true",
-        help="Generate PNG plots for ASR and saliency curves",
+        help="[Deprecated] Ignored in this script. Use evaluate_script/plot_from_all_runs.py for plots.",
     )
     return parser.parse_args()
 
@@ -779,6 +788,42 @@ def _save_json(path: Path, payload: object) -> None:
         json.dump(payload, f, indent=2, ensure_ascii=False)
 
 
+def _runstats_from_dict(payload: Dict[str, object]) -> RunStats:
+    return RunStats(
+        run_dir=Path(str(payload.get("run_dir", ""))),
+        model=str(payload.get("model", "")),
+        strategy=str(payload.get("strategy", "unknown")),
+        eps=int(payload.get("eps", 0)),
+        explain_method=str(payload.get("explain_method", "unknown")),
+        algorithm=str(payload.get("algorithm", "weighted_sum_ga")),
+        loss_type=str(payload.get("loss_type", "margin_loss")),
+        w_m=payload.get("w_m"),
+        w_s=payload.get("w_s"),
+        asr=float(payload.get("asr", 0.0)),
+        spearman=float(payload.get("spearman", float("nan"))),
+        spearman_failed_samples=int(payload.get("spearman_failed_samples", 0)),
+        num_samples_total=int(payload.get("num_samples_total", 0)),
+        num_samples_ok=int(payload.get("num_samples_ok", 0)),
+        asr_curve=[float(v) for v in payload.get("asr_curve", [])],
+        saliency_curve=[float(v) for v in payload.get("saliency_curve", [])],
+    )
+
+
+def _load_runs_from_json(path: Path) -> List[RunStats]:
+    with open(path, "r", encoding="utf-8") as f:
+        raw = json.load(f)
+
+    if not isinstance(raw, list):
+        raise ValueError(f"Invalid all_runs JSON format: expected list, got {type(raw).__name__}")
+
+    runs: List[RunStats] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        runs.append(_runstats_from_dict(item))
+    return runs
+
+
 def _plot_pair_curves_loss(loss_pairs: List[Dict[str, object]], output_dir: Path) -> None:
     try:
         import importlib
@@ -807,7 +852,7 @@ def _plot_pair_curves_loss(loss_pairs: List[Dict[str, object]], output_dir: Path
         x1 = list(range(1, len(margin_asr) + 1))
         x2 = list(range(1, len(ce_asr) + 1))
         axes[0].plot(x1, margin_asr, label="margin_loss", linewidth=2)
-        axes[0].plot(x2, ce_asr, label="negative_cross_entropy", linewidth=2)
+        axes[0].plot(x2, ce_asr, label="LogLikeLihood", linewidth=2)
         axes[0].set_xlabel("Iteration")
         axes[0].set_ylabel("ASR")
         axes[0].set_ylim(0.0, 1.0)
@@ -817,7 +862,7 @@ def _plot_pair_curves_loss(loss_pairs: List[Dict[str, object]], output_dir: Path
         x3 = list(range(1, len(margin_sal) + 1))
         x4 = list(range(1, len(ce_sal) + 1))
         axes[1].plot(x3, margin_sal, label="margin_loss", linewidth=2)
-        axes[1].plot(x4, ce_sal, label="negative_cross_entropy", linewidth=2)
+        axes[1].plot(x4, ce_sal, label="LogLikeLihood", linewidth=2)
         axes[1].set_xlabel("Iteration")
         axes[1].set_ylabel("Mean saliency loss")
         axes[1].grid(alpha=0.3)
@@ -902,7 +947,7 @@ def _plot_overall_compare_loss(overall: Dict[str, object], output_dir: Path) -> 
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 4.2))
     axes[0].plot(range(1, len(margin_asr) + 1), margin_asr, label="margin_loss", linewidth=2.2)
-    axes[0].plot(range(1, len(ce_asr) + 1), ce_asr, label="negative_cross_entropy", linewidth=2.2)
+    axes[0].plot(range(1, len(ce_asr) + 1), ce_asr, label="LogLikeLihood", linewidth=2.2)
     axes[0].set_xlabel("Iteration")
     axes[0].set_ylabel("ASR")
     axes[0].set_ylim(0.0, 1.0)
@@ -910,7 +955,7 @@ def _plot_overall_compare_loss(overall: Dict[str, object], output_dir: Path) -> 
     axes[0].legend()
 
     axes[1].plot(range(1, len(margin_sal) + 1), margin_sal, label="margin_loss", linewidth=2.2)
-    axes[1].plot(range(1, len(ce_sal) + 1), ce_sal, label="negative_cross_entropy", linewidth=2.2)
+    axes[1].plot(range(1, len(ce_sal) + 1), ce_sal, label="LogLikeLihood", linewidth=2.2)
     axes[1].set_xlabel("Iteration")
     axes[1].set_ylabel("Mean saliency loss")
     axes[1].grid(alpha=0.3)
@@ -973,7 +1018,7 @@ def _plot_grouped_fourway(grouped_items: List[Dict[str, object]], output_dir: Pa
 
     style = {
         "saliency_guided_negative_ce": {
-            "label": "Saliency Guided + Negative CE",
+            "label": "Saliency Guided + LogLikeLihood",
             "color": "tab:red",
         },
         "uniform_margin": {
@@ -985,7 +1030,7 @@ def _plot_grouped_fourway(grouped_items: List[Dict[str, object]], output_dir: Pa
             "color": "tab:green",
         },
         "uniform_negative_ce": {
-            "label": "Uniform + Log(Negative Loglikelihood)",
+            "label": "Uniform + LogLikeLihood",
             "color": "tab:orange",
         },
     }
@@ -1051,7 +1096,7 @@ def _plot_overall_grouped_fourway(overall: Dict[str, object], output_dir: Path) 
 
     style = {
         "saliency_guided_negative_ce": {
-            "label": "Saliency Guided + Negative CE",
+            "label": "Saliency Guided + LogLikeLihood",
             "color": "tab:red",
         },
         "uniform_margin": {
@@ -1063,7 +1108,7 @@ def _plot_overall_grouped_fourway(overall: Dict[str, object], output_dir: Path) 
             "color": "tab:green",
         },
         "uniform_negative_ce": {
-            "label": "Uniform + Log(Negative Loglikelihood)",
+            "label": "Uniform + LogLikeLihood",
             "color": "tab:orange",
         },
     }
@@ -1113,7 +1158,14 @@ def main() -> None:
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    all_runs = _load_all_runs(root_dir)
+    if args.all_runs_json:
+        all_runs_path = Path(args.all_runs_json)
+        if not all_runs_path.exists():
+            raise FileNotFoundError(f"all_runs JSON not found: {all_runs_path}")
+        all_runs = _load_runs_from_json(all_runs_path)
+    else:
+        all_runs = _load_all_runs(root_dir)
+
     if not all_runs:
         raise ValueError(f"No valid run found under: {root_dir}")
 
@@ -1162,12 +1214,10 @@ def main() -> None:
     _save_json(output_dir / "latex_rows.json", latex_rows)
 
     if args.make_plots:
-        _plot_pair_curves_loss(loss_pairs, output_dir)
-        _plot_pair_curves_init(init_pairs, output_dir)
-        _plot_overall_compare_loss(overall_compare_loss, output_dir)
-        _plot_overall_compare_init(overall_compare_init, output_dir)
-        _plot_grouped_fourway(grouped_fourway, output_dir)
-        _plot_overall_grouped_fourway(overall_grouped_fourway, output_dir)
+        print(
+            "[INFO] --make-plots is ignored in statis_results.py. "
+            "Use evaluate_script/plot_from_all_runs.py with --make-plots instead."
+        )
 
     print(f"Loaded runs: {len(all_runs)}")
     print(f"Runs after filter: {len(filtered)}")
