@@ -213,13 +213,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--algorithm",
         type=str,
-        default="weighted_sum_ga",
+        default="all",
         help="Keep only this algorithm (weighted_sum_ga or nsgaii). Use 'all' to keep all.",
     )
     parser.add_argument(
         "--explain-method",
         type=str,
-        default="simple_gradient",
+        default="all",
         help="Keep only this explain method. Use 'all' to keep all.",
     )
     parser.add_argument(
@@ -428,25 +428,18 @@ def _extract_run_stats(
     target_w_s: Optional[float] = None,
     target_pairs: Optional[List[Tuple[float, float]]] = None,
 ) -> Optional[RunStats]:
-    report_path = run_dir / "batch_report.json"
     report: Dict[str, object] = {
         "model": model_name,
         "approach": run_dir.name,
         "results": [],
     }
 
-    # Prefer recomputing from per-image summaries in run folder.
+    # Always recompute from per-image summaries in run folder.
     fallback_results = _load_results_from_run_folder(run_dir)
     if fallback_results:
         report["results"] = fallback_results
-    elif report_path.exists():
-        with open(report_path, "r", encoding="utf-8") as f:
-            loaded = json.load(f)
-        if isinstance(loaded, dict):
-            report = loaded
     else:
-        print("[SKIP] No summary.json files found in run folder:", run_dir)
-        return None
+        print("[WARN] No summary.json files found in run folder:", run_dir)
 
     approach = str(report.get("approach", run_dir.name))
     meta = _parse_approach(approach)
@@ -458,23 +451,11 @@ def _extract_run_stats(
     w_m = meta["w_m"]
     w_s = meta["w_s"]
     if eps is None:
-        return None
-
-    # Skip runs that do not match requested filters before expensive sample loops.
-    if target_algorithm is not None and algorithm != target_algorithm:
-        return None
-    if target_explain_method is not None and explain_method != target_explain_method:
-        return None
-    if target_w_m is not None and not _is_close(w_m, target_w_m):
-        return None
-    if target_w_s is not None and not _is_close(w_s, target_w_s):
-        return None
-    if target_pairs and not any(_is_close(w_m, wm) and _is_close(w_s, ws) for wm, ws in target_pairs):
-        return None
+        eps = 0
 
     all_results = report.get("results", [])
     if not isinstance(all_results, list):
-        return None
+        all_results = []
     results = [r for r in all_results if isinstance(r, dict) and r.get("status") == "ok"]
 
     # Keep partial/incomplete runs instead of dropping them entirely.
@@ -538,7 +519,7 @@ def _extract_run_stats(
             first_iter = len(sal_curve) if sal_curve else 1
         first_success_iters.append(first_iter)
 
-        corr, err = _compute_spearman_for_sample(result=result, report_path=report_path)
+        corr, err = _compute_spearman_for_sample(result=result, report_path=run_dir / "batch_report.json")
         if err is not None:
             spearman_failed_samples += 1
         if corr is not None:
