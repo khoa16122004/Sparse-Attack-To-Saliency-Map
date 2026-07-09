@@ -11,7 +11,7 @@ class NSGAII(Weighted_Sum_GA):
         super().__init__(params)
         self.nds = NonDominatedSorting()
 
-    def _pick_best_candidate_idx(self, population, pop_saliency_losses):
+    def  _pick_best_candidate_idx(self, population, pop_saliency_losses):
         success_indices = [i for i, sol in enumerate(population.population) if sol.is_adversarial]
         if success_indices:
             return min(success_indices, key=lambda idx: float(pop_saliency_losses[idx].detach().cpu().item()))

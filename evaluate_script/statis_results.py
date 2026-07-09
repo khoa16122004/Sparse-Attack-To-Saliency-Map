@@ -507,6 +507,7 @@ def _load_all_runs(root_dir: Path) -> List[RunStats]:
 
     model_dirs = [d for d in sorted(root_dir.iterdir()) if d.is_dir()]
     for model_dir in tqdm(model_dirs, desc="models", unit="model"):
+        print(model_dir)
         if not model_dir.is_dir():
             continue
         model_name = model_dir.name
