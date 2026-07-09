@@ -399,6 +399,26 @@ def _build_asr_curve(total_samples: int, first_success_iters: List[Optional[int]
     return curve
 
 
+def _load_results_from_run_folder(run_dir: Path) -> List[Dict[str, object]]:
+    results: List[Dict[str, object]] = []
+    for summary_path in sorted(run_dir.glob("*/*/summary.json")):
+        try:
+            with open(summary_path, "r", encoding="utf-8") as f:
+                payload = json.load(f)
+        except Exception:
+            continue
+
+        if not isinstance(payload, dict):
+            continue
+
+        if "output_dir" not in payload:
+            payload["output_dir"] = str(summary_path.parent)
+
+        results.append(payload)
+
+    return results
+
+
 def _extract_run_stats(
     run_dir: Path,
     model_name: str,
@@ -409,15 +429,22 @@ def _extract_run_stats(
     target_pairs: Optional[List[Tuple[float, float]]] = None,
 ) -> Optional[RunStats]:
     report_path = run_dir / "batch_report.json"
-    if not report_path.exists():
-        print(report_path)
-        raise
-        return None
+    report: Dict[str, object]
+    if report_path.exists():
+        with open(report_path, "r", encoding="utf-8") as f:
+            loaded = json.load(f)
+        report = loaded if isinstance(loaded, dict) else {}
+    else:
+        fallback_results = _load_results_from_run_folder(run_dir)
+        if not fallback_results:
+            return None
+        report = {
+            "model": model_name,
+            "approach": run_dir.name,
+            "results": fallback_results,
+        }
 
-    with open(report_path, "r", encoding="utf-8") as f:
-        report = json.load(f)
-
-    approach = str(report.get("approach", ""))
+    approach = str(report.get("approach", run_dir.name))
     meta = _parse_approach(approach)
     strategy = str(meta["strategy"])
     eps = meta["eps"]
@@ -442,6 +469,8 @@ def _extract_run_stats(
         return None
 
     all_results = report.get("results", [])
+    if not isinstance(all_results, list):
+        return None
     results = [r for r in all_results if r.get("status") == "ok"]
     if not results:
         return None
