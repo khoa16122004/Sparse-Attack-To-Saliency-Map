@@ -433,6 +433,7 @@ def _load_results_from_run_folder(run_dir: Path) -> List[Dict[str, object]]:
     for summary_path in sorted(summary_paths):
         key = str(summary_path)
         if key in seen_paths:
+            print(f"[WARN] Duplicate summary path found, skipping: {summary_path}")
             continue
         seen_paths.add(key)
 
@@ -440,6 +441,7 @@ def _load_results_from_run_folder(run_dir: Path) -> List[Dict[str, object]]:
             with open(summary_path, "r", encoding="utf-8") as f:
                 payload = json.load(f)
         except Exception:
+            print(f"[WARN] Failed to load JSON from {summary_path}, skipping.")
             continue
 
         if not isinstance(payload, dict):
