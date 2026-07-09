@@ -87,6 +87,10 @@ def _safe_mean(values: List[float]) -> float:
     return float(np.mean(valid))
 
 
+def _has_summary_files(run_dir: Path) -> bool:
+    return any(run_dir.glob("*/*/summary.json")) or any(run_dir.glob("*/*/summarize.json"))
+
+
 def _resolve_output_dir_candidates(result: Dict[str, object], report_path: Path) -> List[Path]:
     report_parent = report_path.parent
     raw_output_dir = result.get("output_dir", "")
@@ -180,6 +184,29 @@ def _compute_spearman_for_sample(result: Dict[str, object], report_path: Path) -
         }
 
     return corr, None
+
+
+def _read_history_from_text(history_path: Path) -> Tuple[List[float], List[float]]:
+    margin: List[float] = []
+    saliency: List[float] = []
+
+    if not history_path.exists():
+        return margin, saliency
+
+    with open(history_path, "r", encoding="utf-8") as f:
+        for raw_line in f:
+            line = raw_line.strip()
+            if not line:
+                continue
+
+            parts = re.split(r"[\s,]+", line)
+            if len(parts) >= 2:
+                margin.append(_safe_float(parts[0]))
+                saliency.append(_safe_float(parts[1]))
+            elif len(parts) == 1:
+                saliency.append(_safe_float(parts[0]))
+
+    return margin, saliency
 
 
 def parse_args() -> argparse.Namespace:
@@ -401,7 +428,14 @@ def _build_asr_curve(total_samples: int, first_success_iters: List[Optional[int]
 
 def _load_results_from_run_folder(run_dir: Path) -> List[Dict[str, object]]:
     results: List[Dict[str, object]] = []
-    for summary_path in sorted(run_dir.glob("*/*/summary.json")):
+    summary_paths = list(run_dir.glob("*/*/summary.json")) + list(run_dir.glob("*/*/summarize.json"))
+    seen_paths = set()
+    for summary_path in sorted(summary_paths):
+        key = str(summary_path)
+        if key in seen_paths:
+            continue
+        seen_paths.add(key)
+
         try:
             with open(summary_path, "r", encoding="utf-8") as f:
                 payload = json.load(f)
@@ -413,6 +447,13 @@ def _load_results_from_run_folder(run_dir: Path) -> List[Dict[str, object]]:
 
         if "output_dir" not in payload:
             payload["output_dir"] = str(summary_path.parent)
+
+        if not isinstance(payload.get("history_saliency"), list) or len(payload.get("history_saliency", [])) == 0:
+            _, saliency_hist = _read_history_from_text(summary_path.parent / "history_scores.txt")
+            if not saliency_hist:
+                _, saliency_hist = _read_history_from_text(summary_path.parent / "history.txt")
+            if saliency_hist:
+                payload["history_saliency"] = saliency_hist
 
         results.append(payload)
 
@@ -469,6 +510,12 @@ def _extract_run_stats(
     if not isinstance(all_results, list):
         all_results = []
     results = [r for r in all_results if isinstance(r, dict) and r.get("status") == "ok"]
+
+    if model_name in {"unknown", ""}:
+        for item in all_results:
+            if isinstance(item, dict) and item.get("model"):
+                model_name = str(item.get("model"))
+                break
 
     # Keep partial/incomplete runs instead of dropping them entirely.
     if not results:
@@ -578,6 +625,39 @@ def _load_all_runs(
     all_runs: List[RunStats] = []
     if not root_dir.exists() or not root_dir.is_dir():
         raise FileNotFoundError(f"root dir not found: {root_dir}")
+
+    # Case 1: root itself is a run folder (contains class/image/summary.json).
+    if _has_summary_files(root_dir):
+        stats = _extract_run_stats(
+            run_dir=root_dir,
+            model_name="unknown",
+            target_algorithm=target_algorithm,
+            target_explain_method=target_explain_method,
+            target_w_m=target_w_m,
+            target_w_s=target_w_s,
+            target_pairs=target_pairs,
+        )
+        if stats is not None:
+            all_runs.append(stats)
+        return all_runs
+
+    # Case 2: root directly contains run folders.
+    direct_children = [d for d in sorted(root_dir.iterdir()) if d.is_dir()]
+    direct_run_dirs = [d for d in direct_children if _has_summary_files(d)]
+    if direct_run_dirs:
+        for run_dir in tqdm(direct_run_dirs, desc="runs", unit="run"):
+            stats = _extract_run_stats(
+                run_dir=run_dir,
+                model_name="unknown",
+                target_algorithm=target_algorithm,
+                target_explain_method=target_explain_method,
+                target_w_m=target_w_m,
+                target_w_s=target_w_s,
+                target_pairs=target_pairs,
+            )
+            if stats is not None:
+                all_runs.append(stats)
+        return all_runs
 
     model_dirs = [d for d in sorted(root_dir.iterdir()) if d.is_dir()]
     for model_dir in tqdm(model_dirs, desc="models", unit="model"):
