@@ -471,9 +471,28 @@ def _extract_run_stats(
     all_results = report.get("results", [])
     if not isinstance(all_results, list):
         return None
-    results = [r for r in all_results if r.get("status") == "ok"]
+    results = [r for r in all_results if isinstance(r, dict) and r.get("status") == "ok"]
+
+    # Keep partial/incomplete runs instead of dropping them entirely.
     if not results:
-        return None
+        return RunStats(
+            run_dir=run_dir,
+            model=model_name,
+            strategy=strategy,
+            eps=int(eps),
+            explain_method=explain_method,
+            algorithm=algorithm,
+            loss_type=loss_type,
+            w_m=w_m,
+            w_s=w_s,
+            asr=0.0,
+            spearman=float("nan"),
+            spearman_failed_samples=0,
+            num_samples_total=len(all_results),
+            num_samples_ok=0,
+            asr_curve=[],
+            saliency_curve=[],
+        )
 
     first_success_iters: List[Optional[int]] = []
     saliency_histories: List[List[float]] = []
