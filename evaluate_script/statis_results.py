@@ -429,21 +429,24 @@ def _extract_run_stats(
     target_pairs: Optional[List[Tuple[float, float]]] = None,
 ) -> Optional[RunStats]:
     report_path = run_dir / "batch_report.json"
-    report: Dict[str, object]
-    if report_path.exists():
+    report: Dict[str, object] = {
+        "model": model_name,
+        "approach": run_dir.name,
+        "results": [],
+    }
+
+    # Prefer recomputing from per-image summaries in run folder.
+    fallback_results = _load_results_from_run_folder(run_dir)
+    if fallback_results:
+        report["results"] = fallback_results
+    elif report_path.exists():
         with open(report_path, "r", encoding="utf-8") as f:
             loaded = json.load(f)
-        report = loaded if isinstance(loaded, dict) else {}
+        if isinstance(loaded, dict):
+            report = loaded
     else:
-        fallback_results = _load_results_from_run_folder(run_dir)
-        if not fallback_results:
-            print("[SKIP] No summary.json files found in run folder:", run_dir)
-            return None
-        report = {
-            "model": model_name,
-            "approach": run_dir.name,
-            "results": fallback_results,
-        }
+        print("[SKIP] No summary.json files found in run folder:", run_dir)
+        return None
 
     approach = str(report.get("approach", run_dir.name))
     meta = _parse_approach(approach)
