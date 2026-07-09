@@ -540,6 +540,7 @@ def _load_all_runs(
         model_name = model_dir.name
         run_dirs = [d for d in sorted(model_dir.iterdir()) if d.is_dir()]
         for run_dir in tqdm(run_dirs, desc=f"runs {model_name}", unit="run", leave=False):
+            print(run_dir)
             if not run_dir.is_dir():
                 continue
             stats = _extract_run_stats(
@@ -551,6 +552,7 @@ def _load_all_runs(
                 target_w_s=target_w_s,
                 target_pairs=target_pairs,
             )
+            raise
             if stats is not None:
                 all_runs.append(stats)
 
