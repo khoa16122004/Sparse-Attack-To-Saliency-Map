@@ -409,7 +409,9 @@ def _extract_run_stats(
     target_pairs: Optional[List[Tuple[float, float]]] = None,
 ) -> Optional[RunStats]:
     report_path = run_dir / "batch_report.json"
+    print(report_path)
     if not report_path.exists():
+        print(report_path)
         return None
 
     with open(report_path, "r", encoding="utf-8") as f:
@@ -541,8 +543,6 @@ def _load_all_runs(
         for run_dir in tqdm(run_dirs, desc=f"runs {model_name}", unit="run", leave=False):
 
             if not run_dir.is_dir():
-                print(run_dir)
-                raise
                 continue
             stats = _extract_run_stats(
                 run_dir=run_dir,
@@ -553,7 +553,6 @@ def _load_all_runs(
                 target_w_s=target_w_s,
                 target_pairs=target_pairs,
             )
-            raise
             if stats is not None:
                 all_runs.append(stats)
 
