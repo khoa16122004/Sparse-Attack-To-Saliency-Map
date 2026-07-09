@@ -591,6 +591,7 @@ def _load_all_runs(
         for run_dir in tqdm(run_dirs, desc=f"runs {model_name}", unit="run", leave=False):
 
             if not run_dir.is_dir():
+                print(f'[SKIP] not a directory: {run_dir}')
                 continue
             stats = _extract_run_stats(
                 run_dir=run_dir,
