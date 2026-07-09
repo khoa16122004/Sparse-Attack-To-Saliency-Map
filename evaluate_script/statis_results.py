@@ -445,9 +445,11 @@ def _load_results_from_run_folder(run_dir: Path) -> List[Dict[str, object]]:
             continue
 
         if not isinstance(payload, dict):
+            print(f"[WARN] Invalid JSON structure in {summary_path}, expected a dict, skipping.")
             continue
 
         if "output_dir" not in payload:
+            print(f"[WARN] 'output_dir' missing in {summary_path}, inferring from parent directory.")
             payload["output_dir"] = str(summary_path.parent)
 
         if not isinstance(payload.get("history_saliency"), list) or len(payload.get("history_saliency", [])) == 0:
