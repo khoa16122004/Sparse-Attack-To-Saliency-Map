@@ -534,13 +534,13 @@ def _load_all_runs(
 
     model_dirs = [d for d in sorted(root_dir.iterdir()) if d.is_dir()]
     for model_dir in tqdm(model_dirs, desc="models", unit="model"):
-        print(model_dir)
         if not model_dir.is_dir():
             continue
         model_name = model_dir.name
         run_dirs = [d for d in sorted(model_dir.iterdir()) if d.is_dir()]
         for run_dir in tqdm(run_dirs, desc=f"runs {model_name}", unit="run", leave=False):
             print(run_dir)
+            raise
             if not run_dir.is_dir():
                 continue
             stats = _extract_run_stats(
