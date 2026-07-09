@@ -453,6 +453,18 @@ def _extract_run_stats(
     if eps is None:
         eps = 0
 
+    # Apply run-level filters early to avoid expensive processing of non-matching runs.
+    if target_algorithm is not None and algorithm != target_algorithm:
+        return None
+    if target_explain_method is not None and explain_method != target_explain_method:
+        return None
+    if target_w_m is not None and not _is_close(w_m, target_w_m):
+        return None
+    if target_w_s is not None and not _is_close(w_s, target_w_s):
+        return None
+    if target_pairs and not any(_is_close(w_m, wm) and _is_close(w_s, ws) for wm, ws in target_pairs):
+        return None
+
     all_results = report.get("results", [])
     if not isinstance(all_results, list):
         all_results = []
