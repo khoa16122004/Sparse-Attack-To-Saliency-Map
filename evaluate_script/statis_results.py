@@ -409,7 +409,6 @@ def _extract_run_stats(
     target_pairs: Optional[List[Tuple[float, float]]] = None,
 ) -> Optional[RunStats]:
     report_path = run_dir / "batch_report.json"
-    print(report_path)
     if not report_path.exists():
         print(report_path)
         raise
