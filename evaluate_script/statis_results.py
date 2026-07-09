@@ -412,6 +412,7 @@ def _extract_run_stats(
     print(report_path)
     if not report_path.exists():
         print(report_path)
+        raise
         return None
 
     with open(report_path, "r", encoding="utf-8") as f:
