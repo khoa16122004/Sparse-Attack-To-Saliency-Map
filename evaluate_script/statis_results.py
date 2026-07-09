@@ -399,7 +399,15 @@ def _build_asr_curve(total_samples: int, first_success_iters: List[Optional[int]
     return curve
 
 
-def _extract_run_stats(run_dir: Path, model_name: str) -> Optional[RunStats]:
+def _extract_run_stats(
+    run_dir: Path,
+    model_name: str,
+    target_algorithm: Optional[str] = None,
+    target_explain_method: Optional[str] = None,
+    target_w_m: Optional[float] = None,
+    target_w_s: Optional[float] = None,
+    target_pairs: Optional[List[Tuple[float, float]]] = None,
+) -> Optional[RunStats]:
     report_path = run_dir / "batch_report.json"
     if not report_path.exists():
         return None
@@ -417,6 +425,18 @@ def _extract_run_stats(run_dir: Path, model_name: str) -> Optional[RunStats]:
     w_m = meta["w_m"]
     w_s = meta["w_s"]
     if eps is None:
+        return None
+
+    # Skip runs that do not match requested filters before expensive sample loops.
+    if target_algorithm is not None and algorithm != target_algorithm:
+        return None
+    if target_explain_method is not None and explain_method != target_explain_method:
+        return None
+    if target_w_m is not None and not _is_close(w_m, target_w_m):
+        return None
+    if target_w_s is not None and not _is_close(w_s, target_w_s):
+        return None
+    if target_pairs and not any(_is_close(w_m, wm) and _is_close(w_s, ws) for wm, ws in target_pairs):
         return None
 
     all_results = report.get("results", [])
@@ -500,7 +520,14 @@ def _extract_run_stats(run_dir: Path, model_name: str) -> Optional[RunStats]:
     )
 
 
-def _load_all_runs(root_dir: Path) -> List[RunStats]:
+def _load_all_runs(
+    root_dir: Path,
+    target_algorithm: Optional[str] = None,
+    target_explain_method: Optional[str] = None,
+    target_w_m: Optional[float] = None,
+    target_w_s: Optional[float] = None,
+    target_pairs: Optional[List[Tuple[float, float]]] = None,
+) -> List[RunStats]:
     all_runs: List[RunStats] = []
     if not root_dir.exists() or not root_dir.is_dir():
         raise FileNotFoundError(f"root dir not found: {root_dir}")
@@ -515,7 +542,15 @@ def _load_all_runs(root_dir: Path) -> List[RunStats]:
         for run_dir in tqdm(run_dirs, desc=f"runs {model_name}", unit="run", leave=False):
             if not run_dir.is_dir():
                 continue
-            stats = _extract_run_stats(run_dir=run_dir, model_name=model_name)
+            stats = _extract_run_stats(
+                run_dir=run_dir,
+                model_name=model_name,
+                target_algorithm=target_algorithm,
+                target_explain_method=target_explain_method,
+                target_w_m=target_w_m,
+                target_w_s=target_w_s,
+                target_pairs=target_pairs,
+            )
             if stats is not None:
                 all_runs.append(stats)
 
@@ -1159,29 +1194,43 @@ def main() -> None:
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    target_algo = None
+    if args.algorithm.lower() != "all":
+        target_algo = _normalize_algorithm(args.algorithm)
+
+    target_explain_method = None
+    if args.explain_method.lower() != "all":
+        target_explain_method = args.explain_method
+
+    target_w_m = _parse_optional_float_arg(args.w_m, "--w-m")
+    raw_w_s = args.w_s if str(args.w_s).strip().lower() != "all" else args.w_c
+    target_w_s = _parse_optional_float_arg(raw_w_s, "--w-s")
+    target_pairs = _parse_weight_pairs(args.weight_pairs)
+
     if args.all_runs_json:
         all_runs_path = Path(args.all_runs_json)
         if not all_runs_path.exists():
             raise FileNotFoundError(f"all_runs JSON not found: {all_runs_path}")
         all_runs = _load_runs_from_json(all_runs_path)
     else:
-        all_runs = _load_all_runs(root_dir)
+        all_runs = _load_all_runs(
+            root_dir,
+            target_algorithm=target_algo,
+            target_explain_method=target_explain_method,
+            target_w_m=target_w_m,
+            target_w_s=target_w_s,
+            target_pairs=target_pairs,
+        )
 
     if not all_runs:
         raise ValueError(f"No valid run found under: {root_dir}")
 
     filtered = all_runs
-    if args.algorithm.lower() != "all":
-        target_algo = _normalize_algorithm(args.algorithm)
+    if target_algo is not None:
         filtered = [r for r in filtered if r.algorithm == target_algo]
 
-    if args.explain_method.lower() != "all":
-        filtered = [r for r in filtered if r.explain_method == args.explain_method]
-
-    target_w_m = _parse_optional_float_arg(args.w_m, "--w-m")
-    raw_w_s = args.w_s if str(args.w_s).strip().lower() != "all" else args.w_c
-    target_w_s = _parse_optional_float_arg(raw_w_s, "--w-s")
-    target_pairs = _parse_weight_pairs(args.weight_pairs)
+    if target_explain_method is not None:
+        filtered = [r for r in filtered if r.explain_method == target_explain_method]
 
     if target_w_m is not None:
         filtered = [r for r in filtered if _is_close(r.w_m, target_w_m)]
