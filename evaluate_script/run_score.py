@@ -1119,6 +1119,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--w-c", type=str, default="all", help="Backward-compatible alias of --w-s")
     parser.add_argument("--w-s", type=str, default="all", help="Filter by w_s. Use numeric value or all")
     parser.add_argument("--weight-pairs", type=str, default=None, help="Comma-separated wm:ws pairs, e.g. 1:0,0.5:0.5")
+    parser.add_argument(
+        "--compare-uniform-loss-only",
+        action="store_true",
+        help=(
+            "Keep only uniform strategy and only export/plot loss comparison "
+            "(margin_loss vs LogLikeLihood)"
+        ),
+    )
     parser.add_argument("--print-latex", action="store_true", help="Print LaTeX rows to stdout")
     parser.add_argument("--make-plots", action="store_true", help="Generate PNG plots")
     return parser.parse_args()
@@ -1178,39 +1186,60 @@ def main() -> None:
             if any(_is_close(r.w_m, wm) and _is_close(r.w_s, ws) for wm, ws in target_pairs)
         ]
 
+    if args.compare_uniform_loss_only:
+        filtered = [r for r in filtered if r.strategy == "uniform"]
+
     if not filtered:
         raise ValueError("No run left after filtering")
 
     loss_pairs = _build_pair_curves_loss(filtered)
-    init_pairs = _build_pair_curves_init(filtered)
-    grouped_fourway = _build_grouped_fourway_curves(filtered)
     overall_compare_loss = _build_overall_compare_loss(loss_pairs)
-    overall_compare_init = _build_overall_compare_init(init_pairs)
-    overall_grouped_fourway = _build_overall_grouped_fourway(grouped_fourway)
     latex_rows = _build_latex_rows(filtered)
+
+    init_pairs: List[Dict[str, object]] = []
+    grouped_fourway: List[Dict[str, object]] = []
+    overall_compare_init: Dict[str, object] = {
+        "num_pairs": 0,
+        "averaged_over": "disabled_by_compare_uniform_loss_only",
+    }
+    overall_grouped_fourway: Dict[str, object] = {
+        "num_groups": 0,
+        "averaged_over": "disabled_by_compare_uniform_loss_only",
+    }
+
+    if not args.compare_uniform_loss_only:
+        init_pairs = _build_pair_curves_init(filtered)
+        grouped_fourway = _build_grouped_fourway_curves(filtered)
+        overall_compare_init = _build_overall_compare_init(init_pairs)
+        overall_grouped_fourway = _build_overall_grouped_fourway(grouped_fourway)
 
     _save_json(output_dir / "all_runs.json", [r.__dict__ | {"run_dir": str(r.run_dir)} for r in filtered])
     _save_json(output_dir / "compare_loss_curves.json", loss_pairs)
-    _save_json(output_dir / "compare_init_curves.json", init_pairs)
     _save_json(output_dir / "compare_loss_curves_overall.json", overall_compare_loss)
-    _save_json(output_dir / "compare_init_curves_overall.json", overall_compare_init)
-    _save_json(output_dir / "compare_grouped_fourway_curves.json", grouped_fourway)
-    _save_json(output_dir / "compare_grouped_fourway_overall.json", overall_grouped_fourway)
+    if not args.compare_uniform_loss_only:
+        _save_json(output_dir / "compare_init_curves.json", init_pairs)
+        _save_json(output_dir / "compare_init_curves_overall.json", overall_compare_init)
+        _save_json(output_dir / "compare_grouped_fourway_curves.json", grouped_fourway)
+        _save_json(output_dir / "compare_grouped_fourway_overall.json", overall_grouped_fourway)
     _save_json(output_dir / "latex_rows.json", latex_rows)
 
     if args.make_plots:
         _plot_pair_curves_loss(loss_pairs, output_dir)
-        _plot_pair_curves_init(init_pairs, output_dir)
         _plot_overall_compare_loss(overall_compare_loss, output_dir)
-        _plot_overall_compare_init(overall_compare_init, output_dir)
-        _plot_grouped_fourway(grouped_fourway, output_dir)
-        _plot_overall_grouped_fourway(overall_grouped_fourway, output_dir)
+        if not args.compare_uniform_loss_only:
+            _plot_pair_curves_init(init_pairs, output_dir)
+            _plot_overall_compare_init(overall_compare_init, output_dir)
+            _plot_grouped_fourway(grouped_fourway, output_dir)
+            _plot_overall_grouped_fourway(overall_grouped_fourway, output_dir)
 
     print(f"Loaded runs: {len(all_runs)}")
     print(f"Runs after filter: {len(filtered)}")
     print(f"Loss pairs: {len(loss_pairs)}")
-    print(f"Init pairs: {len(init_pairs)}")
-    print(f"Grouped fourway charts: {len(grouped_fourway)}")
+    if args.compare_uniform_loss_only:
+        print("Mode: compare_uniform_loss_only")
+    else:
+        print(f"Init pairs: {len(init_pairs)}")
+        print(f"Grouped fourway charts: {len(grouped_fourway)}")
     print(f"Output dir: {output_dir}")
 
     if args.print_latex:
