@@ -817,38 +817,65 @@ def _plot_pair_curves_loss(loss_pairs: List[Dict[str, object]], output_dir: Path
             f"{item['model']} | eps={item['eps']} | {item['strategy']} | "
             f"{item['explain_method']} | {item['algorithm']}"
         )
+        base_name = (
+            f"{item['model']}__eps-{item['eps']}__strategy-{item['strategy']}"
+            f"__exp-{item['explain_method']}__algo-{item['algorithm']}"
+        )
 
-        for loss_key, loss_label, suffix in [
-            ("margin_loss", "margin_loss", "margin"),
-            ("negative_cross_entropy_saliency", "LogLikeLihood", "loglikelihood"),
-        ]:
-            asr_curve = item[loss_key]["asr_curve"]
-            sal_curve = item[loss_key]["saliency_curve"]
+        margin_asr = item["margin_loss"]["asr_curve"]
+        ce_asr = item["negative_cross_entropy_saliency"]["asr_curve"]
+        margin_sal = item["margin_loss"]["saliency_curve"]
+        ce_sal = item["negative_cross_entropy_saliency"]["saliency_curve"]
+        margin_obj = item["margin_loss"].get("objective_curve", [])
+        ce_obj = item["negative_cross_entropy_saliency"].get("objective_curve", [])
 
-            fig, axes = plt.subplots(1, 2, figsize=(12, 4.2))
+        # 1) compare loss: ASR + saliency for both losses.
+        fig, axes = plt.subplots(1, 2, figsize=(12, 4.2))
+        axes[0].plot(range(1, len(margin_asr) + 1), margin_asr, label="margin_loss", linewidth=2)
+        axes[0].plot(range(1, len(ce_asr) + 1), ce_asr, label="LogLikeLihood", linewidth=2)
+        axes[0].set_xlabel("Iteration")
+        axes[0].set_ylabel("ASR")
+        axes[0].set_ylim(0.0, 1.0)
+        axes[0].grid(alpha=0.3)
+        axes[0].legend()
 
-            axes[0].plot(range(1, len(asr_curve) + 1), asr_curve, label=loss_label, linewidth=2)
-            axes[0].set_xlabel("Iteration")
-            axes[0].set_ylabel("ASR")
-            axes[0].set_ylim(0.0, 1.0)
-            axes[0].grid(alpha=0.3)
-            axes[0].legend()
+        axes[1].plot(range(1, len(margin_sal) + 1), margin_sal, label="margin_loss", linewidth=2)
+        axes[1].plot(range(1, len(ce_sal) + 1), ce_sal, label="LogLikeLihood", linewidth=2)
+        axes[1].set_xlabel("Iteration")
+        axes[1].set_ylabel("Mean saliency loss")
+        axes[1].grid(alpha=0.3)
+        axes[1].legend()
 
-            axes[1].plot(range(1, len(sal_curve) + 1), sal_curve, label=loss_label, linewidth=2)
-            axes[1].set_xlabel("Iteration")
-            axes[1].set_ylabel("Mean saliency loss")
-            axes[1].grid(alpha=0.3)
-            axes[1].legend()
+        fig.suptitle(f"{common_title} | compare_loss")
+        fig.tight_layout()
+        fig.savefig(plot_dir / f"{base_name}__compare-loss.png", dpi=150)
+        plt.close(fig)
 
-            fig.suptitle(f"{common_title} | loss={loss_key}")
-            fig.tight_layout()
+        # 2) margin objective vs saliency.
+        fig, ax = plt.subplots(1, 1, figsize=(7.2, 4.2))
+        ax.plot(range(1, len(margin_obj) + 1), margin_obj, label="margin objective", linewidth=2)
+        ax.plot(range(1, len(margin_sal) + 1), margin_sal, label="saliency loss", linewidth=2)
+        ax.set_xlabel("Iteration")
+        ax.set_ylabel("Value")
+        ax.grid(alpha=0.3)
+        ax.legend()
+        fig.suptitle(f"{common_title} | margin objective vs saliency")
+        fig.tight_layout()
+        fig.savefig(plot_dir / f"{base_name}__objective-margin-vs-saliency.png", dpi=150)
+        plt.close(fig)
 
-            file_name = (
-                f"{item['model']}__eps-{item['eps']}__strategy-{item['strategy']}"
-                f"__exp-{item['explain_method']}__algo-{item['algorithm']}__loss-{suffix}.png"
-            )
-            fig.savefig(plot_dir / file_name, dpi=150)
-            plt.close(fig)
+        # 3) loglikelihood objective vs saliency.
+        fig, ax = plt.subplots(1, 1, figsize=(7.2, 4.2))
+        ax.plot(range(1, len(ce_obj) + 1), ce_obj, label="LogLikeLihood objective", linewidth=2)
+        ax.plot(range(1, len(ce_sal) + 1), ce_sal, label="saliency loss", linewidth=2)
+        ax.set_xlabel("Iteration")
+        ax.set_ylabel("Value")
+        ax.grid(alpha=0.3)
+        ax.legend()
+        fig.suptitle(f"{common_title} | LogLikeLihood objective vs saliency")
+        fig.tight_layout()
+        fig.savefig(plot_dir / f"{base_name}__objective-loglikelihood-vs-saliency.png", dpi=150)
+        plt.close(fig)
 
 
 def _plot_pair_curves_init(init_pairs: List[Dict[str, object]], output_dir: Path) -> None:
@@ -909,31 +936,57 @@ def _plot_overall_compare_loss(overall: Dict[str, object], output_dir: Path) -> 
     plot_dir = output_dir / "plots" / "compare_loss"
     plot_dir.mkdir(parents=True, exist_ok=True)
 
-    for loss_key, loss_label, suffix in [
-        ("margin_loss", "margin_loss", "margin"),
-        ("negative_cross_entropy_saliency", "LogLikeLihood", "loglikelihood"),
-    ]:
-        asr_curve = overall[loss_key]["asr_curve"]
-        sal_curve = overall[loss_key]["saliency_curve"]
+    margin_asr = overall["margin_loss"]["asr_curve"]
+    ce_asr = overall["negative_cross_entropy_saliency"]["asr_curve"]
+    margin_sal = overall["margin_loss"]["saliency_curve"]
+    ce_sal = overall["negative_cross_entropy_saliency"]["saliency_curve"]
+    margin_obj = overall["margin_loss"].get("objective_curve", [])
+    ce_obj = overall["negative_cross_entropy_saliency"].get("objective_curve", [])
 
-        fig, axes = plt.subplots(1, 2, figsize=(12, 4.2))
-        axes[0].plot(range(1, len(asr_curve) + 1), asr_curve, label=loss_label, linewidth=2.2)
-        axes[0].set_xlabel("Iteration")
-        axes[0].set_ylabel("ASR")
-        axes[0].set_ylim(0.0, 1.0)
-        axes[0].grid(alpha=0.3)
-        axes[0].legend()
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4.2))
+    axes[0].plot(range(1, len(margin_asr) + 1), margin_asr, label="margin_loss", linewidth=2.2)
+    axes[0].plot(range(1, len(ce_asr) + 1), ce_asr, label="LogLikeLihood", linewidth=2.2)
+    axes[0].set_xlabel("Iteration")
+    axes[0].set_ylabel("ASR")
+    axes[0].set_ylim(0.0, 1.0)
+    axes[0].grid(alpha=0.3)
+    axes[0].legend()
 
-        axes[1].plot(range(1, len(sal_curve) + 1), sal_curve, label=loss_label, linewidth=2.2)
-        axes[1].set_xlabel("Iteration")
-        axes[1].set_ylabel("Mean saliency loss")
-        axes[1].grid(alpha=0.3)
-        axes[1].legend()
+    axes[1].plot(range(1, len(margin_sal) + 1), margin_sal, label="margin_loss", linewidth=2.2)
+    axes[1].plot(range(1, len(ce_sal) + 1), ce_sal, label="LogLikeLihood", linewidth=2.2)
+    axes[1].set_xlabel("Iteration")
+    axes[1].set_ylabel("Mean saliency loss")
+    axes[1].grid(alpha=0.3)
+    axes[1].legend()
 
-        fig.suptitle(f"compare_loss overall average | loss={loss_key} (pairs={overall['num_pairs']})")
-        fig.tight_layout()
-        fig.savefig(plot_dir / f"overall__compare_loss__{suffix}.png", dpi=170)
-        plt.close(fig)
+    fig.suptitle(f"compare_loss overall average (pairs={overall['num_pairs']})")
+    fig.tight_layout()
+    fig.savefig(plot_dir / "overall__compare_loss.png", dpi=170)
+    plt.close(fig)
+
+    fig, ax = plt.subplots(1, 1, figsize=(7.2, 4.2))
+    ax.plot(range(1, len(margin_obj) + 1), margin_obj, label="margin objective", linewidth=2.2)
+    ax.plot(range(1, len(margin_sal) + 1), margin_sal, label="saliency loss", linewidth=2.2)
+    ax.set_xlabel("Iteration")
+    ax.set_ylabel("Value")
+    ax.grid(alpha=0.3)
+    ax.legend()
+    fig.suptitle(f"overall margin objective vs saliency (pairs={overall['num_pairs']})")
+    fig.tight_layout()
+    fig.savefig(plot_dir / "overall__objective-margin-vs-saliency.png", dpi=170)
+    plt.close(fig)
+
+    fig, ax = plt.subplots(1, 1, figsize=(7.2, 4.2))
+    ax.plot(range(1, len(ce_obj) + 1), ce_obj, label="LogLikeLihood objective", linewidth=2.2)
+    ax.plot(range(1, len(ce_sal) + 1), ce_sal, label="saliency loss", linewidth=2.2)
+    ax.set_xlabel("Iteration")
+    ax.set_ylabel("Value")
+    ax.grid(alpha=0.3)
+    ax.legend()
+    fig.suptitle(f"overall LogLikeLihood objective vs saliency (pairs={overall['num_pairs']})")
+    fig.tight_layout()
+    fig.savefig(plot_dir / "overall__objective-loglikelihood-vs-saliency.png", dpi=170)
+    plt.close(fig)
 
 
 def _plot_overall_compare_init(overall: Dict[str, object], output_dir: Path) -> None:
