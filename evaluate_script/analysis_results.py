@@ -736,7 +736,7 @@ def _build_latex_rows(runs: List[RunStats]) -> List[str]:
         row = (
             f"& {eps} & {strategy_text} "
             f"& {margin.asr * 100.0:.2f} & {margin.spearman:.4f} "
-            f"& {ce.asr * 100.0:.2f} & {ce.spearman:.4f} \\\\"
+            f"& {ce.asr * 100.0:.2f} & {ce.spearman:.4f} \\\\" 
         )
         rows.append((str(model), row))
 
@@ -1397,7 +1397,7 @@ def main() -> None:
 
     if args.make_plots:
         print(
-            "[INFO] --make-plots is ignored in statis_results.py. "
+            "[INFO] --make-plots is ignored in analysis_results.py. "
             "Use evaluate_script/plot_from_all_runs.py with --make-plots instead."
         )
 
@@ -1424,7 +1424,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-
-
-

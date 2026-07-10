@@ -3,27 +3,50 @@ import json
 from pathlib import Path
 from typing import List
 
-from statis_results import (
-    _build_grouped_fourway_curves,
-    _build_overall_compare_init,
-    _build_overall_compare_loss,
-    _build_overall_grouped_fourway,
-    _build_pair_curves_init,
-    _build_pair_curves_loss,
-    _is_close,
-    _normalize_algorithm,
-    _parse_optional_float_arg,
-    _parse_weight_pairs,
-    _plot_grouped_fourway,
-    _plot_overall_compare_init,
-    _plot_overall_compare_loss,
-    _plot_overall_grouped_fourway,
-    _plot_pair_curves_init,
-    _plot_pair_curves_loss,
-    _runstats_from_dict,
-    _save_json,
-    RunStats,
-)
+try:
+    from analysis_results import (
+        _build_grouped_fourway_curves,
+        _build_overall_compare_init,
+        _build_overall_compare_loss,
+        _build_overall_grouped_fourway,
+        _build_pair_curves_init,
+        _build_pair_curves_loss,
+        _is_close,
+        _normalize_algorithm,
+        _parse_optional_float_arg,
+        _parse_weight_pairs,
+        _plot_grouped_fourway,
+        _plot_overall_compare_init,
+        _plot_overall_compare_loss,
+        _plot_overall_grouped_fourway,
+        _plot_pair_curves_init,
+        _plot_pair_curves_loss,
+        _runstats_from_dict,
+        _save_json,
+        RunStats,
+    )
+except ImportError:
+    from evaluate_script.analysis_results import (
+        _build_grouped_fourway_curves,
+        _build_overall_compare_init,
+        _build_overall_compare_loss,
+        _build_overall_grouped_fourway,
+        _build_pair_curves_init,
+        _build_pair_curves_loss,
+        _is_close,
+        _normalize_algorithm,
+        _parse_optional_float_arg,
+        _parse_weight_pairs,
+        _plot_grouped_fourway,
+        _plot_overall_compare_init,
+        _plot_overall_compare_loss,
+        _plot_overall_grouped_fourway,
+        _plot_pair_curves_init,
+        _plot_pair_curves_loss,
+        _runstats_from_dict,
+        _save_json,
+        RunStats,
+    )
 
 
 def parse_args() -> argparse.Namespace:
