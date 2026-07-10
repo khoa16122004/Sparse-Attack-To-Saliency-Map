@@ -726,79 +726,6 @@ def _build_overall_compare_init(init_pairs: List[Dict[str, object]]) -> Dict[str
     }
 
 
-def _build_grouped_fourway_curves(runs: List[RunStats]) -> List[Dict[str, object]]:
-    grouped = _group_runs(runs, key_fn=lambda r: (r.model, r.eps, r.explain_method, r.algorithm))
-    output: List[Dict[str, object]] = []
-
-    combo_specs = [
-        ("saliency_guided_negative_ce", "saliency_guided", "negative_cross_entropy_saliency"),
-        ("uniform_margin", "uniform", "margin_loss"),
-        ("saliency_guided_margin", "saliency_guided", "margin_loss"),
-        ("uniform_negative_ce", "uniform", "negative_cross_entropy_saliency"),
-    ]
-
-    for key, group in grouped.items():
-        model, eps, explain_method, algorithm = key
-        combo_payload: Dict[str, object] = {}
-        complete = True
-
-        for combo_name, strategy, loss_type in combo_specs:
-            selected = [r for r in group if r.strategy == strategy and r.loss_type == loss_type]
-            if not selected:
-                complete = False
-                break
-
-            combo_payload[combo_name] = {
-                "strategy": strategy,
-                "loss_type": loss_type,
-                "asr_curve": _curve_mean([r.asr_curve for r in selected]),
-                "saliency_curve": _curve_mean([r.saliency_curve for r in selected]),
-                "final_asr": _safe_mean([r.asr for r in selected]),
-            }
-
-        if not complete:
-            continue
-
-        output.append(
-            {
-                "model": model,
-                "eps": eps,
-                "explain_method": explain_method,
-                "algorithm": algorithm,
-                **combo_payload,
-            }
-        )
-
-    return output
-
-
-def _build_overall_grouped_fourway(grouped_items: List[Dict[str, object]]) -> Dict[str, object]:
-    combo_names = [
-        "saliency_guided_negative_ce",
-        "uniform_margin",
-        "saliency_guided_margin",
-        "uniform_negative_ce",
-    ]
-
-    output: Dict[str, object] = {
-        "num_groups": len(grouped_items),
-        "averaged_over": "all_models_all_eps_after_filters",
-    }
-
-    for combo_name in combo_names:
-        asr_curves = [item[combo_name]["asr_curve"] for item in grouped_items]
-        sal_curves = [item[combo_name]["saliency_curve"] for item in grouped_items]
-        final_asr = [float(item[combo_name]["final_asr"]) for item in grouped_items]
-
-        output[combo_name] = {
-            "asr_curve": _curve_mean(asr_curves),
-            "saliency_curve": _curve_mean(sal_curves),
-            "final_asr": _safe_mean(final_asr),
-        }
-
-    return output
-
-
 def _save_json(path: Path, payload: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
@@ -1011,98 +938,6 @@ def _plot_overall_compare_init(overall: Dict[str, object], output_dir: Path) -> 
     plt.close(fig)
 
 
-def _plot_grouped_fourway(grouped_items: List[Dict[str, object]], output_dir: Path) -> None:
-    try:
-        import importlib
-
-        plt = importlib.import_module("matplotlib.pyplot")
-    except ImportError:
-        return
-
-    plot_dir = output_dir / "plots" / "compare_grouped"
-    plot_dir.mkdir(parents=True, exist_ok=True)
-
-    style = {
-        "saliency_guided_negative_ce": {"label": "Saliency Guided + LogLikeLihood", "color": "tab:red"},
-        "uniform_margin": {"label": "Uniform + Margin", "color": "tab:blue"},
-        "saliency_guided_margin": {"label": "Saliency Guided + Margin", "color": "tab:green"},
-        "uniform_negative_ce": {"label": "Uniform + LogLikeLihood", "color": "tab:orange"},
-    }
-
-    for item in grouped_items:
-        title = f"{item['model']} | eps={item['eps']} | {item['explain_method']} | {item['algorithm']}"
-
-        fig, axes = plt.subplots(1, 2, figsize=(13.5, 4.6))
-        for combo_name, config in style.items():
-            asr_curve = item[combo_name]["asr_curve"]
-            sal_curve = item[combo_name]["saliency_curve"]
-
-            axes[0].plot(range(1, len(asr_curve) + 1), asr_curve, label=config["label"], color=config["color"], linewidth=2.0)
-            axes[1].plot(range(1, len(sal_curve) + 1), sal_curve, label=config["label"], color=config["color"], linewidth=2.0)
-
-        axes[0].set_xlabel("Iteration")
-        axes[0].set_ylabel("ASR")
-        axes[0].set_ylim(0.0, 1.0)
-        axes[0].grid(alpha=0.3)
-        axes[0].legend(fontsize=8)
-
-        axes[1].set_xlabel("Iteration")
-        axes[1].set_ylabel("Mean saliency loss")
-        axes[1].grid(alpha=0.3)
-        axes[1].legend(fontsize=8)
-
-        fig.suptitle(title)
-        fig.tight_layout()
-
-        file_name = f"{item['model']}__eps-{item['eps']}__exp-{item['explain_method']}__algo-{item['algorithm']}.png"
-        fig.savefig(plot_dir / file_name, dpi=170)
-        plt.close(fig)
-
-
-def _plot_overall_grouped_fourway(overall: Dict[str, object], output_dir: Path) -> None:
-    try:
-        import importlib
-
-        plt = importlib.import_module("matplotlib.pyplot")
-    except ImportError:
-        return
-
-    plot_dir = output_dir / "plots" / "compare_grouped"
-    plot_dir.mkdir(parents=True, exist_ok=True)
-
-    style = {
-        "saliency_guided_negative_ce": {"label": "Saliency Guided + LogLikeLihood", "color": "tab:red"},
-        "uniform_margin": {"label": "Uniform + Margin", "color": "tab:blue"},
-        "saliency_guided_margin": {"label": "Saliency Guided + Margin", "color": "tab:green"},
-        "uniform_negative_ce": {"label": "Uniform + LogLikeLihood", "color": "tab:orange"},
-    }
-
-    fig, axes = plt.subplots(1, 2, figsize=(13.5, 4.6))
-
-    for combo_name, config in style.items():
-        asr_curve = overall[combo_name]["asr_curve"]
-        sal_curve = overall[combo_name]["saliency_curve"]
-
-        axes[0].plot(range(1, len(asr_curve) + 1), asr_curve, label=config["label"], color=config["color"], linewidth=2.2)
-        axes[1].plot(range(1, len(sal_curve) + 1), sal_curve, label=config["label"], color=config["color"], linewidth=2.2)
-
-    axes[0].set_xlabel("Iteration")
-    axes[0].set_ylabel("ASR")
-    axes[0].set_ylim(0.0, 1.0)
-    axes[0].grid(alpha=0.3)
-    axes[0].legend(fontsize=8)
-
-    axes[1].set_xlabel("Iteration")
-    axes[1].set_ylabel("Mean saliency loss")
-    axes[1].grid(alpha=0.3)
-    axes[1].legend(fontsize=8)
-
-    fig.suptitle(f"compare_grouped overall average (groups={overall['num_groups']})")
-    fig.tight_layout()
-    fig.savefig(plot_dir / "overall__compare_grouped_fourway.png", dpi=180)
-    plt.close(fig)
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
@@ -1195,17 +1030,6 @@ def main() -> None:
     loss_pairs = _build_pair_curves_loss(filtered)
     overall_compare_loss = _build_overall_compare_loss(loss_pairs)
     latex_rows = _build_latex_rows(filtered)
-
-    init_pairs: List[Dict[str, object]] = []
-    grouped_fourway: List[Dict[str, object]] = []
-    overall_compare_init: Dict[str, object] = {
-        "num_pairs": 0,
-        "averaged_over": "disabled_uniform_only",
-    }
-    overall_grouped_fourway: Dict[str, object] = {
-        "num_groups": 0,
-        "averaged_over": "disabled_uniform_only",
-    }
 
     _save_json(output_dir / "all_runs.json", [r.__dict__ | {"run_dir": str(r.run_dir)} for r in filtered])
     _save_json(output_dir / "compare_loss_curves.json", loss_pairs)

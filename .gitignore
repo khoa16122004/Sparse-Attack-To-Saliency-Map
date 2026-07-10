@@ -225,3 +225,4 @@ server_result
 server_run
 evaluate_script/stats_outputs_wm0.5_ws0.5
 evaluate_script/stats_outputs_wm1.0_ws0.0
+evaluate_script/stats_outputs_wm0_ws1
