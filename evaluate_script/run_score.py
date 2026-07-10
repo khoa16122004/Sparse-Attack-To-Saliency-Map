@@ -34,6 +34,7 @@ class RunStats:
     num_samples_ok: int
     asr_curve: List[float]
     saliency_curve: List[float]
+    objective_curve: List[float]
 
 
 def _safe_float(value: object, default: float = float("nan")) -> float:
@@ -348,11 +349,15 @@ def _load_results_from_run_folder(run_dir: Path) -> List[Dict[str, object]]:
         if "output_dir" not in payload:
             payload["output_dir"] = str(summary_path.parent)
 
-        if not isinstance(payload.get("history_saliency"), list) or len(payload.get("history_saliency", [])) == 0:
-            _, saliency_hist = _read_history_from_text(summary_path.parent / "history_scores.txt")
-            if not saliency_hist:
-                _, saliency_hist = _read_history_from_text(summary_path.parent / "history.txt")
-            if saliency_hist:
+        margin_missing = not isinstance(payload.get("history_margin"), list) or len(payload.get("history_margin", [])) == 0
+        saliency_missing = not isinstance(payload.get("history_saliency"), list) or len(payload.get("history_saliency", [])) == 0
+        if margin_missing or saliency_missing:
+            margin_hist, saliency_hist = _read_history_from_text(summary_path.parent / "history_scores.txt")
+            if not margin_hist and not saliency_hist:
+                margin_hist, saliency_hist = _read_history_from_text(summary_path.parent / "history.txt")
+            if margin_missing and margin_hist:
+                payload["history_margin"] = margin_hist
+            if saliency_missing and saliency_hist:
                 payload["history_saliency"] = saliency_hist
 
         results.append(payload)
@@ -427,10 +432,12 @@ def _extract_run_stats(
             num_samples_ok=0,
             asr_curve=[],
             saliency_curve=[],
+            objective_curve=[],
         )
 
     first_success_iters: List[Optional[int]] = []
     saliency_histories: List[List[float]] = []
+    objective_histories: List[List[float]] = []
     spearman_scores: List[float] = []
     spearman_failed_samples = 0
     max_iter = 0
@@ -455,8 +462,25 @@ def _extract_run_stats(
         history_sal = result.get("history_saliency", [])
         sal_curve = [_safe_float(v) for v in history_sal] if isinstance(history_sal, list) else []
         saliency_histories.append(sal_curve)
+
+        if loss_type == "margin_loss":
+            history_obj = result.get("history_margin", [])
+        else:
+            history_obj = (
+                result.get("history_attack_objective")
+                or result.get("history_objective")
+                or result.get("history_ce")
+                or result.get("history_cross_entropy")
+                or result.get("history_margin")
+                or []
+            )
+        obj_curve = [_safe_float(v) for v in history_obj] if isinstance(history_obj, list) else []
+        objective_histories.append(obj_curve)
+
         if len(sal_curve) > max_iter:
             max_iter = len(sal_curve)
+        if len(obj_curve) > max_iter:
+            max_iter = len(obj_curve)
 
         if first_iter is None and final_success:
             first_iter = len(sal_curve) if sal_curve else 1
@@ -472,6 +496,7 @@ def _extract_run_stats(
     spearman = _safe_mean(spearman_scores)
     asr_curve = _build_asr_curve(total_samples=len(results), first_success_iters=first_success_iters, max_iter=max_iter)
     saliency_curve = _curve_mean_with_last_padding(saliency_histories)
+    objective_curve = _curve_mean_with_last_padding(objective_histories)
 
     return RunStats(
         run_dir=run_dir,
@@ -490,6 +515,7 @@ def _extract_run_stats(
         num_samples_ok=len(results),
         asr_curve=asr_curve,
         saliency_curve=saliency_curve,
+        objective_curve=objective_curve,
     )
 
 
@@ -629,11 +655,13 @@ def _build_pair_curves_loss(runs: List[RunStats]) -> List[Dict[str, object]]:
                 "margin_loss": {
                     "asr_curve": _curve_mean([r.asr_curve for r in margin_runs]),
                     "saliency_curve": _curve_mean([r.saliency_curve for r in margin_runs]),
+                    "objective_curve": _curve_mean([r.objective_curve for r in margin_runs]),
                     "final_asr": sum(r.asr for r in margin_runs) / len(margin_runs),
                 },
                 "negative_cross_entropy_saliency": {
                     "asr_curve": _curve_mean([r.asr_curve for r in ce_runs]),
                     "saliency_curve": _curve_mean([r.saliency_curve for r in ce_runs]),
+                    "objective_curve": _curve_mean([r.objective_curve for r in ce_runs]),
                     "final_asr": sum(r.asr for r in ce_runs) / len(ce_runs),
                 },
             }
@@ -681,6 +709,8 @@ def _build_overall_compare_loss(loss_pairs: List[Dict[str, object]]) -> Dict[str
     ce_asr_curves = [item["negative_cross_entropy_saliency"]["asr_curve"] for item in loss_pairs]
     margin_sal_curves = [item["margin_loss"]["saliency_curve"] for item in loss_pairs]
     ce_sal_curves = [item["negative_cross_entropy_saliency"]["saliency_curve"] for item in loss_pairs]
+    margin_obj_curves = [item["margin_loss"]["objective_curve"] for item in loss_pairs]
+    ce_obj_curves = [item["negative_cross_entropy_saliency"]["objective_curve"] for item in loss_pairs]
 
     margin_final_asr = [float(item["margin_loss"]["final_asr"]) for item in loss_pairs]
     ce_final_asr = [float(item["negative_cross_entropy_saliency"]["final_asr"]) for item in loss_pairs]
@@ -691,11 +721,13 @@ def _build_overall_compare_loss(loss_pairs: List[Dict[str, object]]) -> Dict[str
         "margin_loss": {
             "asr_curve": _curve_mean(margin_asr_curves),
             "saliency_curve": _curve_mean(margin_sal_curves),
+            "objective_curve": _curve_mean(margin_obj_curves),
             "final_asr": _safe_mean(margin_final_asr),
         },
         "negative_cross_entropy_saliency": {
             "asr_curve": _curve_mean(ce_asr_curves),
             "saliency_curve": _curve_mean(ce_sal_curves),
+            "objective_curve": _curve_mean(ce_obj_curves),
             "final_asr": _safe_mean(ce_final_asr),
         },
     }
@@ -750,6 +782,7 @@ def _runstats_from_dict(payload: Dict[str, object]) -> RunStats:
         num_samples_ok=int(payload.get("num_samples_ok", 0)),
         asr_curve=[float(v) for v in payload.get("asr_curve", [])],
         saliency_curve=[float(v) for v in payload.get("saliency_curve", [])],
+        objective_curve=[float(v) for v in payload.get("objective_curve", [])],
     )
 
 
@@ -786,8 +819,10 @@ def _plot_pair_curves_loss(loss_pairs: List[Dict[str, object]], output_dir: Path
         ce_asr = item["negative_cross_entropy_saliency"]["asr_curve"]
         margin_sal = item["margin_loss"]["saliency_curve"]
         ce_sal = item["negative_cross_entropy_saliency"]["saliency_curve"]
+        margin_obj = item["margin_loss"].get("objective_curve", [])
+        ce_obj = item["negative_cross_entropy_saliency"].get("objective_curve", [])
 
-        fig, axes = plt.subplots(1, 2, figsize=(12, 4.2))
+        fig, axes = plt.subplots(1, 3, figsize=(17, 4.4))
 
         axes[0].plot(range(1, len(margin_asr) + 1), margin_asr, label="margin_loss", linewidth=2)
         axes[0].plot(range(1, len(ce_asr) + 1), ce_asr, label="LogLikeLihood", linewidth=2)
@@ -803,6 +838,13 @@ def _plot_pair_curves_loss(loss_pairs: List[Dict[str, object]], output_dir: Path
         axes[1].set_ylabel("Mean saliency loss")
         axes[1].grid(alpha=0.3)
         axes[1].legend()
+
+        axes[2].plot(range(1, len(margin_obj) + 1), margin_obj, label="margin_loss objective", linewidth=2)
+        axes[2].plot(range(1, len(ce_obj) + 1), ce_obj, label="LogLikeLihood objective", linewidth=2)
+        axes[2].set_xlabel("Iteration")
+        axes[2].set_ylabel("Attack objective")
+        axes[2].grid(alpha=0.3)
+        axes[2].legend()
 
         fig.suptitle(title)
         fig.tight_layout()
@@ -877,8 +919,10 @@ def _plot_overall_compare_loss(overall: Dict[str, object], output_dir: Path) -> 
     ce_asr = overall["negative_cross_entropy_saliency"]["asr_curve"]
     margin_sal = overall["margin_loss"]["saliency_curve"]
     ce_sal = overall["negative_cross_entropy_saliency"]["saliency_curve"]
+    margin_obj = overall["margin_loss"].get("objective_curve", [])
+    ce_obj = overall["negative_cross_entropy_saliency"].get("objective_curve", [])
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4.2))
+    fig, axes = plt.subplots(1, 3, figsize=(17, 4.4))
     axes[0].plot(range(1, len(margin_asr) + 1), margin_asr, label="margin_loss", linewidth=2.2)
     axes[0].plot(range(1, len(ce_asr) + 1), ce_asr, label="LogLikeLihood", linewidth=2.2)
     axes[0].set_xlabel("Iteration")
@@ -893,6 +937,13 @@ def _plot_overall_compare_loss(overall: Dict[str, object], output_dir: Path) -> 
     axes[1].set_ylabel("Mean saliency loss")
     axes[1].grid(alpha=0.3)
     axes[1].legend()
+
+    axes[2].plot(range(1, len(margin_obj) + 1), margin_obj, label="margin_loss objective", linewidth=2.2)
+    axes[2].plot(range(1, len(ce_obj) + 1), ce_obj, label="LogLikeLihood objective", linewidth=2.2)
+    axes[2].set_xlabel("Iteration")
+    axes[2].set_ylabel("Attack objective")
+    axes[2].grid(alpha=0.3)
+    axes[2].legend()
 
     fig.suptitle(f"compare_loss overall average (pairs={overall['num_pairs']})")
     fig.tight_layout()
