@@ -53,7 +53,6 @@ export CUDA_VISIBLE_DEVICES=$BEST_GPU
 # =========================================================
 # CHAY CODE: SO SANH 2 FITNESS LOSS
 # =========================================================
-OUTPUT_ROOT="server_run"
 MODEL_NAMES="resnet18"
 NUM_SAMPLE=100
 EPSILONS="100 50 20"
@@ -65,6 +64,8 @@ EPSILONS="100 50 20"
 W_MARGIN="${W_MARGIN:-0.0}"
 W_SALIENCY="${W_SALIENCY:-1.0}"
 SEED="${SEED:-22520691}"
+OUTPUT_ROOT="server_run_seed$SEED"
+
 
 for MODEL_NAME in $MODEL_NAMES; do
     for STRATEGY in uniform; do

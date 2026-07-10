@@ -53,7 +53,6 @@ export CUDA_VISIBLE_DEVICES=$BEST_GPU
 # =========================================================
 # CHAY CODE: SO SANH 2 FITNESS LOSS
 # =========================================================
-OUTPUT_ROOT="server_run"
 MODEL_NAMES="vgg16"
 NUM_SAMPLE=100
 EPSILONS="100 50 20"
@@ -71,6 +70,7 @@ if [ $# -ge 2 ]; then
     W_SALIENCY="$2"
 fi
 SEED="${SEED:-22520691}"
+OUTPUT_ROOT="server_run_seed$SEED"
 
 
 for MODEL_NAME in $MODEL_NAMES; do
