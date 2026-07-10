@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import random
 import sys
 from pathlib import Path
 
@@ -114,6 +115,7 @@ def parse_args():
     )
     parser.add_argument("--saliency-temperature", type=float, default=1.0)
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
+    parser.add_argument("--seed", type=int, default=None, help="Global random seed for reproducibility")
 
     return parser.parse_args()
 
@@ -235,6 +237,8 @@ def build_approach_tag(args):
         if fit_name == "cross_entropy_saliency":
             fit_name = "negative_cross_entropy_saliency"
         parts.append(f"fit-{fit_name}")
+    if args.seed is not None:
+        parts.append(f"seed-{args.seed}")
     return "__".join(parts)
 
 
@@ -266,7 +270,13 @@ def create_fitness(fitness_function, model, x_tensor, normalize, y_true, explain
     raise ValueError(f"Unsupported fitness function: {fitness_function}")
 
 
-def run_attack_one(image_path, output_paths, model_name, model, spatial, normalize, explain_fn, args, device):
+def run_attack_one(image_path, output_paths, model_name, model, spatial, normalize, explain_fn, args, device, sample_seed=None):
+    if sample_seed is not None:
+        random.seed(sample_seed)
+        torch.manual_seed(sample_seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(sample_seed)
+
     image = Image.open(image_path).convert("RGB")
     x_tensor = spatial(image).to(device).unsqueeze(0)
 
@@ -326,6 +336,7 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
 
     return {
         "model": model_name,
+        "seed": sample_seed,
         "true_label": int(y_true.item()),
         "clean_pred": int(pred.item()),
         "adv_pred": int(adv_pred),
@@ -346,6 +357,12 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
 
 def main():
     args = parse_args()
+
+    if args.seed is not None:
+        random.seed(args.seed)
+        torch.manual_seed(args.seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(args.seed)
 
     if args.num_sample is not None and args.num_sample < 0:
         raise ValueError("--num_sample must be >= 0")
@@ -372,6 +389,7 @@ def main():
     print(f"[INFO] selection_file={selection_file}")
     print(f"[INFO] model={model_name}")
     print(f"[INFO] device={args.device}")
+    print(f"[INFO] seed={args.seed}")
 
     model, spatial, normalize = get_torchvision_model(model_name, pretrained=True)
     model = model.to(device)
@@ -400,7 +418,7 @@ def main():
 
     progress = tqdm(items, total=len(items), desc="Running attacks", unit="img")
 
-    for class_name, raw_path in progress:
+    for sample_index, (class_name, raw_path) in enumerate(progress):
         image_path = resolve_image_path(
             raw_path=raw_path,
             class_name=class_name,
@@ -449,6 +467,7 @@ def main():
             continue
 
         try:
+            sample_seed = None if args.seed is None else (args.seed + sample_index)
             metrics = run_attack_one(
                 image_path=image_path,
                 output_paths=output_paths,
@@ -459,6 +478,7 @@ def main():
                 explain_fn=explain_fn,
                 args=args,
                 device=device,
+                sample_seed=sample_seed,
             )
             result = {
                 "status": "ok",
@@ -494,6 +514,7 @@ def main():
         "selection_file": str(selection_file),
         "model": model_name,
         "approach": approach_tag,
+        "seed": args.seed,
         "num_requested": args.num_sample,
         "total": len(all_results),
         "ok": total_ok,

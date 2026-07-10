@@ -1,5 +1,6 @@
 import argparse
 import os
+import random
 import sys
 
 import torch
@@ -76,6 +77,7 @@ def parse_args():
         help="Temperature for saliency-guided pixel sampling (lower is sharper)",
     )
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
+    parser.add_argument("--seed", type=int, default=None, help="Global random seed for reproducibility")
 
     return parser.parse_args()
 
@@ -128,6 +130,12 @@ def create_fitness(fitness_function, model, x_tensor, normalize, y_true, explain
 
 
 def run_attack(args):
+    if args.seed is not None:
+        random.seed(args.seed)
+        torch.manual_seed(args.seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(args.seed)
+
     if args.device == "cuda" and not torch.cuda.is_available():
         print("CUDA is not available, switching to CPU")
         args.device = "cpu"
@@ -259,6 +267,7 @@ def run_attack(args):
     print(f"fitness_function: {args.fitness_function}")
     print(f"operator_strategy: {args.operator_strategy}")
     print(f"saliency_temperature: {args.saliency_temperature}")
+    print(f"seed: {args.seed}")
     print(f"saved_clean_image: {clean_image_path}")
     print(f"saved_adv: {args.output}")
     print(f"saved_clean_map: {clean_map_path}")
@@ -284,6 +293,7 @@ def run_attack(args):
         "fitness_function": args.fitness_function,
         "operator_strategy": args.operator_strategy,
         "saliency_temperature": args.saliency_temperature,
+        "seed": args.seed,
         "saved_clean_image": clean_image_path,
         "saved_adv": args.output,
         "saved_clean_map": clean_map_path,

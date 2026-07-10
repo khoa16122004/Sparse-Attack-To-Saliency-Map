@@ -70,9 +70,11 @@ fi
 if [ $# -ge 2 ]; then
     W_SALIENCY="$2"
 fi
+SEED="${SEED:-22520691}"
+
 
 for MODEL_NAME in $MODEL_NAMES; do
-    for STRATEGY in uniform saliency_guided; do
+    for STRATEGY in uniform; do
         for EPS in $EPSILONS; do
             for FITNESS in margin_saliency cross_entropy_saliency; do
                 echo "[RUN] model=$MODEL_NAME strategy=$STRATEGY fitness=$FITNESS eps=$EPS w_margin=$W_MARGIN w_saliency=$W_SALIENCY num_sample=$NUM_SAMPLE output_root=$OUTPUT_ROOT"
@@ -84,7 +86,8 @@ for MODEL_NAME in $MODEL_NAMES; do
                     --w-margin "$W_MARGIN" \
                     --w-saliency "$W_SALIENCY" \
                     --fitness-function "$FITNESS" \
-                    --output-root "$OUTPUT_ROOT"
+                    --output-root "$OUTPUT_ROOT" \
+                    --seed "$SEED"
             done
         done
     done
