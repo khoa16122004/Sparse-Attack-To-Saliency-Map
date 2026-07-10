@@ -64,7 +64,7 @@ EPSILONS="100 50 20"
 W_MARGIN="${W_MARGIN:-0.0}"
 W_SALIENCY="${W_SALIENCY:-1.0}"
 SEED="${SEED:-22520691}"
-OUTPUT_ROOT="server_run_seed$SEED"
+OUTPUT_ROOT="server_run_NSGAII_seed$SEED"
 
 for MODEL_NAME in $MODEL_NAMES; do
     for STRATEGY in uniform; do
