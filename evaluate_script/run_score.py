@@ -603,6 +603,14 @@ def _choose_best_by_asr_then_spearman(runs: List[RunStats]) -> Optional[RunStats
     )[0]
 
 
+def _h_score(asr: float, sro: float) -> float:
+    inv_sro = 1.0 - float(sro)
+    denom = float(asr) + inv_sro
+    if abs(denom) < 1e-12:
+        return float("nan")
+    return (2.0 * float(asr) * inv_sro) / denom
+
+
 def _build_latex_rows(runs: List[RunStats]) -> List[str]:
     rows: List[str] = []
     grouped = _group_runs(runs, key_fn=lambda r: (r.model, r.eps, r.strategy, r.explain_method, r.algorithm))
@@ -616,11 +624,14 @@ def _build_latex_rows(runs: List[RunStats]) -> List[str]:
         if margin is None or ce is None:
             continue
 
+        margin_h = _h_score(margin.asr, margin.spearman)
+        ce_h = _h_score(ce.asr, ce.spearman)
+
         strategy_text = "Saliency-guided" if strategy == "saliency_guided" else "Uniform"
         row = (
             f"& {eps} & {strategy_text} "
-            f"& {margin.asr * 100.0:.2f} & {margin.spearman:.4f} "
-            f"& {ce.asr * 100.0:.2f} & {ce.spearman:.4f} \\\\"
+            f"& {margin.asr:.4f} & {margin.spearman:.4f} & {margin_h:.4f} "
+            f"& {ce.asr:.4f} & {ce.spearman:.4f} & {ce_h:.4f} \\\\" 
         )
         rows.append((str(model), row))
 
