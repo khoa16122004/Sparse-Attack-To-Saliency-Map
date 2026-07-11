@@ -801,6 +801,13 @@ def _save_json(path: Path, payload: object) -> None:
         json.dump(payload, f, indent=2, ensure_ascii=False)
 
 
+def _save_text_lines(path: Path, lines: List[str]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        for line in lines:
+            f.write(f"{line}\n")
+
+
 def _runstats_from_dict(payload: Dict[str, object]) -> RunStats:
     return RunStats(
         run_dir=Path(str(payload.get("run_dir", ""))),
@@ -1075,6 +1082,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model", type=str, default="all", help="Filter model name (e.g. resnet18). Use all to keep all")
     parser.add_argument("--all-runs-json", type=str, default=None, help="Optional precomputed all_runs.json path")
     parser.add_argument("--output-dir", type=str, default="evaluate_script/stats_outputs", help="Directory to save output JSON/plots")
+    parser.add_argument("--latex-txt", type=str, default="evaluate_script/latex.txt", help="Path to save rendered LaTeX rows text")
     parser.add_argument("--algorithm", type=str, default="all", help="Filter algorithm (weighted_sum_ga or nsgaii). Use all to keep all")
     parser.add_argument("--explain-method", type=str, default="all", help="Filter explain method. Use all to keep all")
     parser.add_argument("--eps", type=str, default="all", help="Filter epsilon. Use integer value or all")
@@ -1100,6 +1108,7 @@ def main() -> None:
 
     result_root = Path(args.result_root)
     output_dir = Path(args.output_dir)
+    latex_txt_path = Path(args.latex_txt)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     target_algo = None
@@ -1175,6 +1184,7 @@ def main() -> None:
     _save_json(output_dir / "compare_loss_curves.json", loss_pairs)
     _save_json(output_dir / "compare_loss_curves_overall.json", overall_compare_loss)
     _save_json(output_dir / "latex_rows.json", latex_rows)
+    _save_text_lines(latex_txt_path, latex_rows)
 
     if args.make_plots:
         _plot_pair_curves_loss(loss_pairs, output_dir)
@@ -1185,6 +1195,7 @@ def main() -> None:
     print(f"Loss pairs: {len(loss_pairs)}")
     print("Mode: uniform_only (saliency_guided excluded)")
     print(f"Output dir: {output_dir}")
+    print(f"LaTeX txt: {latex_txt_path}")
 
     if args.print_latex:
         print("\n=== LaTeX Rows ===")

@@ -129,6 +129,18 @@ def create_fitness(fitness_function, model, x_tensor, normalize, y_true, explain
     raise ValueError(f"Unsupported fitness function: {fitness_function}")
 
 
+def save_non_dominated_front_txt(front_fitness, output_path):
+    if front_fitness is None:
+        return
+
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        for row in front_fitness:
+            score_1 = float(row[0])
+            score_2 = float(row[1])
+            f.write(f"{score_1:.12g} {score_2:.12g}\n")
+
+
 def run_attack(args):
     if args.seed is not None:
         random.seed(args.seed)
@@ -184,7 +196,12 @@ def run_attack(args):
     }
 
     attacker = create_attacker(ga_params, args.algorithm)
-    adv_chw, best_candidate, best_scores, history = attacker.attack()
+    attack_output = attacker.attack()
+    if len(attack_output) == 5:
+        adv_chw, best_candidate, best_scores, history, non_nominated_front_fitness = attack_output
+    else:
+        adv_chw, best_candidate, best_scores, history = attack_output
+        non_nominated_front_fitness = None
     adv_chw = adv_chw.detach().cpu()
     weighted_fitness = best_scores.get("weighted_fitness")
     if weighted_fitness is None:
@@ -217,6 +234,10 @@ def run_attack(args):
 
     os.makedirs(os.path.dirname(clean_map_path) or ".", exist_ok=True)
     os.makedirs(os.path.dirname(adv_map_path) or ".", exist_ok=True)
+
+    output_root, _ = os.path.splitext(args.output)
+    non_dominated_front_txt = f"{output_root}_non_dominated_front_scores.txt"
+    save_non_dominated_front_txt(non_nominated_front_fitness, non_dominated_front_txt)
 
     clean_saliency_map = fitness.saliency_true[0]
     adv_saliency_map, _ = explain_fn(model, adv_chw.unsqueeze(0).to(device), normalize, y_true)
@@ -272,6 +293,8 @@ def run_attack(args):
     print(f"saved_adv: {args.output}")
     print(f"saved_clean_map: {clean_map_path}")
     print(f"saved_adv_map: {adv_map_path}")
+    if non_nominated_front_fitness is not None:
+        print(f"saved_non_dominated_front_scores: {non_dominated_front_txt}")
     if margin_chart_path is not None and saliency_chart_path is not None:
         print(f"saved_margin_chart: {margin_chart_path}")
         print(f"saved_saliency_chart: {saliency_chart_path}")
@@ -298,6 +321,7 @@ def run_attack(args):
         "saved_adv": args.output,
         "saved_clean_map": clean_map_path,
         "saved_adv_map": adv_map_path,
+        "saved_non_dominated_front_scores": non_dominated_front_txt if non_nominated_front_fitness is not None else None,
         "saved_margin_chart": margin_chart_path,
         "saved_saliency_chart": saliency_chart_path,
     }
