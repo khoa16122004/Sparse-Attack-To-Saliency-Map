@@ -1,0 +1,131 @@
+\begin{table*}[t]
+\centering
+\caption{Comparison between GA with different $\lambda$ values and NSGA-II. $|P|=50$, $N=200$, $p_c=0.4$, $p_m=0.1$, 100 samples, Simple Grad. Harmonic Score$=\frac{2\,\mathrm{ASR}(1-\mathrm{SRO})}{\mathrm{ASR}+(1-\mathrm{SRO})}$.}
+\label{tab:ga_vs_nsga}
+
+\resizebox{\textwidth}{!}{
+\begin{tabular}{cc|cccccc|cccccc|cccccc}
+\toprule
+
+\multirow{3}{*}{Model}
+&
+\multirow{3}{*}{Algorithm}
+&
+\multicolumn{6}{c|}{$\epsilon=20$}
+&
+\multicolumn{6}{c|}{$\epsilon=50$}
+&
+\multicolumn{6}{c}{$\epsilon=100$}
+\\
+
+\cmidrule(lr){3-8}
+\cmidrule(lr){9-14}
+\cmidrule(lr){15-20}
+
+&
+&
+\multicolumn{3}{c|}{Margin Loss}
+&
+\multicolumn{3}{c|}{Log-Likelihood}
+&
+\multicolumn{3}{c|}{Margin Loss}
+&
+\multicolumn{3}{c|}{Log-Likelihood}
+&
+\multicolumn{3}{c|}{Margin Loss}
+&
+\multicolumn{3}{c}{Log-Likelihood}
+\\
+
+\cmidrule(lr){3-5}
+\cmidrule(lr){6-8}
+\cmidrule(lr){9-11}
+\cmidrule(lr){12-14}
+\cmidrule(lr){15-17}
+\cmidrule(lr){18-20}
+
+&
+&
+ASR$\uparrow$
+&
+SRO$\downarrow$
+&
+\textbf{H-Score}$\uparrow$
+&
+ASR$\uparrow$
+&
+SRO$\downarrow$
+&
+\textbf{H-Score}$\uparrow$
+&
+ASR$\uparrow$
+&
+SRO$\downarrow$
+&
+\textbf{H-Score}$\uparrow$
+&
+ASR$\uparrow$
+&
+SRO$\downarrow$
+&
+\textbf{H-Score}$\uparrow$
+&
+ASR$\uparrow$
+&
+SRO$\downarrow$
+&
+\textbf{H-Score}$\uparrow$
+&
+ASR$\uparrow$
+&
+SRO$\downarrow$
+&
+\textbf{H-Score}$\uparrow$
+\\
+
+\midrule
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\multirow{4}{*}{ResNet18}
+
+& GA ($\lambda=0.0$)
+& & & & & & & & & & & & & & & & & & \\
+& GA ($\lambda=0.5$)
+& & & & & & & & & & & & & & & & & & \\
+& GA ($\lambda=1.0$)
+& & & & & & & & & & & & & & & & & & \\
+& \textbf{NSGA-II}
+& & & & & & & & & & & & & & & & & & \\
+
+\midrule
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\multirow{4}{*}{VGG16}
+
+& GA ($\lambda=0.0$)
+& & & & & & & & & & & & & & & & & & \\
+& GA ($\lambda=0.5$)
+& & & & & & & & & & & & & & & & & & \\
+& GA ($\lambda=1.0$)
+& & & & & & & & & & & & & & & & & & \\
+& \textbf{NSGA-II}
+& & & & & & & & & & & & & & & & & & \\
+
+\midrule
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\multirow{4}{*}{ViT-B-32}
+
+& GA ($\lambda=0.0$)
+& & & & & & & & & & & & & & & & & & \\
+& GA ($\lambda=0.5$)
+& & & & & & & & & & & & & & & & & & \\
+& GA ($\lambda=1.0$)
+& & & & & & & & & & & & & & & & & & \\
+& \textbf{NSGA-II}
+& & & & & & & & & & & & & & & & & & \\
+
+\bottomrule
+\end{tabular}
+}
+\end{table*}

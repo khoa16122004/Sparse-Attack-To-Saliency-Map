@@ -6,12 +6,7 @@ def h_score(asr: float, sro: float) -> float:
 
 
 raw_scores = """
-&0.21&0.7282&
-&0.19&0.7281&
-&0.34&0.6753&
-&0.30&0.6717&
-&0.37&0.6406&
-&0.34&0.6380&   
+&0.88&0.4091&
 """
 
 for line in raw_scores.strip().splitlines():

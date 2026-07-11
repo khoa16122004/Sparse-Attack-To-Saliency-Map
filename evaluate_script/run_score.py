@@ -103,6 +103,10 @@ def _normalize_algorithm(name: str) -> str:
     return lower
 
 
+def _normalize_model_name(name: str) -> str:
+    return str(name or "").strip().lower()
+
+
 def _parse_approach(approach: str) -> Dict[str, object]:
     fields: Dict[str, object] = {
         "strategy": "unknown",
@@ -521,6 +525,7 @@ def _extract_run_stats(
 
 def _load_all_runs(
     root_dir: Path,
+    target_model: Optional[str] = None,
     target_algorithm: Optional[str] = None,
     target_explain_method: Optional[str] = None,
     target_w_m: Optional[float] = None,
@@ -565,6 +570,8 @@ def _load_all_runs(
     model_dirs = [d for d in sorted(root_dir.iterdir()) if d.is_dir()]
     for model_dir in tqdm(model_dirs, desc="models", unit="model"):
         model_name = model_dir.name
+        if target_model is not None and _normalize_model_name(model_name) != _normalize_model_name(target_model):
+            continue
         run_dirs = [d for d in sorted(model_dir.iterdir()) if d.is_dir()]
         for run_dir in tqdm(run_dirs, desc=f"runs {model_name}", unit="run", leave=False):
             stats = _extract_run_stats(
@@ -1046,6 +1053,7 @@ def parse_args() -> argparse.Namespace:
         )
     )
     parser.add_argument("--result-root", type=str, default="server_run/server_run", help="Root folder with model/run directories")
+    parser.add_argument("--model", type=str, default="all", help="Filter model name (e.g. resnet18). Use all to keep all")
     parser.add_argument("--all-runs-json", type=str, default=None, help="Optional precomputed all_runs.json path")
     parser.add_argument("--output-dir", type=str, default="evaluate_script/stats_outputs", help="Directory to save output JSON/plots")
     parser.add_argument("--algorithm", type=str, default="all", help="Filter algorithm (weighted_sum_ga or nsgaii). Use all to keep all")
@@ -1078,6 +1086,10 @@ def main() -> None:
     if args.algorithm.lower() != "all":
         target_algo = _normalize_algorithm(args.algorithm)
 
+    target_model = None
+    if _normalize_model_name(args.model) != "all":
+        target_model = args.model
+
     target_explain_method = None
     if args.explain_method.lower() != "all":
         target_explain_method = args.explain_method
@@ -1095,6 +1107,7 @@ def main() -> None:
     else:
         all_runs = _load_all_runs(
             result_root,
+            target_model=target_model,
             target_algorithm=target_algo,
             target_explain_method=target_explain_method,
             target_w_m=target_w_m,
@@ -1106,6 +1119,8 @@ def main() -> None:
         raise ValueError(f"No valid run found under: {result_root}")
 
     filtered = all_runs
+    if target_model is not None:
+        filtered = [r for r in filtered if _normalize_model_name(r.model) == _normalize_model_name(target_model)]
     if target_algo is not None:
         filtered = [r for r in filtered if r.algorithm == target_algo]
     if target_explain_method is not None:
