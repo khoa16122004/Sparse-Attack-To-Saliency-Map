@@ -129,6 +129,20 @@ def create_fitness(fitness_function, model, x_tensor, normalize, y_true, explain
     raise ValueError(f"Unsupported fitness function: {fitness_function}")
 
 
+def _sorted_front_by_score1(front_fitness, front_adv_images=None):
+    if front_fitness is None:
+        return None, front_adv_images
+
+    order = np.argsort(front_fitness[:, 0], kind="mergesort")
+    sorted_fitness = front_fitness[order]
+
+    if front_adv_images is None:
+        return sorted_fitness, None
+
+    sorted_adv_images = [front_adv_images[int(i)] for i in order]
+    return sorted_fitness, sorted_adv_images
+
+
 def save_non_dominated_front_txt(front_fitness, output_path):
     if front_fitness is None:
         return
@@ -250,6 +264,14 @@ def run_attack(args):
         adv_chw, best_candidate, best_scores, history = attack_output
         non_nominated_front_fitness = None
         non_nominated_front_history = None
+
+    non_nominated_front_fitness, non_nominated_front_advimg = _sorted_front_by_score1(
+        non_nominated_front_fitness,
+        non_nominated_front_advimg,
+    )
+    if non_nominated_front_history:
+        non_nominated_front_history = [_sorted_front_by_score1(front_fit)[0] for front_fit in non_nominated_front_history]
+
     adv_chw = adv_chw.detach().cpu()
     weighted_fitness = best_scores.get("weighted_fitness")
     if weighted_fitness is None:

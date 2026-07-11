@@ -5,6 +5,7 @@ import random
 import sys
 from pathlib import Path
 
+import numpy as np
 import torch
 from PIL import Image
 from torchvision.utils import save_image
@@ -315,6 +316,20 @@ def create_fitness(fitness_function, model, x_tensor, normalize, y_true, explain
     raise ValueError(f"Unsupported fitness function: {fitness_function}")
 
 
+def _sorted_front_by_score1(front_fitness, front_adv_images=None):
+    if front_fitness is None:
+        return None, front_adv_images
+
+    order = np.argsort(front_fitness[:, 0], kind="mergesort")
+    sorted_fitness = front_fitness[order]
+
+    if front_adv_images is None:
+        return sorted_fitness, None
+
+    sorted_adv_images = [front_adv_images[int(i)] for i in order]
+    return sorted_fitness, sorted_adv_images
+
+
 def run_attack_one(image_path, output_paths, model_name, model, spatial, normalize, explain_fn, args, device, sample_seed=None):
     if sample_seed is not None:
         random.seed(sample_seed)
@@ -380,6 +395,14 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         adv_chw, best_candidate, best_scores, history = attack_output
         non_nominated_front_fitness = None
         non_nominated_front_history = None
+
+    non_nominated_front_fitness, non_nominated_front_advimg = _sorted_front_by_score1(
+        non_nominated_front_fitness,
+        non_nominated_front_advimg,
+    )
+    if non_nominated_front_history:
+        non_nominated_front_history = [_sorted_front_by_score1(front_fit)[0] for front_fit in non_nominated_front_history]
+
     adv_chw_cpu = adv_chw.detach().cpu()
 
     save_image(x_tensor[0].detach().cpu(), str(output_paths["clean"]))
