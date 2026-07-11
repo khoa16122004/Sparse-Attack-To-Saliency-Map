@@ -33,7 +33,6 @@ class NSGAII(Weighted_Sum_GA):
         pop_fitness = np.stack([pop_margin_losses.cpu().numpy(), pop_saliency_losses.cpu().numpy()], axis=1)
         selected_idxs, fronts, non_nominated_front = self.selection(pop_fitness)
         non_nominated_front_fitness = pop_fitness[non_nominated_front].copy()
-        non_nominated_front_advimg = [population.population[i].generate_adv_image() for i in non_nominated_front]
         population = Population([population.population[i] for i in selected_idxs], self.params['fitness'])
         pop_margin_losses = pop_margin_losses[selected_idxs]
         pop_saliency_losses = pop_saliency_losses[selected_idxs]
@@ -47,7 +46,6 @@ class NSGAII(Weighted_Sum_GA):
             'first_success_iteration': first_success_iteration,
         }
         history = [best_scores]
-        non_nominated_front_history = [non_nominated_front_fitness.copy()]
         
 
         for it in tqdm(range(1, self.params["iterations"])):            
@@ -71,8 +69,6 @@ class NSGAII(Weighted_Sum_GA):
             pool_fitness = np.stack([pool_margin_losses.cpu().numpy(), pool_saliency_losses.cpu().numpy()], axis=1)
             winner_idxs, fronts, non_nominated_front = self.selection(pool_fitness)
             non_nominated_front_fitness = pool_fitness[non_nominated_front]
-            non_nominated_front_advimg = [pool_solutions[i].generate_adv_image() for i in non_nominated_front]
-            non_nominated_front_history.append(non_nominated_front_fitness.copy())
             population = Population([pool_solutions[i] for i in winner_idxs], self.params['fitness'])
             pop_margin_losses = pool_margin_losses[winner_idxs]
             pop_saliency_losses = pool_saliency_losses[winner_idxs]
@@ -91,11 +87,11 @@ class NSGAII(Weighted_Sum_GA):
             history.append(best_scores)
             # print(f"Iteration {it}: Best margin_loss={best_scores['margin_loss']:.4f}, Best saliency_loss={best_scores['saliency_loss']:.4f}")
         
-        return best_candidate.generate_adv_image(), best_candidate, best_scores, history, non_nominated_front_fitness, non_nominated_front_history, non_nominated_front_advimg
+        return best_candidate.generate_adv_image(), best_candidate, best_scores, history, non_nominated_front_fitness
         
     def selection(self, fitnesess):
         pop_size = self.params["pop_size"]
-        fronts = self.nds.do(fitnesess, n_stop_if_ranked=pop_size) # [ [id1, id2], [id3, id4] ,...]
+        fronts = self.nds.do(fitnesess) # [ [id1, id2], [id3, id4] ,...]
         non_nominated_front = fronts[0]
         selected_idxs = []
         for k, front in enumerate(fronts):
@@ -115,48 +111,3 @@ class NSGAII(Weighted_Sum_GA):
 
             
             
-    def calculating_crowding_distance(self, F):
-        infinity = 1e+14
-
-        n_points = F.shape[0]
-        n_obj = F.shape[1]
-
-        if n_points <= 2:
-            return np.full(n_points, infinity)
-        else:
-
-            # sort each column and get index
-            I = np.argsort(F, axis=0, kind='mergesort')
-
-            # now really sort the whole array
-            F = F[I, np.arange(n_obj)]
-
-            # get the distance to the last element in sorted list and replace zeros with actual values
-            dist = np.concatenate([F, np.full((1, n_obj), np.inf)]) - np.concatenate([np.full((1, n_obj), -np.inf), F])
-
-            index_dist_is_zero = np.where(dist == 0)
-
-            dist_to_last = np.copy(dist)
-            for i, j in zip(*index_dist_is_zero):
-                dist_to_last[i, j] = dist_to_last[i - 1, j]
-
-            dist_to_next = np.copy(dist)
-            for i, j in reversed(list(zip(*index_dist_is_zero))):
-                dist_to_next[i, j] = dist_to_next[i + 1, j]
-
-            # normalize all the distances
-            norm = np.max(F, axis=0) - np.min(F, axis=0)
-            norm[norm == 0] = np.nan
-            dist_to_last, dist_to_next = dist_to_last[:-1] / norm, dist_to_next[1:] / norm
-
-            # if we divided by zero because all values in one columns are equal replace by none
-            dist_to_last[np.isnan(dist_to_last)] = 0.0
-            dist_to_next[np.isnan(dist_to_next)] = 0.0
-
-            # sum up the distance to next and last and norm by objectives - also reorder from sorted list
-            J = np.argsort(I, axis=0)
-            crowding = np.sum(dist_to_last[J, np.arange(n_obj)] + dist_to_next[J, np.arange(n_obj)], axis=1) / n_obj
-
-        # replace infinity with a large number
-        crowding[np.isinf(crowding)] = infinity
-        return crowding

@@ -3,6 +3,7 @@ import os
 import random
 import sys
 
+import numpy as np
 import torch
 from PIL import Image
 from torchvision.utils import save_image
@@ -147,18 +148,12 @@ def create_fitness(fitness_function, model, x_tensor, normalize, y_true, explain
     raise ValueError(f"Unsupported fitness function: {fitness_function}")
 
 
-def _sorted_front_by_score1(front_fitness, front_adv_images=None):
+def _sorted_front_by_score1(front_fitness):
     if front_fitness is None:
-        return None, front_adv_images
+        return None
 
     order = np.argsort(front_fitness[:, 0], kind="mergesort")
-    sorted_fitness = front_fitness[order]
-
-    if front_adv_images is None:
-        return sorted_fitness, None
-
-    sorted_adv_images = [front_adv_images[int(i)] for i in order]
-    return sorted_fitness, sorted_adv_images
+    return front_fitness[order]
 
 
 def save_non_dominated_front_txt(front_fitness, output_path):
@@ -171,39 +166,6 @@ def save_non_dominated_front_txt(front_fitness, output_path):
             score_1 = float(row[0])
             score_2 = float(row[1])
             f.write(f"{score_1:.12g} {score_2:.12g}\n")
-
-
-def save_non_dominated_front_history(front_history, output_dir):
-    if not front_history:
-        return
-
-    os.makedirs(output_dir, exist_ok=True)
-    for it, front_fitness in enumerate(front_history):
-        output_path = os.path.join(output_dir, f"iter_{it:04d}.txt")
-        save_non_dominated_front_txt(front_fitness, output_path)
-
-
-def save_non_dominated_front_items(front_fitness, front_adv_images, model, normalize, y_true, explain_fn, device, output_dir):
-    if front_fitness is None or front_adv_images is None or len(front_adv_images) == 0:
-        return None
-
-    if len(front_adv_images) != len(front_fitness):
-        raise ValueError(
-            f"non-dominated front mismatch: {len(front_adv_images)} images vs {len(front_fitness)} fitness rows"
-        )
-
-    os.makedirs(output_dir, exist_ok=True)
-
-    adv_batch = torch.stack([img.detach().to(device) for img in front_adv_images], dim=0)
-    front_saliency_maps, _ = explain_fn(model, adv_batch, normalize, y_true)
-
-    for line_idx, (adv_img, saliency_map) in enumerate(zip(front_adv_images, front_saliency_maps)):
-        adv_path = os.path.join(output_dir, f"line_{line_idx:04d}_adv.png")
-        map_path = os.path.join(output_dir, f"line_{line_idx:04d}_map.png")
-        save_image(adv_img.detach().cpu(), adv_path)
-        _save_saliency_map(saliency_map, map_path)
-
-    return output_dir
 
 
 def run_attack(args):
@@ -262,33 +224,13 @@ def run_attack(args):
 
     attacker = create_attacker(ga_params, args.algorithm)
     attack_output = attacker.attack()
-    non_nominated_front_advimg = None
-    if len(attack_output) >= 7:
-        (
-            adv_chw,
-            best_candidate,
-            best_scores,
-            history,
-            non_nominated_front_fitness,
-            non_nominated_front_history,
-            non_nominated_front_advimg,
-        ) = attack_output[:7]
-    elif len(attack_output) == 6:
-        adv_chw, best_candidate, best_scores, history, non_nominated_front_fitness, non_nominated_front_history = attack_output
-    elif len(attack_output) == 5:
+    if len(attack_output) >= 5:
         adv_chw, best_candidate, best_scores, history, non_nominated_front_fitness = attack_output
-        non_nominated_front_history = None
     else:
         adv_chw, best_candidate, best_scores, history = attack_output
         non_nominated_front_fitness = None
-        non_nominated_front_history = None
 
-    non_nominated_front_fitness, non_nominated_front_advimg = _sorted_front_by_score1(
-        non_nominated_front_fitness,
-        non_nominated_front_advimg,
-    )
-    if non_nominated_front_history:
-        non_nominated_front_history = [_sorted_front_by_score1(front_fit)[0] for front_fit in non_nominated_front_history]
+    non_nominated_front_fitness = _sorted_front_by_score1(non_nominated_front_fitness)
 
     adv_chw = adv_chw.detach().cpu()
     weighted_fitness = best_scores.get("weighted_fitness")
@@ -336,20 +278,7 @@ def run_attack(args):
 
     output_root, _ = os.path.splitext(args.output)
     non_dominated_front_txt = f"{output_root}_non_dominated_front_scores.txt"
-    non_dominated_front_history_dir = f"{output_root}_non_dominated_front_history"
-    non_dominated_front_items_dir = f"{output_root}_non_dominated_front_items"
     save_non_dominated_front_txt(non_nominated_front_fitness, non_dominated_front_txt)
-    save_non_dominated_front_history(non_nominated_front_history, non_dominated_front_history_dir)
-    saved_non_dominated_front_items_dir = save_non_dominated_front_items(
-        non_nominated_front_fitness,
-        non_nominated_front_advimg,
-        model,
-        normalize,
-        y_true,
-        explain_fn,
-        device,
-        non_dominated_front_items_dir,
-    )
 
     clean_saliency_map = fitness.saliency_true[0]
     adv_saliency_map, _ = explain_fn(model, adv_chw.unsqueeze(0).to(device), normalize, y_true)
@@ -424,10 +353,6 @@ def run_attack(args):
     print(f"saved_adv_map_class_b: {four_map_paths['adv_b']}")
     if non_nominated_front_fitness is not None:
         print(f"saved_non_dominated_front_scores: {non_dominated_front_txt}")
-    if non_nominated_front_history:
-        print(f"saved_non_dominated_front_history_dir: {non_dominated_front_history_dir}")
-    if saved_non_dominated_front_items_dir is not None:
-        print(f"saved_non_dominated_front_items_dir: {saved_non_dominated_front_items_dir}")
     if margin_chart_path is not None and saliency_chart_path is not None:
         print(f"saved_margin_chart: {margin_chart_path}")
         print(f"saved_saliency_chart: {saliency_chart_path}")
@@ -459,8 +384,6 @@ def run_attack(args):
         "saved_adv_map_class_a": four_map_paths["adv_a"],
         "saved_adv_map_class_b": four_map_paths["adv_b"],
         "saved_non_dominated_front_scores": non_dominated_front_txt if non_nominated_front_fitness is not None else None,
-        "saved_non_dominated_front_history_dir": non_dominated_front_history_dir if non_nominated_front_history else None,
-        "saved_non_dominated_front_items_dir": saved_non_dominated_front_items_dir,
         "saved_margin_chart": margin_chart_path,
         "saved_saliency_chart": saliency_chart_path,
     }

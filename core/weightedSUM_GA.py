@@ -1,7 +1,9 @@
 import torch
+import numpy as np
 from Solutions import Solution, Population
 from operators import build_pixel_sampling_probs, generate_offspring, init_population
 from tqdm import tqdm
+from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
 
 
 class Weighted_Sum_GA:
@@ -10,7 +12,7 @@ class Weighted_Sum_GA:
         self.device = params.get("device", "cuda" if torch.cuda.is_available() else "cpu")
         self.operator_strategy = params.get("operator_strategy", "uniform")
         self.saliency_temperature = params.get("saliency_temperature", 1.0)
-
+        self.nds = NonDominatedSorting()
         # Saliency-guided strategy is used for initialization only.
         self.init_pixel_probs = None
         if self.operator_strategy == "saliency_guided":
@@ -46,6 +48,9 @@ class Weighted_Sum_GA:
             'first_success_iteration': first_success_iteration,
         }
         history = [best_scores]
+        stack_fitness = np.stack([pop_margin_losses.cpu().numpy(), pop_saliency_losses.cpu().numpy()], axis=1)
+        non_nominated_front = self.nds.do(stack_fitness)[0] # [ [id1, id2], [id3, id4] ,...]
+        non_nominated_front_fitness = stack_fitness[non_nominated_front]
 
         for it in tqdm(range(1, self.params["iterations"])):            
             parent_indices = torch.randint(
@@ -68,7 +73,11 @@ class Weighted_Sum_GA:
             pool_margin_losses = torch.cat((pop_margin_losses, off_margin_losses), dim=0)
             pool_saliency_losses = torch.cat((pop_saliency_losses, off_saliency_losses), dim=0)
             pool_weighted_fitness = torch.cat((pop_weighted_fitness, off_weighted_fitness), dim=0)
-
+            stack_fitness = np.stack([pool_margin_losses.cpu().numpy(), pool_saliency_losses.cpu().numpy()], axis=1)
+            non_nominated_front = self.nds.do(stack_fitness)[0]
+            non_nominated_front_fitness = stack_fitness[non_nominated_front]
+            
+            
             winner_idxs = self.tournament_selection(pool_weighted_fitness)
             population = Population([pool[i] for i in winner_idxs], self.params['fitness'])
             pop_margin_losses = pool_margin_losses[winner_idxs]
@@ -88,7 +97,7 @@ class Weighted_Sum_GA:
             }
             history.append(best_scores)
             print(f"Iteration {it}: best weighted fitness = {best_scores['weighted_fitness']:.4f}, margin loss = {best_scores['margin_loss']:.4f}, saliency loss = {best_scores['saliency_loss']:.4f}")
-        return best_candidate.generate_adv_image(), best_candidate, best_scores, history
+        return best_candidate.generate_adv_image(), best_candidate, best_scores, history, non_nominated_front_fitness
             
             
             
@@ -118,6 +127,54 @@ class Weighted_Sum_GA:
             # Keep crossover and mutation uniform for both strategies.
             pixel_probs=None,
         )
+        
+    def calculating_crowding_distance(self, F):
+        infinity = 1e+14
+
+        n_points = F.shape[0]
+        n_obj = F.shape[1]
+
+        if n_points <= 2:
+            return np.full(n_points, infinity)
+        else:
+
+            # sort each column and get index
+            I = np.argsort(F, axis=0, kind='mergesort')
+
+            # now really sort the whole array
+            F = F[I, np.arange(n_obj)]
+
+            # get the distance to the last element in sorted list and replace zeros with actual values
+            dist = np.concatenate([F, np.full((1, n_obj), np.inf)]) - np.concatenate([np.full((1, n_obj), -np.inf), F])
+
+            index_dist_is_zero = np.where(dist == 0)
+
+            dist_to_last = np.copy(dist)
+            for i, j in zip(*index_dist_is_zero):
+                dist_to_last[i, j] = dist_to_last[i - 1, j]
+
+            dist_to_next = np.copy(dist)
+            for i, j in reversed(list(zip(*index_dist_is_zero))):
+                dist_to_next[i, j] = dist_to_next[i + 1, j]
+
+            # normalize all the distances
+            norm = np.max(F, axis=0) - np.min(F, axis=0)
+            norm[norm == 0] = np.nan
+            dist_to_last, dist_to_next = dist_to_last[:-1] / norm, dist_to_next[1:] / norm
+
+            # if we divided by zero because all values in one columns are equal replace by none
+            dist_to_last[np.isnan(dist_to_last)] = 0.0
+            dist_to_next[np.isnan(dist_to_next)] = 0.0
+
+            # sum up the distance to next and last and norm by objectives - also reorder from sorted list
+            J = np.argsort(I, axis=0)
+            crowding = np.sum(dist_to_last[J, np.arange(n_obj)] + dist_to_next[J, np.arange(n_obj)], axis=1) / n_obj
+
+        # replace infinity with a large number
+        crowding[np.isinf(crowding)] = infinity
+        return crowding
+        
+        
     
     
     
