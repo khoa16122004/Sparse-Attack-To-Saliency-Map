@@ -61,10 +61,10 @@ EPSILONS="100 50 20"
 # Example:
 #   W_MARGIN=0.7 W_SALIENCY=0.3 sbatch resnet18_NSGAII.sh
 #   sbatch resnet18_NSGAII.sh 0.7 0.3
-W_MARGIN="${W_MARGIN:-0.0}"
-W_SALIENCY="${W_SALIENCY:-1.0}"
+W_MARGIN="${W_MARGIN:-0.5}"
+W_SALIENCY="${W_SALIENCY:-0.5}"
 SEED="${SEED:-22520691}"
-OUTPUT_ROOT="test_server_run_NSGAII_seed$SEED"
+OUTPUT_ROOT="offical/server_run_seed/GA/$SEED/"
 
 for MODEL_NAME in $MODEL_NAMES; do
     for STRATEGY in uniform; do
