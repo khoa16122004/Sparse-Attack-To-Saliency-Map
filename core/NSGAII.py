@@ -33,6 +33,7 @@ class NSGAII(Weighted_Sum_GA):
         pop_fitness = np.stack([pop_margin_losses.cpu().numpy(), pop_saliency_losses.cpu().numpy()], axis=1)
         selected_idxs, fronts, non_nominated_front = self.selection(pop_fitness)
         non_nominated_front_fitness = pop_fitness[non_nominated_front].copy()
+        non_nominated_front_advimg = [population.population[i].generate_adv_image() for i in non_nominated_front]
         population = Population([population.population[i] for i in selected_idxs], self.params['fitness'])
         pop_margin_losses = pop_margin_losses[selected_idxs]
         pop_saliency_losses = pop_saliency_losses[selected_idxs]
@@ -47,6 +48,7 @@ class NSGAII(Weighted_Sum_GA):
         }
         history = [best_scores]
         non_nominated_front_history = [non_nominated_front_fitness.copy()]
+        
 
         for it in tqdm(range(1, self.params["iterations"])):            
             parent_indices = torch.randint(
@@ -69,6 +71,7 @@ class NSGAII(Weighted_Sum_GA):
             pool_fitness = np.stack([pool_margin_losses.cpu().numpy(), pool_saliency_losses.cpu().numpy()], axis=1)
             winner_idxs, fronts, non_nominated_front = self.selection(pool_fitness)
             non_nominated_front_fitness = pool_fitness[non_nominated_front]
+            non_nominated_front_advimg = [pool_solutions[i].generate_adv_image() for i in non_nominated_front]
             non_nominated_front_history.append(non_nominated_front_fitness.copy())
             population = Population([pool_solutions[i] for i in winner_idxs], self.params['fitness'])
             pop_margin_losses = pool_margin_losses[winner_idxs]
@@ -88,7 +91,7 @@ class NSGAII(Weighted_Sum_GA):
             history.append(best_scores)
             # print(f"Iteration {it}: Best margin_loss={best_scores['margin_loss']:.4f}, Best saliency_loss={best_scores['saliency_loss']:.4f}")
         
-        return best_candidate.generate_adv_image(), best_candidate, best_scores, history, non_nominated_front_fitness, non_nominated_front_history
+        return best_candidate.generate_adv_image(), best_candidate, best_scores, history, non_nominated_front_fitness, non_nominated_front_history, non_nominated_front_advimg
         
     def selection(self, fitnesess):
         pop_size = self.params["pop_size"]

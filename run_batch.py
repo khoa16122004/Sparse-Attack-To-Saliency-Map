@@ -184,6 +184,7 @@ def prepare_output_paths(output_dir):
         "history_txt": output_dir / "history_scores.txt",
         "non_dominated_front_txt": output_dir / "non_dominated_front_scores.txt",
         "non_dominated_front_history_dir": output_dir / "non_dominated_front_history",
+        "non_dominated_front_items_dir": output_dir / "non_dominated_front_items",
         "summary": output_dir / "summary.json",
     }
 
@@ -220,6 +221,29 @@ def save_non_dominated_front_history(front_history, output_dir):
     for it, front_fitness in enumerate(front_history):
         output_path = output_dir / f"iter_{it:04d}.txt"
         save_non_dominated_front_txt(front_fitness, str(output_path))
+
+
+def save_non_dominated_front_items(front_fitness, front_adv_images, model, normalize, y_true, explain_fn, device, output_dir):
+    if front_fitness is None or front_adv_images is None or len(front_adv_images) == 0:
+        return None
+
+    if len(front_adv_images) != len(front_fitness):
+        raise ValueError(
+            f"non-dominated front mismatch: {len(front_adv_images)} images vs {len(front_fitness)} fitness rows"
+        )
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    adv_batch = torch.stack([img.detach().to(device) for img in front_adv_images], dim=0)
+    front_saliency_maps, _ = explain_fn(model, adv_batch, normalize, y_true)
+
+    for line_idx, (adv_img, saliency_map) in enumerate(zip(front_adv_images, front_saliency_maps)):
+        adv_path = output_dir / f"line_{line_idx:04d}_adv.png"
+        map_path = output_dir / f"line_{line_idx:04d}_map.png"
+        save_image(adv_img.detach().cpu(), str(adv_path))
+        _save_saliency_map(saliency_map, str(map_path))
+
+    return output_dir
 
 
 def history_to_lists(history):
@@ -336,7 +360,18 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
 
     attacker = create_attacker(ga_params, args.algorithm)
     attack_output = attacker.attack()
-    if len(attack_output) == 6:
+    non_nominated_front_advimg = None
+    if len(attack_output) >= 7:
+        (
+            adv_chw,
+            best_candidate,
+            best_scores,
+            history,
+            non_nominated_front_fitness,
+            non_nominated_front_history,
+            non_nominated_front_advimg,
+        ) = attack_output[:7]
+    elif len(attack_output) == 6:
         adv_chw, best_candidate, best_scores, history, non_nominated_front_fitness, non_nominated_front_history = attack_output
     elif len(attack_output) == 5:
         adv_chw, best_candidate, best_scores, history, non_nominated_front_fitness = attack_output
@@ -361,6 +396,16 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
     save_history_scores_txt(history, str(output_paths["history_txt"]))
     save_non_dominated_front_txt(non_nominated_front_fitness, str(output_paths["non_dominated_front_txt"]))
     save_non_dominated_front_history(non_nominated_front_history, output_paths["non_dominated_front_history_dir"])
+    saved_non_dominated_front_items_dir = save_non_dominated_front_items(
+        non_nominated_front_fitness,
+        non_nominated_front_advimg,
+        model,
+        normalize,
+        y_true,
+        explain_fn,
+        device,
+        output_paths["non_dominated_front_items_dir"],
+    )
     history_margin, history_saliency = history_to_lists(history)
     weighted_fitness = best_scores.get("weighted_fitness")
     if weighted_fitness is None:
@@ -384,6 +429,7 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "history_scores_file": str(output_paths["history_txt"]),
         "non_dominated_front_scores_file": str(output_paths["non_dominated_front_txt"]) if non_nominated_front_fitness is not None else None,
         "non_dominated_front_history_dir": str(output_paths["non_dominated_front_history_dir"]) if non_nominated_front_history else None,
+        "non_dominated_front_items_dir": str(saved_non_dominated_front_items_dir) if saved_non_dominated_front_items_dir is not None else None,
         "history_margin": history_margin,
         "history_saliency": history_saliency,
     }

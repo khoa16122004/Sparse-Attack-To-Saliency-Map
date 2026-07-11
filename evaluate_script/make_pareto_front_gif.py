@@ -47,12 +47,12 @@ def main() -> None:
     )
     parser.add_argument("--history-dir", type=str, required=True, help="Directory with iter_XXXX.txt files")
     parser.add_argument("--output", type=str, default=None, help="Output gif path")
-    parser.add_argument("--fps", type=int, default=4, help="GIF frames per second")
-    parser.add_argument("--dpi", type=int, default=150, help="GIF dpi")
+    parser.add_argument("--fps", type=int, default=6, help="GIF frames per second")
+    parser.add_argument("--dpi", type=int, default=120, help="GIF dpi")
     parser.add_argument("--xlabel", type=str, default="Score 1")
     parser.add_argument("--ylabel", type=str, default="Score 2")
     parser.add_argument("--title-prefix", type=str, default="Pareto Front Evolution")
-    parser.add_argument("--no-connect", action="store_true", help="Disable connecting points in x-sorted order")
+    parser.add_argument("--connect", action="store_true", help="Connect points in x-sorted order")
     args = parser.parse_args()
 
     history_dir = Path(args.history_dir)
@@ -77,33 +77,60 @@ def main() -> None:
     y_pad = max((y_max - y_min) * 0.05, 1e-6)
 
     import matplotlib.pyplot as plt
-    from matplotlib.animation import FuncAnimation, PillowWriter
+    from PIL import Image
 
-    fig, ax = plt.subplots(figsize=(7.2, 5.6))
+    fig, ax = plt.subplots(figsize=(6.8, 5.2))
+    ax.set_xlim(x_min - x_pad, x_max + x_pad)
+    ax.set_ylim(y_min - y_pad, y_max + y_pad)
+    ax.set_xlabel(args.xlabel)
+    ax.set_ylabel(args.ylabel)
+    ax.grid(alpha=0.25)
 
-    def update(frame_idx: int):
-        ax.clear()
+    scatter = ax.scatter([], [], s=24, alpha=0.9, color="#1f77b4")
+    line = None
+    if args.connect:
+        (line,) = ax.plot([], [], color="#ff7f0e", linewidth=1.1, alpha=0.85)
+
+    def render_frame(frame_idx: int):
         front = fronts[frame_idx]
-
-        ax.set_xlim(x_min - x_pad, x_max + x_pad)
-        ax.set_ylim(y_min - y_pad, y_max + y_pad)
-        ax.set_xlabel(args.xlabel)
-        ax.set_ylabel(args.ylabel)
-        ax.grid(alpha=0.25)
-
         if front.shape[0] > 0:
-            ax.scatter(front[:, 0], front[:, 1], s=26, alpha=0.9, color="#1f77b4")
-            if not args.no_connect and front.shape[0] >= 2:
+            scatter.set_offsets(front)
+            if args.connect and line is not None and front.shape[0] >= 2:
                 sort_idx = np.argsort(front[:, 0])
                 sorted_front = front[sort_idx]
-                ax.plot(sorted_front[:, 0], sorted_front[:, 1], color="#ff7f0e", linewidth=1.2, alpha=0.85)
+                line.set_data(sorted_front[:, 0], sorted_front[:, 1])
+            elif line is not None:
+                line.set_data([], [])
+        else:
+            scatter.set_offsets(np.empty((0, 2)))
+            if line is not None:
+                line.set_data([], [])
 
         iter_idx = _extract_iter_index(files[frame_idx])
         ax.set_title(f"{args.title_prefix} | Iteration {iter_idx}")
+        fig.canvas.draw()
 
-    anim = FuncAnimation(fig, update, frames=len(files), interval=max(1, int(1000 / max(args.fps, 1))))
-    writer = PillowWriter(fps=max(args.fps, 1))
-    anim.save(output_path, writer=writer, dpi=args.dpi)
+        rgba = np.asarray(fig.canvas.buffer_rgba(), dtype=np.uint8)
+        rgb = rgba[:, :, :3]
+        pil_rgb = Image.fromarray(rgb, mode="RGB")
+
+        # Quantize explicitly to avoid Pillow's internal GIF conversion crashes.
+        try:
+            return pil_rgb.quantize(colors=255, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
+        except Exception:
+            return pil_rgb.quantize(colors=255, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
+
+    frames = [render_frame(i) for i in range(len(files))]
+    frame_duration_ms = max(1, int(1000 / max(args.fps, 1)))
+    frames[0].save(
+        output_path,
+        save_all=True,
+        append_images=frames[1:],
+        duration=frame_duration_ms,
+        loop=0,
+        optimize=False,
+        disposal=2,
+    )
     plt.close(fig)
 
     print(f"Saved GIF: {output_path}")
