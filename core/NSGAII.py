@@ -46,6 +46,7 @@ class NSGAII(Weighted_Sum_GA):
             'first_success_iteration': first_success_iteration,
         }
         history = [best_scores]
+        non_nominated_front_history = [non_nominated_front_fitness.copy()]
 
         for it in tqdm(range(1, self.params["iterations"])):            
             parent_indices = torch.randint(
@@ -68,8 +69,7 @@ class NSGAII(Weighted_Sum_GA):
             pool_fitness = np.stack([pool_margin_losses.cpu().numpy(), pool_saliency_losses.cpu().numpy()], axis=1)
             winner_idxs, fronts, non_nominated_front = self.selection(pool_fitness)
             non_nominated_front_fitness = pool_fitness[non_nominated_front]
-
-            
+            non_nominated_front_history.append(non_nominated_front_fitness.copy())
             population = Population([pool_solutions[i] for i in winner_idxs], self.params['fitness'])
             pop_margin_losses = pool_margin_losses[winner_idxs]
             pop_saliency_losses = pool_saliency_losses[winner_idxs]
@@ -88,7 +88,7 @@ class NSGAII(Weighted_Sum_GA):
             history.append(best_scores)
             # print(f"Iteration {it}: Best margin_loss={best_scores['margin_loss']:.4f}, Best saliency_loss={best_scores['saliency_loss']:.4f}")
         
-        return best_candidate.generate_adv_image(), best_candidate, best_scores, history, non_nominated_front_fitness
+        return best_candidate.generate_adv_image(), best_candidate, best_scores, history, non_nominated_front_fitness, non_nominated_front_history
         
     def selection(self, fitnesess):
         pop_size = self.params["pop_size"]

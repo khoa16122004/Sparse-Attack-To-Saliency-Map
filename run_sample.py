@@ -141,6 +141,16 @@ def save_non_dominated_front_txt(front_fitness, output_path):
             f.write(f"{score_1:.12g} {score_2:.12g}\n")
 
 
+def save_non_dominated_front_history(front_history, output_dir):
+    if not front_history:
+        return
+
+    os.makedirs(output_dir, exist_ok=True)
+    for it, front_fitness in enumerate(front_history):
+        output_path = os.path.join(output_dir, f"iter_{it:04d}.txt")
+        save_non_dominated_front_txt(front_fitness, output_path)
+
+
 def run_attack(args):
     if args.seed is not None:
         random.seed(args.seed)
@@ -197,11 +207,15 @@ def run_attack(args):
 
     attacker = create_attacker(ga_params, args.algorithm)
     attack_output = attacker.attack()
-    if len(attack_output) == 5:
+    if len(attack_output) == 6:
+        adv_chw, best_candidate, best_scores, history, non_nominated_front_fitness, non_nominated_front_history = attack_output
+    elif len(attack_output) == 5:
         adv_chw, best_candidate, best_scores, history, non_nominated_front_fitness = attack_output
+        non_nominated_front_history = None
     else:
         adv_chw, best_candidate, best_scores, history = attack_output
         non_nominated_front_fitness = None
+        non_nominated_front_history = None
     adv_chw = adv_chw.detach().cpu()
     weighted_fitness = best_scores.get("weighted_fitness")
     if weighted_fitness is None:
@@ -237,7 +251,9 @@ def run_attack(args):
 
     output_root, _ = os.path.splitext(args.output)
     non_dominated_front_txt = f"{output_root}_non_dominated_front_scores.txt"
+    non_dominated_front_history_dir = f"{output_root}_non_dominated_front_history"
     save_non_dominated_front_txt(non_nominated_front_fitness, non_dominated_front_txt)
+    save_non_dominated_front_history(non_nominated_front_history, non_dominated_front_history_dir)
 
     clean_saliency_map = fitness.saliency_true[0]
     adv_saliency_map, _ = explain_fn(model, adv_chw.unsqueeze(0).to(device), normalize, y_true)
@@ -295,6 +311,8 @@ def run_attack(args):
     print(f"saved_adv_map: {adv_map_path}")
     if non_nominated_front_fitness is not None:
         print(f"saved_non_dominated_front_scores: {non_dominated_front_txt}")
+    if non_nominated_front_history:
+        print(f"saved_non_dominated_front_history_dir: {non_dominated_front_history_dir}")
     if margin_chart_path is not None and saliency_chart_path is not None:
         print(f"saved_margin_chart: {margin_chart_path}")
         print(f"saved_saliency_chart: {saliency_chart_path}")
@@ -322,6 +340,7 @@ def run_attack(args):
         "saved_clean_map": clean_map_path,
         "saved_adv_map": adv_map_path,
         "saved_non_dominated_front_scores": non_dominated_front_txt if non_nominated_front_fitness is not None else None,
+        "saved_non_dominated_front_history_dir": non_dominated_front_history_dir if non_nominated_front_history else None,
         "saved_margin_chart": margin_chart_path,
         "saved_saliency_chart": saliency_chart_path,
     }

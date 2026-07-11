@@ -183,6 +183,7 @@ def prepare_output_paths(output_dir):
         "adv_map": output_dir / "adv_map.png",
         "history_txt": output_dir / "history_scores.txt",
         "non_dominated_front_txt": output_dir / "non_dominated_front_scores.txt",
+        "non_dominated_front_history_dir": output_dir / "non_dominated_front_history",
         "summary": output_dir / "summary.json",
     }
 
@@ -210,6 +211,15 @@ def save_non_dominated_front_txt(front_fitness, output_path):
             score_1 = float(row[0])
             score_2 = float(row[1])
             f.write(f"{score_1:.12g} {score_2:.12g}\n")
+
+
+def save_non_dominated_front_history(front_history, output_dir):
+    if not front_history:
+        return
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for it, front_fitness in enumerate(front_history):
+        output_path = output_dir / f"iter_{it:04d}.txt"
+        save_non_dominated_front_txt(front_fitness, str(output_path))
 
 
 def history_to_lists(history):
@@ -326,11 +336,15 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
 
     attacker = create_attacker(ga_params, args.algorithm)
     attack_output = attacker.attack()
-    if len(attack_output) == 5:
+    if len(attack_output) == 6:
+        adv_chw, best_candidate, best_scores, history, non_nominated_front_fitness, non_nominated_front_history = attack_output
+    elif len(attack_output) == 5:
         adv_chw, best_candidate, best_scores, history, non_nominated_front_fitness = attack_output
+        non_nominated_front_history = None
     else:
         adv_chw, best_candidate, best_scores, history = attack_output
         non_nominated_front_fitness = None
+        non_nominated_front_history = None
     adv_chw_cpu = adv_chw.detach().cpu()
 
     save_image(x_tensor[0].detach().cpu(), str(output_paths["clean"]))
@@ -346,6 +360,7 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
 
     save_history_scores_txt(history, str(output_paths["history_txt"]))
     save_non_dominated_front_txt(non_nominated_front_fitness, str(output_paths["non_dominated_front_txt"]))
+    save_non_dominated_front_history(non_nominated_front_history, output_paths["non_dominated_front_history_dir"])
     history_margin, history_saliency = history_to_lists(history)
     weighted_fitness = best_scores.get("weighted_fitness")
     if weighted_fitness is None:
@@ -368,6 +383,7 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "saliency_temperature": float(args.saliency_temperature),
         "history_scores_file": str(output_paths["history_txt"]),
         "non_dominated_front_scores_file": str(output_paths["non_dominated_front_txt"]) if non_nominated_front_fitness is not None else None,
+        "non_dominated_front_history_dir": str(output_paths["non_dominated_front_history_dir"]) if non_nominated_front_history else None,
         "history_margin": history_margin,
         "history_saliency": history_saliency,
     }
