@@ -66,11 +66,19 @@ W_SALIENCY="${W_SALIENCY:-1.0}"
 SEED="${SEED:-22520691}"
 OUTPUT_ROOT="server_run_seed$SEED"
 
+# At extreme weights (1,0) or (0,1), both fitness formulations produce the same objective.
+FITNESSES="margin_saliency cross_entropy_saliency"
+case "${W_MARGIN}:${W_SALIENCY}" in
+    "0:1"|"0:1.0"|"0.0:1"|"0.0:1.0"|"1:0"|"1:0.0"|"1.0:0"|"1.0:0.0")
+        FITNESSES="margin_saliency"
+        ;;
+esac
+
 
 for MODEL_NAME in $MODEL_NAMES; do
     for STRATEGY in uniform; do
         for EPS in $EPSILONS; do
-            for FITNESS in margin_saliency cross_entropy_saliency; do
+            for FITNESS in $FITNESSES; do
                 echo "[RUN] model=$MODEL_NAME strategy=$STRATEGY fitness=$FITNESS eps=$EPS w_margin=$W_MARGIN w_saliency=$W_SALIENCY num_sample=$NUM_SAMPLE output_root=$OUTPUT_ROOT"
                 python run_batch.py \
                     --model-name "$MODEL_NAME" \
