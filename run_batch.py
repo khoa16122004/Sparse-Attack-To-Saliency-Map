@@ -139,6 +139,24 @@ def _save_saliency_map(saliency_map, output_path):
     Image.fromarray(rgb, mode="RGB").save(output_path)
 
 
+def _save_four_class_maps(model, explain_fn, normalize, clean_chw, adv_chw, class_a, class_b, device, output_paths):
+    clean_batch = clean_chw.unsqueeze(0).to(device)
+    adv_batch = adv_chw.unsqueeze(0).to(device)
+
+    target_a = torch.tensor([int(class_a)], device=device)
+    target_b = torch.tensor([int(class_b)], device=device)
+
+    clean_map_a, _ = explain_fn(model, clean_batch, normalize, target_a)
+    clean_map_b, _ = explain_fn(model, clean_batch, normalize, target_b)
+    adv_map_a, _ = explain_fn(model, adv_batch, normalize, target_a)
+    adv_map_b, _ = explain_fn(model, adv_batch, normalize, target_b)
+
+    _save_saliency_map(clean_map_a[0], str(output_paths["clean_a"]))
+    _save_saliency_map(clean_map_b[0], str(output_paths["clean_b"]))
+    _save_saliency_map(adv_map_a[0], str(output_paths["adv_a"]))
+    _save_saliency_map(adv_map_b[0], str(output_paths["adv_b"]))
+
+
 def load_selection_file(selection_file):
     with open(selection_file, "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -182,6 +200,10 @@ def prepare_output_paths(output_dir):
         "clean": output_dir / "clean.png",
         "clean_map": output_dir / "clean_map.png",
         "adv_map": output_dir / "adv_map.png",
+        "clean_map_class_a": output_dir / "clean_map_class_a.png",
+        "clean_map_class_b": output_dir / "clean_map_class_b.png",
+        "adv_map_class_a": output_dir / "adv_map_class_a.png",
+        "adv_map_class_b": output_dir / "adv_map_class_b.png",
         "history_txt": output_dir / "history_scores.txt",
         "non_dominated_front_txt": output_dir / "non_dominated_front_scores.txt",
         "non_dominated_front_history_dir": output_dir / "non_dominated_front_history",
@@ -415,6 +437,22 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
     adv_saliency_map, _ = explain_fn(model, adv_chw.unsqueeze(0).to(device), normalize, y_true)
     _save_saliency_map(clean_saliency_map, str(output_paths["clean_map"]))
     _save_saliency_map(adv_saliency_map[0], str(output_paths["adv_map"]))
+    _save_four_class_maps(
+        model=model,
+        explain_fn=explain_fn,
+        normalize=normalize,
+        clean_chw=x_tensor[0],
+        adv_chw=adv_chw,
+        class_a=int(y_true.item()),
+        class_b=int(adv_pred),
+        device=device,
+        output_paths={
+            "clean_a": output_paths["clean_map_class_a"],
+            "clean_b": output_paths["clean_map_class_b"],
+            "adv_a": output_paths["adv_map_class_a"],
+            "adv_b": output_paths["adv_map_class_b"],
+        },
+    )
 
     save_history_scores_txt(history, str(output_paths["history_txt"]))
     save_non_dominated_front_txt(non_nominated_front_fitness, str(output_paths["non_dominated_front_txt"]))
@@ -453,6 +491,10 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "non_dominated_front_scores_file": str(output_paths["non_dominated_front_txt"]) if non_nominated_front_fitness is not None else None,
         "non_dominated_front_history_dir": str(output_paths["non_dominated_front_history_dir"]) if non_nominated_front_history else None,
         "non_dominated_front_items_dir": str(saved_non_dominated_front_items_dir) if saved_non_dominated_front_items_dir is not None else None,
+        "clean_map_class_a": str(output_paths["clean_map_class_a"]),
+        "clean_map_class_b": str(output_paths["clean_map_class_b"]),
+        "adv_map_class_a": str(output_paths["adv_map_class_a"]),
+        "adv_map_class_b": str(output_paths["adv_map_class_b"]),
         "history_margin": history_margin,
         "history_saliency": history_saliency,
     }
