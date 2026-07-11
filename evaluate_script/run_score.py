@@ -167,6 +167,16 @@ def _parse_optional_float_arg(raw: str, arg_name: str) -> Optional[float]:
         raise ValueError(f"Invalid value for {arg_name}: {raw}. Use number or 'all'.") from exc
 
 
+def _parse_optional_int_arg(raw: str, arg_name: str) -> Optional[int]:
+    text = str(raw or "").strip().lower()
+    if text in {"", "all"}:
+        return None
+    try:
+        return int(float(text))
+    except ValueError as exc:
+        raise ValueError(f"Invalid value for {arg_name}: {raw}. Use integer or 'all'.") from exc
+
+
 def _parse_weight_pairs(raw: Optional[str]) -> Optional[List[Tuple[float, float]]]:
     if raw is None:
         return None
@@ -372,6 +382,7 @@ def _load_results_from_run_folder(run_dir: Path) -> List[Dict[str, object]]:
 def _extract_run_stats(
     run_dir: Path,
     model_name: str,
+    target_eps: Optional[int] = None,
     target_algorithm: Optional[str] = None,
     target_explain_method: Optional[str] = None,
     target_w_m: Optional[float] = None,
@@ -395,6 +406,10 @@ def _extract_run_stats(
     w_s = meta["w_s"]
     if eps is None:
         eps = 0
+    eps_int = int(float(eps))
+
+    if target_eps is not None and eps_int != target_eps:
+        return None
 
     if target_algorithm is not None and algorithm != target_algorithm:
         return None
@@ -423,7 +438,7 @@ def _extract_run_stats(
             run_dir=run_dir,
             model=model_name,
             strategy=strategy,
-            eps=int(float(eps)),
+            eps=eps_int,
             explain_method=explain_method,
             algorithm=algorithm,
             loss_type=loss_type,
@@ -506,7 +521,7 @@ def _extract_run_stats(
         run_dir=run_dir,
         model=model_name,
         strategy=strategy,
-        eps=int(float(eps)),
+        eps=eps_int,
         explain_method=explain_method,
         algorithm=algorithm,
         loss_type=loss_type,
@@ -526,6 +541,7 @@ def _extract_run_stats(
 def _load_all_runs(
     root_dir: Path,
     target_model: Optional[str] = None,
+    target_eps: Optional[int] = None,
     target_algorithm: Optional[str] = None,
     target_explain_method: Optional[str] = None,
     target_w_m: Optional[float] = None,
@@ -540,6 +556,7 @@ def _load_all_runs(
         stats = _extract_run_stats(
             run_dir=root_dir,
             model_name="unknown",
+            target_eps=target_eps,
             target_algorithm=target_algorithm,
             target_explain_method=target_explain_method,
             target_w_m=target_w_m,
@@ -557,6 +574,7 @@ def _load_all_runs(
             stats = _extract_run_stats(
                 run_dir=run_dir,
                 model_name="unknown",
+                target_eps=target_eps,
                 target_algorithm=target_algorithm,
                 target_explain_method=target_explain_method,
                 target_w_m=target_w_m,
@@ -577,6 +595,7 @@ def _load_all_runs(
             stats = _extract_run_stats(
                 run_dir=run_dir,
                 model_name=model_name,
+                target_eps=target_eps,
                 target_algorithm=target_algorithm,
                 target_explain_method=target_explain_method,
                 target_w_m=target_w_m,
@@ -1058,6 +1077,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=str, default="evaluate_script/stats_outputs", help="Directory to save output JSON/plots")
     parser.add_argument("--algorithm", type=str, default="all", help="Filter algorithm (weighted_sum_ga or nsgaii). Use all to keep all")
     parser.add_argument("--explain-method", type=str, default="all", help="Filter explain method. Use all to keep all")
+    parser.add_argument("--eps", type=str, default="all", help="Filter epsilon. Use integer value or all")
     parser.add_argument("--w-m", type=str, default="all", help="Filter by w_m. Use numeric value or all")
     parser.add_argument("--w-c", type=str, default="all", help="Backward-compatible alias of --w-s")
     parser.add_argument("--w-s", type=str, default="all", help="Filter by w_s. Use numeric value or all")
@@ -1094,6 +1114,8 @@ def main() -> None:
     if args.explain_method.lower() != "all":
         target_explain_method = args.explain_method
 
+    target_eps = _parse_optional_int_arg(args.eps, "--eps")
+
     target_w_m = _parse_optional_float_arg(args.w_m, "--w-m")
     raw_w_s = args.w_s if str(args.w_s).strip().lower() != "all" else args.w_c
     target_w_s = _parse_optional_float_arg(raw_w_s, "--w-s")
@@ -1108,6 +1130,7 @@ def main() -> None:
         all_runs = _load_all_runs(
             result_root,
             target_model=target_model,
+            target_eps=target_eps,
             target_algorithm=target_algo,
             target_explain_method=target_explain_method,
             target_w_m=target_w_m,
@@ -1121,6 +1144,8 @@ def main() -> None:
     filtered = all_runs
     if target_model is not None:
         filtered = [r for r in filtered if _normalize_model_name(r.model) == _normalize_model_name(target_model)]
+    if target_eps is not None:
+        filtered = [r for r in filtered if r.eps == target_eps]
     if target_algo is not None:
         filtered = [r for r in filtered if r.algorithm == target_algo]
     if target_explain_method is not None:
