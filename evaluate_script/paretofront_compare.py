@@ -141,6 +141,53 @@ def _collect_run_fronts(run_dir: Path) -> Dict[str, Path]:
     return fronts
 
 
+def _collect_run_histories(run_dir: Path) -> Dict[str, Path]:
+    histories: Dict[str, Path] = {}
+    for history_path in run_dir.glob("*/*/history_scores.txt"):
+        sample_id = _sample_id_from_front_path(run_dir=run_dir, front_path=history_path)
+        histories[sample_id] = history_path
+    return histories
+
+
+def _read_history(path: Path) -> Optional[Tuple[List[float], List[float]]]:
+    if not path.exists():
+        return None
+
+    objective: List[float] = []
+    saliency: List[float] = []
+    with open(path, "r", encoding="utf-8") as f:
+        for raw_line in f:
+            line = raw_line.strip()
+            if not line:
+                continue
+            parts = re.split(r"[\s,]+", line)
+            if len(parts) < 2:
+                continue
+            obj = _safe_float(parts[0])
+            sal = _safe_float(parts[1])
+            if obj is None or sal is None:
+                continue
+            objective.append(obj)
+            saliency.append(sal)
+
+    if not objective:
+        return None
+    return objective, saliency
+
+
+def _curve_mean_with_last_padding(curves: List[List[float]]) -> List[float]:
+    valid = [c for c in curves if c]
+    if not valid:
+        return []
+
+    max_len = max(len(c) for c in valid)
+    out: List[float] = []
+    for i in range(max_len):
+        values = [curve[i] if i < len(curve) else curve[-1] for curve in valid]
+        out.append(sum(values) / len(values))
+    return out
+
+
 def _find_matching_runs(
     root: Path,
     expected_algorithm: str,
@@ -245,6 +292,123 @@ def _plot_one_sample(
     plt.close(fig)
 
 
+def _plot_best_candidate_curves_for_eps(
+    eps: int,
+    runs_for_eps: Dict[str, RunMeta],
+    output_base: Path,
+    objective_label: str,
+    output_name: str,
+) -> int:
+    try:
+        import importlib
+
+        plt = importlib.import_module("matplotlib.pyplot")
+    except ImportError:
+        print("[WARN] matplotlib not installed, skip plotting")
+        return 0
+
+    color_map = {
+        "ga_1.0_0.0": "tab:red",
+        "ga_0.5_0.5": "tab:blue",
+        "ga_0.0_1.0": "tab:green",
+        "nsgaii": "tab:orange",
+    }
+
+    key_to_sample_history: Dict[str, Dict[str, Path]] = {}
+    for key, meta in runs_for_eps.items():
+        key_to_sample_history[key] = _collect_run_histories(meta.run_dir)
+
+    all_sets = [set(v.keys()) for v in key_to_sample_history.values() if v]
+    if not all_sets:
+        print(f"[WARN] Skip curve eps={eps}: no history files")
+        return 0
+
+    common_samples = sorted(set.intersection(*all_sets))
+    if not common_samples:
+        print(f"[WARN] Skip curve eps={eps}: no common samples among runs")
+        return 0
+
+    key_to_objective_curves: Dict[str, List[List[float]]] = {k: [] for k in key_to_sample_history.keys()}
+    key_to_saliency_curves: Dict[str, List[List[float]]] = {k: [] for k in key_to_sample_history.keys()}
+
+    for sample_id in common_samples:
+        for key, sample_map in key_to_sample_history.items():
+            history_path = sample_map.get(sample_id)
+            if history_path is None:
+                continue
+            history = _read_history(history_path)
+            if history is None:
+                continue
+            objective, saliency = history
+            key_to_objective_curves[key].append(objective)
+            key_to_saliency_curves[key].append(saliency)
+
+    key_to_objective_mean: Dict[str, List[float]] = {}
+    key_to_saliency_mean: Dict[str, List[float]] = {}
+    for key in key_to_sample_history.keys():
+        obj_mean = _curve_mean_with_last_padding(key_to_objective_curves[key])
+        sal_mean = _curve_mean_with_last_padding(key_to_saliency_curves[key])
+        if not obj_mean or not sal_mean:
+            continue
+        key_to_objective_mean[key] = obj_mean
+        key_to_saliency_mean[key] = sal_mean
+
+    if len(key_to_objective_mean) < 2:
+        print(f"[WARN] Skip curve eps={eps}: not enough valid runs")
+        return 0
+
+    fig, axes = plt.subplots(1, 2, figsize=(12.0, 4.6))
+    for key in sorted(key_to_objective_mean.keys()):
+        obj_curve = key_to_objective_mean[key]
+        sal_curve = key_to_saliency_mean[key]
+        color = color_map.get(key)
+        label = _make_label(key)
+
+        axes[0].plot(range(1, len(obj_curve) + 1), obj_curve, linewidth=2.0, color=color, label=label)
+        axes[1].plot(range(1, len(sal_curve) + 1), sal_curve, linewidth=2.0, color=color, label=label)
+
+    axes[0].set_title(objective_label)
+    axes[0].set_xlabel("Iteration")
+    axes[0].set_ylabel("Mean best-candidate objective")
+    axes[0].grid(alpha=0.3)
+    axes[0].legend()
+
+    axes[1].set_title("Saliency loss")
+    axes[1].set_xlabel("Iteration")
+    axes[1].set_ylabel("Mean best-candidate saliency")
+    axes[1].grid(alpha=0.3)
+    axes[1].legend()
+
+    fig.suptitle(f"Best-candidate curves | eps={eps} | common_samples={len(common_samples)}")
+    fig.tight_layout()
+
+    out_path = output_base / f"eps_{eps}" / output_name
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_path, dpi=170)
+    plt.close(fig)
+    return 1
+
+
+def _build_runs_for_eps(
+    eps: int,
+    ga_runs: Dict[Tuple[int, str], RunMeta],
+    nsgaii_runs: Dict[Tuple[int, str], RunMeta],
+    weight_pairs: List[Tuple[float, float]],
+) -> Dict[str, RunMeta]:
+    runs_for_eps: Dict[str, RunMeta] = {}
+    for wm, ws in weight_pairs:
+        key = (eps, f"ga_{wm}_{ws}")
+        run = ga_runs.get(key)
+        if run is not None:
+            runs_for_eps[key[1]] = run
+
+    nsgaii_run = nsgaii_runs.get((eps, "nsgaii"))
+    if nsgaii_run is not None:
+        runs_for_eps["nsgaii"] = nsgaii_run
+
+    return runs_for_eps
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Compare per-sample Pareto fronts between GA (3 weight pairs) and NSGAII"
@@ -324,21 +488,56 @@ def main() -> None:
         weight_pairs=None,
     )
 
+    ga_runs_margin = _find_matching_runs(
+        root=ga_root,
+        expected_algorithm="ga",
+        strategy=args.strategy,
+        explain_method=args.explain_method,
+        eps_list=eps_list,
+        loss_type="margin_loss",
+        weight_pairs=weight_pairs,
+    )
+    nsgaii_runs_margin = _find_matching_runs(
+        root=nsgaii_root,
+        expected_algorithm="nsgaii",
+        strategy=args.strategy,
+        explain_method=args.explain_method,
+        eps_list=eps_list,
+        loss_type="margin_loss",
+        weight_pairs=None,
+    )
+
+    ga_runs_loglikelihood = _find_matching_runs(
+        root=ga_root,
+        expected_algorithm="ga",
+        strategy=args.strategy,
+        explain_method=args.explain_method,
+        eps_list=eps_list,
+        loss_type="negative_cross_entropy_saliency",
+        weight_pairs=weight_pairs,
+    )
+    nsgaii_runs_loglikelihood = _find_matching_runs(
+        root=nsgaii_root,
+        expected_algorithm="nsgaii",
+        strategy=args.strategy,
+        explain_method=args.explain_method,
+        eps_list=eps_list,
+        loss_type="negative_cross_entropy_saliency",
+        weight_pairs=None,
+    )
+
     output_base = Path(args.output_root) / f"{args.model_name}_{args.seed}"
     output_base.mkdir(parents=True, exist_ok=True)
 
     total_plots = 0
+    total_curve_plots = 0
     for eps in eps_list:
-        runs_for_eps: Dict[str, RunMeta] = {}
-        for wm, ws in weight_pairs:
-            key = (eps, f"ga_{wm}_{ws}")
-            run = ga_runs.get(key)
-            if run is not None:
-                runs_for_eps[key[1]] = run
-
-        nsgaii_run = nsgaii_runs.get((eps, "nsgaii"))
-        if nsgaii_run is not None:
-            runs_for_eps["nsgaii"] = nsgaii_run
+        runs_for_eps = _build_runs_for_eps(
+            eps=eps,
+            ga_runs=ga_runs,
+            nsgaii_runs=nsgaii_runs,
+            weight_pairs=weight_pairs,
+        )
 
         if len(runs_for_eps) < 2:
             print(f"[WARN] Skip eps={eps}: not enough matched runs")
@@ -373,10 +572,41 @@ def main() -> None:
             _plot_one_sample(sample_id=sample_id, eps=eps, key_to_points=key_to_points, output_path=out_path)
             total_plots += 1
 
+        runs_margin = _build_runs_for_eps(
+            eps=eps,
+            ga_runs=ga_runs_margin,
+            nsgaii_runs=nsgaii_runs_margin,
+            weight_pairs=weight_pairs,
+        )
+        if len(runs_margin) >= 2:
+            total_curve_plots += _plot_best_candidate_curves_for_eps(
+                eps=eps,
+                runs_for_eps=runs_margin,
+                output_base=output_base,
+                objective_label="Margin loss",
+                output_name="best_candidate_curve__margin_vs_saliency.png",
+            )
+
+        runs_loglikelihood = _build_runs_for_eps(
+            eps=eps,
+            ga_runs=ga_runs_loglikelihood,
+            nsgaii_runs=nsgaii_runs_loglikelihood,
+            weight_pairs=weight_pairs,
+        )
+        if len(runs_loglikelihood) >= 2:
+            total_curve_plots += _plot_best_candidate_curves_for_eps(
+                eps=eps,
+                runs_for_eps=runs_loglikelihood,
+                output_base=output_base,
+                objective_label="Negative log-likelihood",
+                output_name="best_candidate_curve__loglikelihood_vs_saliency.png",
+            )
+
     print(f"GA root: {ga_root}")
     print(f"NSGAII root: {nsgaii_root}")
     print(f"Output: {output_base}")
     print(f"Generated plots: {total_plots}")
+    print(f"Generated curve figures: {total_curve_plots}")
 
 
 if __name__ == "__main__":
