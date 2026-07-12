@@ -409,6 +409,18 @@ def _build_runs_for_eps(
     return runs_for_eps
 
 
+def _fill_ga_01_from_fallback(
+    eps_list: List[int],
+    primary_ga_runs: Dict[Tuple[int, str], RunMeta],
+    fallback_ga_runs: Dict[Tuple[int, str], RunMeta],
+) -> None:
+    ga_01_key_name = "ga_0.0_1.0"
+    for eps in eps_list:
+        key = (eps, ga_01_key_name)
+        if key not in primary_ga_runs and key in fallback_ga_runs:
+            primary_ga_runs[key] = fallback_ga_runs[key]
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Compare per-sample Pareto fronts between GA (3 weight pairs) and NSGAII"
@@ -516,6 +528,14 @@ def main() -> None:
         loss_type="negative_cross_entropy_saliency",
         weight_pairs=weight_pairs,
     )
+
+    # GA wm=0,ws=1 may be executed once (margin only), but should appear in both figures.
+    _fill_ga_01_from_fallback(
+        eps_list=eps_list,
+        primary_ga_runs=ga_runs_loglikelihood,
+        fallback_ga_runs=ga_runs_margin,
+    )
+
     nsgaii_runs_loglikelihood = _find_matching_runs(
         root=nsgaii_root,
         expected_algorithm="nsgaii",
