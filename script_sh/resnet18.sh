@@ -66,10 +66,10 @@ W_SALIENCY="${W_SALIENCY:-1.0}"
 SEED="${SEED:-22520691}"
 OUTPUT_ROOT="offical/server_run_seed/GA/$SEED/"
 
-# At extreme weights (1,0) or (0,1), both fitness formulations produce the same objective.
+# At wm=0, ws=1, both fitness formulations are equivalent (attack objective is off).
 FITNESSES="margin_saliency cross_entropy_saliency"
 case "${W_MARGIN}:${W_SALIENCY}" in
-    "0:1"|"0:1.0"|"0.0:1"|"0.0:1.0"|"1:0"|"1:0.0"|"1.0:0"|"1.0:0.0")
+    "0:1"|"0:1.0"|"0.0:1"|"0.0:1.0")
         FITNESSES="margin_saliency"
         ;;
 esac

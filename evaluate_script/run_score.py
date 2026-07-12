@@ -207,6 +207,54 @@ def _is_close(a: Optional[float], b: float, tol: float = 1e-9) -> bool:
     return abs(float(a) - float(b)) <= tol
 
 
+def _is_wm0_ws1(w_m: Optional[float], w_s: Optional[float]) -> bool:
+    return _is_close(w_m, 0.0) and _is_close(w_s, 1.0)
+
+
+def _expand_equivalent_losses_for_wm0_ws1(runs: List[RunStats]) -> List[RunStats]:
+    grouped = _group_runs(
+        runs,
+        key_fn=lambda r: (r.model, r.eps, r.strategy, r.explain_method, r.algorithm, r.w_m, r.w_s),
+    )
+
+    expanded: List[RunStats] = list(runs)
+    for key, group in grouped.items():
+        _, _, _, _, _, w_m, w_s = key
+        if not _is_wm0_ws1(w_m, w_s):
+            continue
+
+        has_margin = any(r.loss_type == "margin_loss" for r in group)
+        has_ce = any(r.loss_type == "negative_cross_entropy_saliency" for r in group)
+        if has_margin and has_ce:
+            continue
+
+        source = group[0]
+        mirrored_loss = "negative_cross_entropy_saliency" if has_margin else "margin_loss"
+        expanded.append(
+            RunStats(
+                run_dir=source.run_dir,
+                model=source.model,
+                strategy=source.strategy,
+                eps=source.eps,
+                explain_method=source.explain_method,
+                algorithm=source.algorithm,
+                loss_type=mirrored_loss,
+                w_m=source.w_m,
+                w_s=source.w_s,
+                asr=source.asr,
+                spearman=source.spearman,
+                spearman_failed_samples=source.spearman_failed_samples,
+                num_samples_total=source.num_samples_total,
+                num_samples_ok=source.num_samples_ok,
+                asr_curve=source.asr_curve,
+                saliency_curve=source.saliency_curve,
+                objective_curve=source.objective_curve,
+            )
+        )
+
+    return expanded
+
+
 def _has_summary_files(run_dir: Path) -> bool:
     return any(run_dir.glob("*/*/summary.json")) or any(run_dir.glob("*/*/summarize.json"))
 
@@ -1172,6 +1220,10 @@ def main() -> None:
 
     # Always ignore saliency-guided runs in aggregation/printing.
     filtered = [r for r in filtered if r.strategy == "uniform"]
+
+    # For wm=0 and ws=1, both fitness formulations are equivalent; mirror missing side
+    # so compare-loss outputs remain complete even if only one fitness was executed.
+    filtered = _expand_equivalent_losses_for_wm0_ws1(filtered)
 
     if not filtered:
         raise ValueError("No run left after filtering")
