@@ -63,7 +63,7 @@ EPSILONS="100 50 20"
 #   sbatch resnet18.sh 0.7 0.3
 W_MARGIN="${W_MARGIN:-0.0}"
 W_SALIENCY="${W_SALIENCY:-1.0}"
-EXPLAIN_METHOD="${EXPLAIN_METHOD:-integrated_gradients}"
+EXPLAIN_METHOD="${EXPLAIN_METHOD:-input_gradient}"
 SEED="${SEED:-22520691}"
 OUTPUT_ROOT="offical/server_run_seed/GA/$SEED/"
 
