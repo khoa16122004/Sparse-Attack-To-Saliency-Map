@@ -63,11 +63,15 @@ EPSILONS="100 50 20"
 #   sbatch vit_b_32.sh 0.7 0.3
 W_MARGIN="${W_MARGIN:-0.0}"
 W_SALIENCY="${W_SALIENCY:-1.0}"
+EXPLAIN_METHOD="${EXPLAIN_METHOD:-integrated_gradients}"
 if [ $# -ge 1 ]; then
     W_MARGIN="$1"
 fi
 if [ $# -ge 2 ]; then
     W_SALIENCY="$2"
+fi
+if [ $# -ge 3 ]; then
+    EXPLAIN_METHOD="$3"
 fi
 SEED="${SEED:-22520691}"
 OUTPUT_ROOT="server_run_seed$SEED"
@@ -84,7 +88,7 @@ for MODEL_NAME in $MODEL_NAMES; do
     for STRATEGY in uniform; do
         for EPS in $EPSILONS; do
             for FITNESS in $FITNESSES; do
-                echo "[RUN] model=$MODEL_NAME strategy=$STRATEGY fitness=$FITNESS eps=$EPS w_margin=$W_MARGIN w_saliency=$W_SALIENCY num_sample=$NUM_SAMPLE output_root=$OUTPUT_ROOT"
+                echo "[RUN] model=$MODEL_NAME strategy=$STRATEGY fitness=$FITNESS eps=$EPS w_margin=$W_MARGIN w_saliency=$W_SALIENCY explain_method=$EXPLAIN_METHOD num_sample=$NUM_SAMPLE output_root=$OUTPUT_ROOT"
                 python run_batch.py \
                     --model-name "$MODEL_NAME" \
                     --num_sample "$NUM_SAMPLE" \
@@ -94,7 +98,8 @@ for MODEL_NAME in $MODEL_NAMES; do
                     --w-saliency "$W_SALIENCY" \
                     --fitness-function "$FITNESS" \
                     --output-root "$OUTPUT_ROOT" \
-                    --seed "$SEED"
+                    --seed "$SEED" \
+                    --explain-method "$EXPLAIN_METHOD"
             done
         done
     done
