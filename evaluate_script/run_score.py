@@ -107,6 +107,10 @@ def _normalize_model_name(name: str) -> str:
     return str(name or "").strip().lower()
 
 
+def _normalize_explain_method(name: str) -> str:
+    return str(name or "").strip().lower()
+
+
 def _parse_approach(approach: str) -> Dict[str, object]:
     fields: Dict[str, object] = {
         "strategy": "unknown",
@@ -461,7 +465,7 @@ def _extract_run_stats(
 
     if target_algorithm is not None and algorithm != target_algorithm:
         return None
-    if target_explain_method is not None and explain_method != target_explain_method:
+    if target_explain_method is not None and _normalize_explain_method(explain_method) != _normalize_explain_method(target_explain_method):
         return None
     if target_w_m is not None and not _is_close(w_m, target_w_m):
         return None
@@ -1169,7 +1173,7 @@ def main() -> None:
 
     target_explain_method = None
     if args.explain_method.lower() != "all":
-        target_explain_method = args.explain_method
+        target_explain_method = _normalize_explain_method(args.explain_method)
 
     target_eps = _parse_optional_int_arg(args.eps, "--eps")
 
@@ -1184,19 +1188,18 @@ def main() -> None:
             raise FileNotFoundError(f"all_runs JSON not found: {all_runs_path}")
         all_runs = _load_runs_from_json(all_runs_path)
     else:
+        # Load broadly first, then apply filters below to avoid opaque
+        # "No valid run found" errors when a single filter value mismatches.
         all_runs = _load_all_runs(
             result_root,
             target_model=target_model,
-            target_eps=target_eps,
-            target_algorithm=target_algo,
-            target_explain_method=target_explain_method,
-            target_w_m=target_w_m,
-            target_w_s=target_w_s,
-            target_pairs=target_pairs,
         )
 
     if not all_runs:
-        raise ValueError(f"No valid run found under: {result_root}")
+        raise ValueError(
+            "No run with summary files found under: "
+            f"{result_root}. Expected */*/summary.json or */*/summarize.json under each run dir."
+        )
 
     filtered = all_runs
     if target_model is not None:
@@ -1206,7 +1209,11 @@ def main() -> None:
     if target_algo is not None:
         filtered = [r for r in filtered if r.algorithm == target_algo]
     if target_explain_method is not None:
-        filtered = [r for r in filtered if r.explain_method == target_explain_method]
+        filtered = [
+            r
+            for r in filtered
+            if _normalize_explain_method(r.explain_method) == target_explain_method
+        ]
     if target_w_m is not None:
         filtered = [r for r in filtered if _is_close(r.w_m, target_w_m)]
     if target_w_s is not None:
@@ -1226,7 +1233,31 @@ def main() -> None:
     filtered = _expand_equivalent_losses_for_wm0_ws1(filtered)
 
     if not filtered:
-        raise ValueError("No run left after filtering")
+        available_models = sorted({_normalize_model_name(r.model) for r in all_runs})
+        available_algorithms = sorted({r.algorithm for r in all_runs})
+        available_explain_methods = sorted({_normalize_explain_method(r.explain_method) for r in all_runs})
+        available_eps = sorted({r.eps for r in all_runs})
+
+        available_weights = sorted(
+            {
+                (None if r.w_m is None else float(r.w_m), None if r.w_s is None else float(r.w_s))
+                for r in all_runs
+            }
+        )
+        preview_weights = ", ".join(f"({wm}, {ws})" for wm, ws in available_weights[:12])
+        if len(available_weights) > 12:
+            preview_weights += ", ..."
+
+        raise ValueError(
+            "No run left after filtering. Requested: "
+            f"model={target_model or 'all'}, eps={target_eps if target_eps is not None else 'all'}, "
+            f"algorithm={target_algo or 'all'}, explain_method={target_explain_method or 'all'}, "
+            f"w_m={target_w_m if target_w_m is not None else 'all'}, "
+            f"w_s={target_w_s if target_w_s is not None else 'all'}. "
+            f"Available models={available_models}; algorithms={available_algorithms}; "
+            f"explain_methods={available_explain_methods}; eps={available_eps}; "
+            f"weight_pairs=[{preview_weights}]"
+        )
 
     loss_pairs = _build_pair_curves_loss(filtered)
     overall_compare_loss = _build_overall_compare_loss(loss_pairs)
