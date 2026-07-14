@@ -59,11 +59,11 @@ EPSILONS="100 50 20"
 
 # Objective weights (can override by env or script args)
 # Example:
-#   W_MARGIN=0.7 W_SALIENCY=0.3 sbatch resnet18_NSGAII.sh
-#   sbatch resnet18_NSGAII.sh 0.7 0.3
+#   W_MARGIN=0.7 W_SALIENCY=0.3 sbatch vgg16_NSGAII.sh
+#   sbatch vgg16_NSGAII.sh 0.7 0.3
 W_MARGIN="${W_MARGIN:-0.5}"
 W_SALIENCY="${W_SALIENCY:-0.5}"
-EXPLAIN_METHOD="${EXPLAIN_METHOD:-input_gradient}"
+EXPLAIN_METHOD="input_gradient"
 SEED="${SEED:-22520691}"
 OUTPUT_ROOT="offical/server_run_seed/NSGAII/$SEED/"
 
