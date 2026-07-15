@@ -1210,6 +1210,8 @@ def main() -> None:
         if not all_runs_path.exists():
             raise FileNotFoundError(f"all_runs JSON not found: {all_runs_path}")
         all_runs = _load_runs_from_json(all_runs_path)
+        if not all_runs:
+            raise ValueError(f"No runs found in all_runs JSON: {all_runs_path}")
     else:
         # Apply known filters as early as possible to avoid expensive loading of
         # unmatched run folders.
@@ -1223,6 +1225,14 @@ def main() -> None:
             target_w_s=target_w_s,
             target_pairs=target_pairs,
         )
+
+        # If pre-filtered loading finds nothing, load broad (model-only) once to
+        # distinguish between "no summary files" and "filters too strict".
+        if not all_runs:
+            all_runs = _load_all_runs(
+                result_root,
+                target_model=target_model,
+            )
 
     if not all_runs:
         raise ValueError(
