@@ -441,7 +441,13 @@ def _extract_run_stats(
     target_w_s: Optional[float] = None,
     target_pairs: Optional[List[Tuple[float, float]]] = None,
 ) -> Optional[RunStats]:
-    approach = str(run_dir.name)
+    report: Dict[str, object] = {
+        "model": model_name,
+        "approach": run_dir.name,
+        "results": _load_results_from_run_folder(run_dir),
+    }
+
+    approach = str(report.get("approach", run_dir.name))
     meta = _parse_approach(approach)
     strategy = str(meta["strategy"])
     eps = meta["eps"]
@@ -467,12 +473,6 @@ def _extract_run_stats(
         return None
     if target_pairs and not any(_is_close(w_m, wm) and _is_close(w_s, ws) for wm, ws in target_pairs):
         return None
-
-    report: Dict[str, object] = {
-        "model": model_name,
-        "approach": approach,
-        "results": _load_results_from_run_folder(run_dir),
-    }
 
     all_results = report.get("results", [])
     if not isinstance(all_results, list):
@@ -1210,29 +1210,13 @@ def main() -> None:
         if not all_runs_path.exists():
             raise FileNotFoundError(f"all_runs JSON not found: {all_runs_path}")
         all_runs = _load_runs_from_json(all_runs_path)
-        if not all_runs:
-            raise ValueError(f"No runs found in all_runs JSON: {all_runs_path}")
     else:
-        # Apply known filters as early as possible to avoid expensive loading of
-        # unmatched run folders.
+        # Load broadly first, then apply filters below to avoid opaque
+        # "No valid run found" errors when a single filter value mismatches.
         all_runs = _load_all_runs(
             result_root,
             target_model=target_model,
-            target_eps=target_eps,
-            target_algorithm=target_algo,
-            target_explain_method=target_explain_method,
-            target_w_m=target_w_m,
-            target_w_s=target_w_s,
-            target_pairs=target_pairs,
         )
-
-        # If pre-filtered loading finds nothing, load broad (model-only) once to
-        # distinguish between "no summary files" and "filters too strict".
-        if not all_runs:
-            all_runs = _load_all_runs(
-                result_root,
-                target_model=target_model,
-            )
 
     if not all_runs:
         raise ValueError(
