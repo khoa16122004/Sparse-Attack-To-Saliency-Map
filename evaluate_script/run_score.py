@@ -441,7 +441,13 @@ def _extract_run_stats(
     target_w_s: Optional[float] = None,
     target_pairs: Optional[List[Tuple[float, float]]] = None,
 ) -> Optional[RunStats]:
-    approach = run_dir.name
+    report: Dict[str, object] = {
+        "model": model_name,
+        "approach": run_dir.name,
+        "results": _load_results_from_run_folder(run_dir),
+    }
+
+    approach = str(report.get("approach", run_dir.name))
     meta = _parse_approach(approach)
     strategy = str(meta["strategy"])
     eps = meta["eps"]
@@ -468,8 +474,9 @@ def _extract_run_stats(
     if target_pairs and not any(_is_close(w_m, wm) and _is_close(w_s, ws) for wm, ws in target_pairs):
         return None
 
-    all_results = _load_results_from_run_folder(run_dir)
-
+    all_results = report.get("results", [])
+    if not isinstance(all_results, list):
+        all_results = []
     results = [r for r in all_results if isinstance(r, dict) and r.get("status") == "ok"]
 
     if model_name in {"unknown", ""}:
@@ -1204,17 +1211,11 @@ def main() -> None:
             raise FileNotFoundError(f"all_runs JSON not found: {all_runs_path}")
         all_runs = _load_runs_from_json(all_runs_path)
     else:
-        # Apply filters while scanning run dirs to avoid expensive processing
-        # of unrelated runs (e.g., wm/ws pairs outside requested values).
+        # Load broadly first, then apply filters below to avoid opaque
+        # "No valid run found" errors when a single filter value mismatches.
         all_runs = _load_all_runs(
             result_root,
             target_model=target_model,
-            target_eps=target_eps,
-            target_algorithm=target_algo,
-            target_explain_method=target_explain_method,
-            target_w_m=target_w_m,
-            target_w_s=target_w_s,
-            target_pairs=target_pairs,
         )
 
     if not all_runs:
