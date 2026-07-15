@@ -441,13 +441,7 @@ def _extract_run_stats(
     target_w_s: Optional[float] = None,
     target_pairs: Optional[List[Tuple[float, float]]] = None,
 ) -> Optional[RunStats]:
-    report: Dict[str, object] = {
-        "model": model_name,
-        "approach": run_dir.name,
-        "results": _load_results_from_run_folder(run_dir),
-    }
-
-    approach = str(report.get("approach", run_dir.name))
+    approach = str(run_dir.name)
     meta = _parse_approach(approach)
     strategy = str(meta["strategy"])
     eps = meta["eps"]
@@ -473,6 +467,12 @@ def _extract_run_stats(
         return None
     if target_pairs and not any(_is_close(w_m, wm) and _is_close(w_s, ws) for wm, ws in target_pairs):
         return None
+
+    report: Dict[str, object] = {
+        "model": model_name,
+        "approach": approach,
+        "results": _load_results_from_run_folder(run_dir),
+    }
 
     all_results = report.get("results", [])
     if not isinstance(all_results, list):
@@ -691,10 +691,16 @@ def _h_score(asr: float, sro: float) -> float:
 
 def _build_latex_rows(runs: List[RunStats]) -> List[str]:
     rows: List[str] = []
-    grouped = _group_runs(runs, key_fn=lambda r: (r.model, r.eps, r.strategy, r.explain_method, r.algorithm))
+    grouped = _group_runs(
+        runs,
+        key_fn=lambda r: (r.model, r.eps, r.strategy, r.explain_method, r.algorithm, r.w_m, r.w_s),
+    )
 
-    for key in sorted(grouped.keys(), key=lambda x: (str(x[0]), int(x[1]), str(x[2]), str(x[3]), str(x[4]))):
-        model, eps, strategy, _, _ = key
+    for key in sorted(
+        grouped.keys(),
+        key=lambda x: (str(x[0]), int(x[1]), str(x[2]), str(x[3]), str(x[4]), str(x[5]), str(x[6])),
+    ):
+        model, eps, strategy, _, _, w_m, w_s = key
         group = grouped[key]
 
         margin = _choose_best_by_asr_then_spearman([g for g in group if g.loss_type == "margin_loss"])
@@ -706,6 +712,7 @@ def _build_latex_rows(runs: List[RunStats]) -> List[str]:
         ce_h = _h_score(ce.asr, ce.spearman)
 
         strategy_text = "Saliency-guided" if strategy == "saliency_guided" else "Uniform"
+        strategy_text = f"{strategy_text} (wm={w_m}, ws={w_s})"
         row = (
             f"& {eps} & {strategy_text} "
             f"& {margin.asr:.4f} & {margin.spearman:.4f} & {margin_h:.4f} "
@@ -724,11 +731,14 @@ def _build_latex_rows(runs: List[RunStats]) -> List[str]:
 
 
 def _build_pair_curves_loss(runs: List[RunStats]) -> List[Dict[str, object]]:
-    grouped = _group_runs(runs, key_fn=lambda r: (r.model, r.eps, r.strategy, r.explain_method, r.algorithm))
+    grouped = _group_runs(
+        runs,
+        key_fn=lambda r: (r.model, r.eps, r.strategy, r.explain_method, r.algorithm, r.w_m, r.w_s),
+    )
     output: List[Dict[str, object]] = []
 
     for key, group in grouped.items():
-        model, eps, strategy, explain_method, algorithm = key
+        model, eps, strategy, explain_method, algorithm, w_m, w_s = key
         margin_runs = [g for g in group if g.loss_type == "margin_loss"]
         ce_runs = [g for g in group if g.loss_type == "negative_cross_entropy_saliency"]
         if not margin_runs or not ce_runs:
@@ -741,6 +751,8 @@ def _build_pair_curves_loss(runs: List[RunStats]) -> List[Dict[str, object]]:
                 "strategy": strategy,
                 "explain_method": explain_method,
                 "algorithm": algorithm,
+                "w_m": w_m,
+                "w_s": w_s,
                 "margin_loss": {
                     "asr_curve": _curve_mean([r.asr_curve for r in margin_runs]),
                     "saliency_curve": _curve_mean([r.saliency_curve for r in margin_runs]),
@@ -760,11 +772,14 @@ def _build_pair_curves_loss(runs: List[RunStats]) -> List[Dict[str, object]]:
 
 
 def _build_pair_curves_init(runs: List[RunStats]) -> List[Dict[str, object]]:
-    grouped = _group_runs(runs, key_fn=lambda r: (r.model, r.eps, r.loss_type, r.explain_method, r.algorithm))
+    grouped = _group_runs(
+        runs,
+        key_fn=lambda r: (r.model, r.eps, r.loss_type, r.explain_method, r.algorithm, r.w_m, r.w_s),
+    )
     output: List[Dict[str, object]] = []
 
     for key, group in grouped.items():
-        model, eps, loss_type, explain_method, algorithm = key
+        model, eps, loss_type, explain_method, algorithm, w_m, w_s = key
         saliency_runs = [g for g in group if g.strategy == "saliency_guided"]
         uniform_runs = [g for g in group if g.strategy == "uniform"]
         if not saliency_runs or not uniform_runs:
@@ -777,6 +792,8 @@ def _build_pair_curves_init(runs: List[RunStats]) -> List[Dict[str, object]]:
                 "loss_type": loss_type,
                 "explain_method": explain_method,
                 "algorithm": algorithm,
+                "w_m": w_m,
+                "w_s": w_s,
                 "saliency_guided": {
                     "asr_curve": _curve_mean([r.asr_curve for r in saliency_runs]),
                     "saliency_curve": _curve_mean([r.saliency_curve for r in saliency_runs]),
@@ -911,11 +928,13 @@ def _plot_pair_curves_loss(loss_pairs: List[Dict[str, object]], output_dir: Path
     for item in loss_pairs:
         common_title = (
             f"{item['model']} | eps={item['eps']} | {item['strategy']} | "
-            f"{item['explain_method']} | {item['algorithm']}"
+            f"{item['explain_method']} | {item['algorithm']} | "
+            f"wm={item.get('w_m')} ws={item.get('w_s')}"
         )
         base_name = (
             f"{item['model']}__eps-{item['eps']}__strategy-{item['strategy']}"
             f"__exp-{item['explain_method']}__algo-{item['algorithm']}"
+            f"__wm-{item.get('w_m')}__ws-{item.get('w_s')}"
         )
 
         margin_asr = item["margin_loss"]["asr_curve"]
@@ -986,7 +1005,10 @@ def _plot_pair_curves_init(init_pairs: List[Dict[str, object]], output_dir: Path
     plot_dir.mkdir(parents=True, exist_ok=True)
 
     for item in init_pairs:
-        title = f"{item['model']} | eps={item['eps']} | {item['loss_type']} | {item['explain_method']} | {item['algorithm']}"
+        title = (
+            f"{item['model']} | eps={item['eps']} | {item['loss_type']} | "
+            f"{item['explain_method']} | {item['algorithm']} | wm={item.get('w_m')} ws={item.get('w_s')}"
+        )
 
         sal_asr = item["saliency_guided"]["asr_curve"]
         uni_asr = item["uniform"]["asr_curve"]
@@ -1015,7 +1037,8 @@ def _plot_pair_curves_init(init_pairs: List[Dict[str, object]], output_dir: Path
 
         file_name = (
             f"{item['model']}__eps-{item['eps']}__loss-{item['loss_type']}"
-            f"__exp-{item['explain_method']}__algo-{item['algorithm']}.png"
+            f"__exp-{item['explain_method']}__algo-{item['algorithm']}"
+            f"__wm-{item.get('w_m')}__ws-{item.get('w_s')}.png"
         )
         fig.savefig(plot_dir / file_name, dpi=150)
         plt.close(fig)
@@ -1188,11 +1211,17 @@ def main() -> None:
             raise FileNotFoundError(f"all_runs JSON not found: {all_runs_path}")
         all_runs = _load_runs_from_json(all_runs_path)
     else:
-        # Load broadly first, then apply filters below to avoid opaque
-        # "No valid run found" errors when a single filter value mismatches.
+        # Apply known filters as early as possible to avoid expensive loading of
+        # unmatched run folders.
         all_runs = _load_all_runs(
             result_root,
             target_model=target_model,
+            target_eps=target_eps,
+            target_algorithm=target_algo,
+            target_explain_method=target_explain_method,
+            target_w_m=target_w_m,
+            target_w_s=target_w_s,
+            target_pairs=target_pairs,
         )
 
     if not all_runs:
@@ -1275,6 +1304,13 @@ def main() -> None:
 
     print(f"Loaded runs: {len(all_runs)}")
     print(f"Runs after filter: {len(filtered)}")
+    weight_pairs_after_filter = sorted(
+        {
+            (None if r.w_m is None else float(r.w_m), None if r.w_s is None else float(r.w_s))
+            for r in filtered
+        }
+    )
+    print(f"Weight pairs after filter: {weight_pairs_after_filter}")
     print(f"Loss pairs: {len(loss_pairs)}")
     print("Mode: uniform_only (saliency_guided excluded)")
     print(f"Output dir: {output_dir}")
