@@ -6,7 +6,7 @@ from torchvision.models import get_model_weights
 import torchvision.transforms as T
 import numpy as np
 import torch
-from explain_method import simple_gradient_map, integrated_gradients, input_gradient_map
+from explain_method import simple_gradient_map, integrated_gradients, input_gradient_map, grad_cam
 
 
 def _to_float(value):
@@ -76,6 +76,8 @@ def get_explainable_method(method_name):
         explain_method = integrated_gradients
     elif method_name == "input_gradient":
         explain_method = input_gradient_map
+    elif method_name == "grad_cam":
+        explain_method = grad_cam
     
     else:
         raise ValueError(f"Unknown explainable method: {method_name}")

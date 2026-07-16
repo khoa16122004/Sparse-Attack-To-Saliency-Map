@@ -130,6 +130,58 @@ def integrated_gradients(model, input_tensor, normalize, target_class=None, step
 
     return saliency.detach(), output_logits
 
+def _infer_gradcam_model_name(model):
+    if hasattr(model, "layer4"):
+        return "resnet"
+
+    class_name = model.__class__.__name__.lower()
+    if class_name.startswith("vgg"):
+        return "vgg"
+    if class_name.startswith("densenet"):
+        return "densenet"
+
+    if class_name == "visiontransformer" or hasattr(model, "encoder"):
+        patch_size = getattr(model, "patch_size", None)
+        if patch_size == 16:
+            return "vit_b_16"
+        if patch_size == 32:
+            return "vit_b_32"
+
+    raise ValueError(
+        f"Could not infer Grad-CAM model name for class {model.__class__.__name__}. "
+        "Pass a supported torchvision model (resnet/vgg/densenet/vit_b_16/vit_b_32)."
+    )
+
+
+def grad_cam(model, input_tensor, normalize, target_class=None, model_name=None):
+    if model_name is None:
+        model_name = _infer_gradcam_model_name(model)
+
+    grayscale_cam, output_logits = get_gradcam_map(
+        model=model,
+        model_name=model_name,
+        input_tensor=input_tensor,
+        normalize=normalize,
+        target_class=target_class,
+    )
+
+    saliency = torch.as_tensor(
+        grayscale_cam,
+        device=input_tensor.device,
+        dtype=input_tensor.dtype,
+    )
+
+    if saliency.dim() == 2:
+        saliency = saliency.unsqueeze(0)
+
+    H, W = saliency.shape[-2:]
+    saliency = (H * W) * saliency / (
+        saliency.view(saliency.size(0), -1).sum(dim=1).view(-1, 1, 1) + 1e-8
+    )
+
+    return saliency.detach(), output_logits
+
+
 
 def _vit_reshape_transform_vit_b_32(tensor, weight=7, height=7):
     tensor = tensor[:, 1:, :]

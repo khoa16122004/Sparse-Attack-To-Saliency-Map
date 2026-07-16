@@ -81,7 +81,7 @@ def parse_args():
         "--explain-method",
         type=str,
         default="simple_gradient",
-        choices=["simple_gradient", "integrated_gradients", 'input_gradient'],
+        choices=["simple_gradient", "integrated_gradients", "input_gradient", "grad_cam"],
         help="Saliency explanation method",
     )
     parser.add_argument("--label", type=int, default=None, help="True label index override")
