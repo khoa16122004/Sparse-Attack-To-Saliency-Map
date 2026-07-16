@@ -47,7 +47,6 @@ def parse_args():
     )
     parser.add_argument(
         "--num_sample",
-        "--num-sample",
         dest="num_sample",
         type=int,
         default=None,
