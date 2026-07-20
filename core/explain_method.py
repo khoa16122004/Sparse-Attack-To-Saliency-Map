@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 from pytorch_grad_cam.utils.image import show_cam_on_image
@@ -177,6 +178,126 @@ def grad_cam(model, input_tensor, normalize, target_class=None, model_name=None)
     H, W = saliency.shape[-2:]
     saliency = (H * W) * saliency / (
         saliency.view(saliency.size(0), -1).sum(dim=1).view(-1, 1, 1) + 1e-8
+    )
+
+    return saliency.detach(), output_logits
+
+
+# For ViT
+# Raw attention
+# Rollout
+
+def _is_vit_model(model, model_name=None):
+    if model_name is not None:
+        return str(model_name).lower().startswith("vit")
+
+    class_name = model.__class__.__name__.lower()
+    return class_name == "visiontransformer" or hasattr(model, "encoder")
+
+
+def _forward_with_attentions(model, x):
+    try:
+        outputs = model(x, output_attentions=True)
+    except TypeError as exc:
+        raise ValueError(
+            "This ViT model does not expose attentions via output_attentions=True. "
+            "Use a ViT implementation that returns attentions (e.g. HuggingFace ViTModel/ViTForImageClassification)."
+        ) from exc
+
+    if hasattr(outputs, "logits") and hasattr(outputs, "attentions"):
+        logits = outputs.logits
+        attentions = outputs.attentions
+        return logits, attentions
+
+    if isinstance(outputs, (tuple, list)) and len(outputs) >= 2:
+        logits = outputs[0]
+        attentions = outputs[-1]
+        return logits, attentions
+
+    raise ValueError("Could not parse logits/attentions from model outputs.")
+
+
+def _tokens_to_map(tokens, batch_size, out_hw):
+    grid = int(tokens.shape[-1] ** 0.5)
+    if grid * grid != tokens.shape[-1]:
+        raise ValueError("Number of patch tokens is not a perfect square.")
+
+    saliency = tokens.reshape(batch_size, 1, grid, grid)
+    saliency = F.interpolate(
+        saliency,
+        size=out_hw,
+        mode="bilinear",
+        align_corners=False,
+    ).squeeze(1)
+
+    saliency = saliency / (saliency.mean(dim=(1, 2), keepdim=True) + 1e-8)
+    return saliency
+
+
+def raw_attention(model, input_tensor, normalize, target_class=None, model_name=None):
+    if not _is_vit_model(model, model_name):
+        raise ValueError("raw_attention only supports ViT models.")
+
+    model.zero_grad()
+    x = input_tensor.clone().detach()
+
+    logits, attentions = _forward_with_attentions(model, normalize(x))
+    output_logits = logits.detach()
+
+    last_attn = attentions[-1]  # B x num_heads x num_tokens x num_tokens
+    attn_map = last_attn.mean(dim=1)  # B x num_tokens x num_tokens
+    cls_to_patches = attn_map[:, 0, 1:]  # B x (num_tokens - 1)
+
+    saliency = _tokens_to_map(
+        cls_to_patches,
+        batch_size=x.shape[0],
+        out_hw=x.shape[-2:],
+    )
+
+    return saliency.detach(), output_logits
+
+
+def attention_grad(model, input_tensor, normalize, target_class=None, model_name=None):
+    if not _is_vit_model(model, model_name):
+        raise ValueError("attention_grad only supports ViT models.")
+
+    model.zero_grad()
+    x = input_tensor.clone().detach().requires_grad_(True)
+
+    logits, attentions = _forward_with_attentions(model, normalize(x))
+    output_logits = logits.detach()
+    target_class = _prepare_target_class(logits, target_class)
+    score = logits.gather(1, target_class.view(-1, 1)).sum()
+
+    cams = []
+    for attn in attentions:
+        grad = torch.autograd.grad(score, attn, retain_graph=True, allow_unused=True)[0]
+        if grad is None:
+            continue
+
+        # Gradient-weighted attention, averaged across heads.
+        cam = (attn * grad).clamp(min=0).mean(dim=1)  # B x num_tokens x num_tokens
+        cams.append(cam)
+
+    if not cams:
+        raise ValueError(
+            "Attention tensors are not connected to logits for gradient computation. "
+            "Use a ViT implementation with differentiable returned attentions."
+        )
+
+    rollout = torch.eye(cams[0].shape[-1], device=x.device).unsqueeze(0)
+    rollout = rollout.repeat(x.shape[0], 1, 1)
+
+    for cam in cams:
+        cam = cam + torch.eye(cam.shape[-1], device=x.device)
+        cam = cam / (cam.sum(dim=-1, keepdim=True) + 1e-8)
+        rollout = cam @ rollout
+
+    cls_to_patches = rollout[:, 0, 1:]
+    saliency = _tokens_to_map(
+        cls_to_patches,
+        batch_size=x.shape[0],
+        out_hw=x.shape[-2:],
     )
 
     return saliency.detach(), output_logits

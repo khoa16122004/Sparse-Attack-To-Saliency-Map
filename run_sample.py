@@ -37,7 +37,14 @@ def parse_args():
         "--explain-method",
         type=str,
         default="simple_gradient",
-        choices=["simple_gradient", "integrated_gradients", "input_gradient", "grad_cam"],
+        choices=[
+            "simple_gradient",
+            "integrated_gradients",
+            "input_gradient",
+            "grad_cam",
+            "raw_attention",
+            "attention_grad",
+        ],
         help="Saliency explanation method",
     )
 
