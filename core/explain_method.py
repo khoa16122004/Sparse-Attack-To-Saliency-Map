@@ -195,10 +195,61 @@ def _is_vit_model(model, model_name=None):
     return class_name == "visiontransformer" or hasattr(model, "encoder")
 
 
+def _is_torchvision_vit_model(model):
+    class_name = model.__class__.__name__.lower()
+    return (
+        class_name == "visiontransformer"
+        and hasattr(model, "_process_input")
+        and hasattr(model, "class_token")
+        and hasattr(model, "encoder")
+        and hasattr(model, "heads")
+    )
+
+
+def _forward_torchvision_vit_with_attentions(model, x):
+    # Re-implement torchvision ViT forward so we can request attention weights per block.
+    tokens = model._process_input(x)
+    batch_size = tokens.shape[0]
+    class_token = model.class_token.expand(batch_size, -1, -1)
+    tokens = torch.cat([class_token, tokens], dim=1)
+
+    encoder = model.encoder
+    tokens = tokens + encoder.pos_embedding
+    tokens = encoder.dropout(tokens)
+
+    attentions = []
+    for block in encoder.layers:
+        residual = tokens
+        x_norm = block.ln_1(tokens)
+        attn_out, attn_weights = block.self_attention(
+            x_norm,
+            x_norm,
+            x_norm,
+            need_weights=True,
+            average_attn_weights=False,
+        )
+        attn_out = block.dropout(attn_out)
+        tokens = residual + attn_out
+
+        y = block.ln_2(tokens)
+        y = block.mlp(y)
+        tokens = tokens + y
+
+        if attn_weights is None:
+            raise ValueError("Could not extract attention weights from torchvision ViT block.")
+        attentions.append(attn_weights)
+
+    tokens = encoder.ln(tokens)
+    logits = model.heads(tokens[:, 0])
+    return logits, tuple(attentions)
+
+
 def _forward_with_attentions(model, x):
     try:
         outputs = model(x, output_attentions=True)
     except TypeError as exc:
+        if _is_torchvision_vit_model(model):
+            return _forward_torchvision_vit_with_attentions(model, x)
         raise ValueError(
             "This ViT model does not expose attentions via output_attentions=True. "
             "Use a ViT implementation that returns attentions (e.g. HuggingFace ViTModel/ViTForImageClassification)."
