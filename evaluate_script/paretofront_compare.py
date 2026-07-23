@@ -210,14 +210,19 @@ def _find_matching_runs(
 
         parsed.run_dir = run_dir
         if parsed.algorithm != expected_algorithm:
+            print(f"Algorithm mismatch: expected {expected_algorithm}, got {parsed.algorithm}, skipping: {run_dir}")
             continue
         if parsed.strategy != strategy:
+            print(f"Strategy mismatch: expected {strategy}, got {parsed.strategy}, skipping: {run_dir}")
             continue
         if parsed.explain_method != explain_method:
+            print(f"Explain method mismatch: expected {explain_method}, got {parsed.explain_method}, skipping: {run_dir}")
             continue
         if parsed.eps not in eps_set:
+            print(f"eps {parsed.eps} not in expected eps_list {eps_list}, skipping: {run_dir}")
             continue
         if loss_type != "all" and parsed.loss_type != loss_type:
+            print(f"Loss type mismatch: expected {loss_type}, got {parsed.loss_type}, skipping: {run_dir}")
             continue
 
         if weight_pairs is not None:
