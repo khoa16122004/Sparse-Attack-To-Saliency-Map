@@ -558,6 +558,7 @@ def main() -> None:
             nsgaii_runs=nsgaii_runs,
             weight_pairs=weight_pairs,
         )
+        print(runs_for_eps)
 
         if len(runs_for_eps) < 2:
             print(f"[WARN] Skip eps={eps}: not enough matched runs")
