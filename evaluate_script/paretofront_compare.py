@@ -204,7 +204,6 @@ def _find_matching_runs(
     eps_set = set(eps_list)
     for run_dir in sorted([p for p in root.iterdir() if p.is_dir()]):
         parsed = _parse_approach(run_dir.name)
-        print(f"Parsing run_dir={run_dir}, parsed={parsed}")
         if parsed is None:
             print("parsed is None, skipping: ", parsed)
             continue
