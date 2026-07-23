@@ -63,8 +63,8 @@ EPSILONS="100 50 20"
 #   sbatch resnet18.sh 0.7 0.3
 W_MARGIN="${W_MARGIN:-0.0}"
 W_SALIENCY="${W_SALIENCY:-1.0}"
-EXPLAIN_METHOD="${EXPLAIN_METHOD:-grad_cam}"
-SEED="${SEED:-22520691}"
+EXPLAIN_METHOD="${EXPLAIN_METHOD:-simple_gradient}"
+SEED="${SEED:-22520692}"
 OUTPUT_ROOT="offical/server_run_seed/GA/$SEED/"
 
 # At wm=0, ws=1, both fitness formulations are equivalent (attack objective is off).
