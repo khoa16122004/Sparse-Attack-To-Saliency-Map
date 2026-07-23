@@ -206,6 +206,7 @@ def _find_matching_runs(
         parsed = _parse_approach(run_dir.name)
         print(f"Parsing run_dir={run_dir}, parsed={parsed}")
         if parsed is None:
+            print("parsed is None, skipping: ", parsed)
             continue
 
         parsed.run_dir = run_dir
