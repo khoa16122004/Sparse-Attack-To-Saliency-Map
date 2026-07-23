@@ -316,7 +316,7 @@ def attention_grad(model, input_tensor, normalize, target_class=None, model_name
     x = input_tensor.clone().detach().requires_grad_(True)
 
     logits, attentions = _forward_with_attentions(model, normalize(x))
-    output_logits = logits.detach()
+    output_logits = logits
     target_class = _prepare_target_class(logits, target_class)
     score = logits.gather(1, target_class.view(-1, 1)).sum()
 
