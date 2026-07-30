@@ -93,6 +93,13 @@ def parse_args():
     parser.add_argument("--kernel-size", type=int, default=11, help="Gaussian blur kernel size for insertion")
     parser.add_argument("--kernel-sigma", type=int, default=5, help="Gaussian blur sigma for insertion")
     parser.add_argument("--save-process", action="store_true", help="Save every deletion/insertion step image")
+    parser.add_argument(
+        "--verbose",
+        type=int,
+        default=0,
+        choices=[0, 1, 2],
+        help="CausalMetric verbosity: 0 no plot, 1 final step only, 2 show every step",
+    )
     return parser.parse_args()
 
 
