@@ -270,7 +270,7 @@ def save_causal_metric_summary(image_tensor, final_tensor, scores, output_path, 
     preview_image = denormalize_image_tensor(final_tensor, preprocess)
     
     # new normalize
-    scores = normalize_causal_curve(scores, mode)
+    # scores = normalize_causal_curve(scores, mode)
     
     plt.figure(figsize=(10, 5))
     plt.subplot(121)
