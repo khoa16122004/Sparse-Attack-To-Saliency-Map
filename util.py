@@ -15,6 +15,7 @@ from explain_method import (
     attention_grad,
 )
 from torch import nn
+import matplotlib.pyplot as plt
 
 
 def _to_float(value):
