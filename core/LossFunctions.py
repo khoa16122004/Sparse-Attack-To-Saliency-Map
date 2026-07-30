@@ -55,5 +55,29 @@ class NegativeCrossEntropySaliency_Fitness(MarginSalinecy_Fitness):
         negative_ce_loss = log_probs.gather(1, y_true.unsqueeze(1)).squeeze(1) + 1e-12
         return negative_ce_loss
     
+    
+
+# Increase Confidence, Decrease Saliency
+class ReverseMarginSalinecy_Fitness(MarginSalinecy_Fitness):
+    def __init__(self, model, x_tensor, normalize, y_true, explain_method):
+        super().__init__(model, x_tensor, normalize, y_true, explain_method)
+        
+    def benchmark(self, xadv_tensors):
+        saliency_maps, logits = self.explain_method(self.model, xadv_tensors, self.normalize, self.y_true)
+        margin_loss = -self.cal_marginloss(logits, self.y_true)  # Reverse the margin loss
+        saliency_loss = self.cal_saliency_loss(saliency_maps, self.saliency_true)
+        return margin_loss, saliency_loss, logits
+    
+class ReverseNegativeCrossEntropySaliency_Fitness(NegativeCrossEntropySaliency_Fitness):
+    def __init__(self, model, x_tensor, normalize, y_true, explain_method):
+        super().__init__(model, x_tensor, normalize, y_true, explain_method)
+        
+    def benchmark(self, xadv_tensors):
+        saliency_maps, logits = self.explain_method(self.model, xadv_tensors, self.normalize, self.y_true)
+        negative_ce_loss = -self.cal_cross_entropy(logits, self.y_true)  # Reverse the negative cross-entropy loss
+        saliency_loss = self.cal_saliency_loss(saliency_maps, self.saliency_true)
+        return negative_ce_loss, saliency_loss, logits
+
+
             
             
