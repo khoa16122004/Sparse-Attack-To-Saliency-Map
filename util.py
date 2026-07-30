@@ -250,8 +250,7 @@ def save_causal_metric_summary(image_tensor, final_tensor, scores, output_path, 
     plt.close()
     
 def denormalize_image_tensor(image_tensor, preprocess):
-    print(preprocess)
-    mean, std = get_preprocess_normalization_stats(preprocess)
+    mean, std = preprocess.mean, preprocess.std
     if image_tensor.ndim == 4:
         image_tensor = image_tensor[0]
     image = image_tensor.detach().cpu().numpy().transpose((1, 2, 0))
