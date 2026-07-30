@@ -454,13 +454,13 @@ def run_attack(args):
     
     deletion_curve = deletion.single_run(
         normalize(x_tensor),
-        clean_saliency_map.cpu().unsqueeze(0),
+        clean_saliency_map.cpu().numpy(),
         verbose=args.verbose,
         save_to=deletion_process_dir if args.save_process else None,
     )
     insertion_curve = insertion.single_run(
         normalize(x_tensor),
-        adv_saliency_map[0].cpu().unsqueeze(0),
+        adv_saliency_map[0].cpu().numpy(),
         verbose=args.verbose,
         save_to=insertion_process_dir if args.save_process else None,
     )
@@ -490,13 +490,13 @@ def run_attack(args):
     
     deletion_curve = deletion.single_run(
         normalize(adv_chw.unsqueeze(0).to(device)),
-        clean_saliency_map.cpu().unsqueeze(0),
+        clean_saliency_map.cpu().numpy(),
         verbose=args.verbose,
         save_to=deletion_process_dir if args.save_process else None,
     )
     insertion_curve = insertion.single_run(
         normalize(adv_chw.unsqueeze(0).to(device)),
-        adv_saliency_map[0].cpu().unsqueeze(0),
+        adv_saliency_map[0].cpu().numpy(),
         verbose=args.verbose,
         save_to=insertion_process_dir if args.save_process else None,
     )
