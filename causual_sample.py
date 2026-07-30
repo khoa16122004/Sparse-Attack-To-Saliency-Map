@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import random
 import sys
@@ -7,7 +8,7 @@ import numpy as np
 import torch
 from PIL import Image
 from torchvision.utils import save_image
-
+from torch import nn
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 CORE_DIR = os.path.join(ROOT_DIR, "core")
@@ -15,9 +16,11 @@ if CORE_DIR not in sys.path:
     sys.path.insert(0, CORE_DIR)
 
 from LossFunctions import MarginSalinecy_Fitness, NegativeCrossEntropySaliency_Fitness, ReverseMarginSalinecy_Fitness, ReverseNegativeCrossEntropySaliency_Fitness
-from util import get_explainable_method, get_torchvision_model, save_attack_two_score_charts
+from util import get_explainable_method, get_torchvision_model, save_attack_two_score_charts, build_blur_substrate, save_causal_metric_summary
 from weightedSUM_GA import Weighted_Sum_GA
 from NSGAII import NSGAII
+from RISE.evaluation import gkern, CausalMetric, auc
+from imagenet_metadata import IMAGENET_CLASSNAMES
 
 
 def parse_args():
@@ -89,6 +92,15 @@ def parse_args():
 
     return parser.parse_args()
 
+
+class SoftmaxModel(nn.Module):
+    def __init__(self, model, dim=1):
+        super().__init__()
+        self.model = model
+        self.softmax = nn.Softmax(dim=dim)
+
+    def forward(self, inputs):
+        return self.softmax(self.model(inputs))
 
 
 def _save_saliency_map(saliency_map, output_path):
@@ -212,7 +224,7 @@ def run_attack(args):
     model.eval()
 
     image = Image.open(args.image).convert("RGB")
-    x_tensor = spatial(image).to(device).unsqueeze(0)
+    x_tensor = spatial(image).to(device).unsqueeze(0) # not normalizde  
 
     with torch.no_grad():
         pred = model(normalize(x_tensor)).argmax(dim=1)
@@ -386,34 +398,120 @@ def run_attack(args):
     else:
         print("saved_history_chart: disabled (use --save-history-chart)")
 
-    return {
-        "model": args.model,
-        "image": args.image,
-        "true_label": y_true.detach().cpu().tolist(),
-        "clean_pred": pred.detach().cpu().tolist(),
-        "adv_pred": adv_pred,
-        "l0_distance": int(best_candidate.l0_distance(adv_chw.to(device))),
-        "margin_loss": float(best_scores["margin_loss"]),
-        "saliency_loss": float(best_scores["saliency_loss"]),
-        "weighted_fitness": float(weighted_fitness),
-        "first_success_iteration": best_scores.get("first_success_iteration"),
-        "algorithm": args.algorithm,
-        "fitness_function": args.fitness_function,
-        "operator_strategy": args.operator_strategy,
-        "saliency_temperature": args.saliency_temperature,
-        "seed": args.seed,
-        "saved_clean_image": clean_image_path,
-        "saved_adv": args.output,
-        "saved_clean_map": clean_map_path,
-        "saved_adv_map": adv_map_path,
-        "saved_clean_map_class_a": four_map_paths["clean_a"],
-        "saved_clean_map_class_b": four_map_paths["clean_b"],
-        "saved_adv_map_class_a": four_map_paths["adv_a"],
-        "saved_adv_map_class_b": four_map_paths["adv_b"],
-        "saved_non_dominated_front_scores": non_dominated_front_txt if non_nominated_front_fitness is not None else None,
-        "saved_margin_chart": margin_chart_path,
-        "saved_saliency_chart": saliency_chart_path,
-    }
+    # return {
+    #     "model": args.model,
+    #     "image": args.image,
+    #     "true_label": y_true.detach().cpu().tolist(),
+    #     "clean_pred": pred.detach().cpu().tolist(),
+    #     "adv_pred": adv_pred,
+    #     "l0_distance": int(best_candidate.l0_distance(adv_chw.to(device))),
+    #     "margin_loss": float(best_scores["margin_loss"]),
+    #     "saliency_loss": float(best_scores["saliency_loss"]),
+    #     "weighted_fitness": float(weighted_fitness),
+    #     "first_success_iteration": best_scores.get("first_success_iteration"),
+    #     "algorithm": args.algorithm,
+    #     "fitness_function": args.fitness_function,
+    #     "operator_strategy": args.operator_strategy,
+    #     "saliency_temperature": args.saliency_temperature,
+    #     "seed": args.seed,
+    #     "saved_clean_image": clean_image_path,
+    #     "saved_adv": args.output,
+    #     "saved_clean_map": clean_map_path,
+    #     "saved_adv_map": adv_map_path,
+    #     "saved_clean_map_class_a": four_map_paths["clean_a"],
+    #     "saved_clean_map_class_b": four_map_paths["clean_b"],
+    #     "saved_adv_map_class_a": four_map_paths["adv_a"],
+    #     "saved_adv_map_class_b": four_map_paths["adv_b"],
+    #     "saved_non_dominated_front_scores": non_dominated_front_txt if non_nominated_front_fitness is not None else None,
+    #     "saved_margin_chart": margin_chart_path,
+    #     "saved_saliency_chart": saliency_chart_path,
+    # }
+    
+    # FaithFull processng
+    metric_model = SoftmaxModel(model)
+    
+    
+    
+    
+    blur_fn = build_blur_substrate(args.kernel_size, args.kernel_sigma)
+    insertion = CausalMetric(metric_model, "ins", args.step, substrate_fn=blur_fn)
+    deletion = CausalMetric(metric_model, "del", args.step, substrate_fn=lambda x: torch.zeros_like(x))  
+    
+    
+    # clean faitfull
+    deletion_process_dir = os.path.join(output_root, "clean_deletion_steps")
+    insertion_process_dir = os.path.join(output_root, "clean_insertion_steps")
+    
+    deletion_curve = deletion.single_run(
+        normalize(x_tensor),
+        clean_saliency_map,
+        verbose=args.verbose,
+        save_to=deletion_process_dir if args.save_process else None,
+    )
+    insertion_curve = insertion.single_run(
+        normalize(x_tensor),
+        adv_saliency_map[0],
+        verbose=args.verbose,
+        save_to=insertion_process_dir if args.save_process else None,
+    )
+    
+    
+    save_causal_metric_summary(
+        image_tensor=normalize(x_tensor),
+        final_tensor=torch.zeros_like(normalize(x_tensor)),
+        scores=deletion_curve,
+        output_path=os.path.join(output_root, f"clean_del_summary.png"),
+        mode="del",
+        class_name=IMAGENET_CLASSNAMES[pred],
+        preprocess=normalize,
+    )
+    save_causal_metric_summary(
+        image_tensor=normalize(x_tensor),
+        final_tensor=normalize(x_tensor),
+        scores=insertion_curve,
+        output_path=os.path.join(output_root, f"clean_ins_summary.png"),
+        mode="ins",
+        class_name=IMAGENET_CLASSNAMES[pred],
+        preprocess=normalize,
+    )
+    # adversarial
+    deletion_process_dir = os.path.join(output_root, "adv_deletion_steps")
+    insertion_process_dir = os.path.join(output_root, "adv_insertion_steps")
+    
+    deletion_curve = deletion.single_run(
+        normalize(adv_chw.unsqueeze(0).to(device)),
+        clean_saliency_map,
+        verbose=args.verbose,
+        save_to=deletion_process_dir if args.save_process else None,
+    )
+    insertion_curve = insertion.single_run(
+        normalize(adv_chw.unsqueeze(0).to(device)),
+        adv_saliency_map[0],
+        verbose=args.verbose,
+        save_to=insertion_process_dir if args.save_process else None,
+    )
+    
+    
+    save_causal_metric_summary(
+        image_tensor=normalize(adv_chw.unsqueeze(0).to(device)),
+        final_tensor=torch.zeros_like(normalize(adv_chw.unsqueeze(0).to(device))),
+        scores=deletion_curve,
+        output_path=os.path.join(output_root, f"adv_del_summary.png"),
+        mode="del",
+        class_name=IMAGENET_CLASSNAMES[pred],
+        preprocess=normalize,
+    )
+    save_causal_metric_summary(
+        image_tensor=normalize(adv_chw.unsqueeze(0).to(device)),
+        final_tensor=normalize(adv_chw.unsqueeze(0).to(device)),
+        scores=insertion_curve,
+        output_path=os.path.join(output_root, f"adv_ins_summary.png"),
+        mode="ins",
+        class_name=IMAGENET_CLASSNAMES[pred],
+        preprocess=normalize,
+    )
+    
+
 
 
 def main():

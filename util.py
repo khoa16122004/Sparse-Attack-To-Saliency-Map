@@ -14,6 +14,7 @@ from explain_method import (
     raw_attention,
     attention_grad,
 )
+from torch import nn
 
 
 def _to_float(value):
@@ -34,6 +35,24 @@ _DATASET_NUM_CLASSES = {
     "caltech256": 256,
 }
 
+
+
+def build_blur_substrate(gkern_or_kernel_size=11, kernel_size=11, kernel_sigma=5):
+    if callable(gkern_or_kernel_size):
+        gkern_fn = gkern_or_kernel_size
+    else:
+        from RISE.evaluation import gkern as gkern_fn
+
+        kernel_sigma = kernel_size
+        kernel_size = gkern_or_kernel_size
+
+    kernel = gkern_fn(kernel_size, kernel_sigma)
+
+    def blur_fn(x):
+        kernel_on_device = kernel.to(device=x.device, dtype=x.dtype)
+        return nn.functional.conv2d(x, kernel_on_device, padding=kernel_size // 2)
+
+    return blur_fn
 
 def split_transform_from_weights(weights):
 
@@ -194,4 +213,37 @@ def save_attack_two_score_charts(
         title=saliency_title,
     )
 
+def save_causal_metric_summary(image_tensor, final_tensor, scores, output_path, mode, class_name, preprocess):
+    if mode == "del":
+        title = "Deletion game"
+        ylabel = "Pixels deleted"
+    elif mode == "ins":
+        title = "Insertion game"
+        ylabel = "Pixels inserted"
+    else:
+        raise ValueError(f"Unknown mode: {mode}")
 
+    output_dir = os.path.dirname(output_path)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+
+    n_steps = len(scores) - 1
+    preview_image = denormalize_image_tensor(final_tensor, preprocess)
+
+    plt.figure(figsize=(10, 5))
+    plt.subplot(121)
+    plt.title(f"{ylabel} 100.0%, P={scores[-1]:.4f}")
+    plt.axis("off")
+    plt.imshow(preview_image)
+
+    plt.subplot(122)
+    plt.plot(np.arange(n_steps + 1) / n_steps, scores)
+    plt.xlim(-0.1, 1.1)
+    plt.ylim(0, 1.05)
+    plt.fill_between(np.arange(n_steps + 1) / n_steps, 0, scores, alpha=0.4)
+    plt.title(title)
+    plt.xlabel(ylabel)
+    plt.ylabel(class_name)
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
