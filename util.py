@@ -129,6 +129,9 @@ class TorchvisionModelWrapper:
         with torch.no_gra():
             logits = self.model(x)
         return logits.detach().cpu()
+    
+    def __call__(self, x):
+        return self.predict(x)
 
 
 def get_intersection(clean_map, adv_map):
