@@ -453,13 +453,13 @@ def run_attack(args):
     insertion_process_dir = os.path.join(output_root, "clean_insertion_steps")
     
     deletion_curve = deletion.single_run(
-        normalize(x_tensor).cpu(),
+        normalize(x_tensor).cpu().unsqueeze(0),
         clean_saliency_map.cpu().numpy(),
         verbose=args.verbose,
         save_to=deletion_process_dir if args.save_process else None,
     )
     insertion_curve = insertion.single_run(
-        normalize(x_tensor).cpu(),
+        normalize(x_tensor).cpu().unsqueeze(0),
         adv_saliency_map[0].cpu().numpy(),
         verbose=args.verbose,
         save_to=insertion_process_dir if args.save_process else None,
@@ -489,13 +489,13 @@ def run_attack(args):
     insertion_process_dir = os.path.join(output_root, "adv_insertion_steps")
     
     deletion_curve = deletion.single_run(
-        normalize(adv_chw.cpu()),
+        normalize(adv_chw.cpu()).unsqueeze(0),
         clean_saliency_map.cpu().numpy(),
         verbose=args.verbose,
         save_to=deletion_process_dir if args.save_process else None,
     )
     insertion_curve = insertion.single_run(
-        normalize(adv_chw.cpu()),
+        normalize(adv_chw.cpu()).unsqueeze(0),
         adv_saliency_map[0].cpu().numpy(),
         verbose=args.verbose,
         save_to=insertion_process_dir if args.save_process else None,
@@ -503,8 +503,8 @@ def run_attack(args):
     
     
     save_causal_metric_summary(
-        image_tensor=normalize(adv_chw.unsqueeze(0).to(device)),
-        final_tensor=torch.zeros_like(normalize(adv_chw.unsqueeze(0).to(device))),
+        image_tensor=normalize(adv_chw.cpu()).unsqueeze(0),
+        final_tensor=torch.zeros_like(normalize(adv_chw.cpu()).unsqueeze(0)),
         scores=deletion_curve,
         output_path=os.path.join(output_root, f"adv_del_summary.png"),
         mode="del",
@@ -512,8 +512,8 @@ def run_attack(args):
         preprocess=normalize,
     )
     save_causal_metric_summary(
-        image_tensor=normalize(adv_chw.unsqueeze(0).to(device)),
-        final_tensor=normalize(adv_chw.unsqueeze(0).to(device)),
+        image_tensor=normalize(adv_chw.cpu()).unsqueeze(0),
+        final_tensor=normalize(adv_chw.cpu()).unsqueeze(0),
         scores=insertion_curve,
         output_path=os.path.join(output_root, f"adv_ins_summary.png"),
         mode="ins",
