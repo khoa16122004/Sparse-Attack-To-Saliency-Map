@@ -217,6 +217,41 @@ def save_attack_two_score_charts(
         title=saliency_title,
     )
 
+
+def normalize_causal_curve(scores, mode="del", eps=1e-8):
+    """
+    Normalize deletion/insertion curve so that only the shape is compared.
+
+    Parameters
+    ----------
+    scores : array-like
+        Probability curve.
+    mode : {"del", "ins"}
+    eps : float
+        Prevent division by zero.
+
+    Returns
+    -------
+    np.ndarray
+        Normalized curve.
+    """
+    scores = np.asarray(scores, dtype=np.float32)
+
+    if mode == "del":
+        # start -> 1, end -> 0
+        denom = max(scores[0] - scores[-1], eps)
+        norm_scores = (scores - scores[-1]) / denom
+
+    elif mode == "ins":
+        # start -> 0, end -> 1
+        denom = max(scores[-1] - scores[0], eps)
+        norm_scores = (scores - scores[0]) / denom
+
+    else:
+        raise ValueError(f"Unknown mode: {mode}")
+
+    return np.clip(norm_scores, 0.0, 1.0)
+
 def save_causal_metric_summary(image_tensor, final_tensor, scores, output_path, mode, class_name, preprocess):
     if mode == "del":
         title = "Deletion game"
@@ -233,7 +268,10 @@ def save_causal_metric_summary(image_tensor, final_tensor, scores, output_path, 
 
     n_steps = len(scores) - 1
     preview_image = denormalize_image_tensor(final_tensor, preprocess)
-
+    
+    # new normalize
+    scores = normalize_causal_curve(scores, mode)
+    
     plt.figure(figsize=(10, 5))
     plt.subplot(121)
     plt.title(f"{ylabel} 100.0%, P={scores[-1]:.4f}")

@@ -521,6 +521,9 @@ def run_attack(args):
         preprocess=normalize,
     )
     
+    
+    print("Clean AUC del/ins", auc(deletion_curve), auc(insertion_curve))
+    print("Adv AUC del/ins", auc(deletion_curve), auc(insertion_curve))
 
 
 
