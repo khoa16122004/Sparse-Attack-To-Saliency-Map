@@ -89,7 +89,10 @@ def parse_args():
     )
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
     parser.add_argument("--seed", type=int, default=None, help="Global random seed for reproducibility")
-
+    parser.add_argument("--step", type=int, default=224, help="Pixels modified per causal-metric step")
+    parser.add_argument("--kernel-size", type=int, default=11, help="Gaussian blur kernel size for insertion")
+    parser.add_argument("--kernel-sigma", type=int, default=5, help="Gaussian blur sigma for insertion")
+    parser.add_argument("--save-process", action="store_true", help="Save every deletion/insertion step image")
     return parser.parse_args()
 
 
