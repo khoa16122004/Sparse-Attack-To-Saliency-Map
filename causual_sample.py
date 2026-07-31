@@ -462,7 +462,7 @@ def run_attack(args):
     )
     insertion_curve = insertion.single_run(
         normalize(x_tensor).cpu().detach(),
-        clean_saliency_map[0].cpu().detach().numpy(),
+        clean_saliency_map.cpu().detach().numpy(),
         verbose=args.verbose,
         save_to=insertion_process_dir if args.save_process else None,
     )
