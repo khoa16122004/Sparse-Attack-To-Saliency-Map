@@ -2,6 +2,7 @@ from torch import nn
 from tqdm import tqdm
 from scipy.ndimage.filters import gaussian_filter
 import torch.nn.functional as F
+from util import normalize_causal_curve
 
 from .utils import *
 
@@ -110,6 +111,10 @@ class CausalMetric():
             if i < n_steps:
                 coords = salient_order[:, self.step * i:self.step * (i + 1)]
                 start.cpu().numpy().reshape(1, 3, HW)[0, :, coords] = finish.cpu().numpy().reshape(1, 3, HW)[0, :, coords]
+
+        #normalize
+        scores = normalize_causal_curve(scores, self.mode)
+
         return scores
 
     def evaluate(self, img_batch, exp_batch, batch_size):
