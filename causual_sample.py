@@ -451,6 +451,8 @@ def run_attack(args):
     # clean faitfull
     deletion_process_dir = os.path.join(output_root, "clean_deletion_steps")
     insertion_process_dir = os.path.join(output_root, "clean_insertion_steps")
+    os.makedirs(deletion_process_dir, exist_ok=True)
+    os.makedirs(insertion_process_dir, exist_ok=True)
     
     deletion_curve = deletion.single_run(
         normalize(x_tensor).cpu(),
