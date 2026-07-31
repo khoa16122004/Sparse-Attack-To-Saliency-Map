@@ -489,6 +489,9 @@ def run_attack(args):
     # adversarial
     deletion_process_dir = os.path.join(output_root, "adv_deletion_steps")
     insertion_process_dir = os.path.join(output_root, "adv_insertion_steps")
+    os.makedirs(deletion_process_dir, exist_ok=True)
+    os.makedirs(insertion_process_dir, exist_ok=True)
+    
     
     deletion_curve = deletion.single_run(
         normalize(adv_chw.cpu()).unsqueeze(0),
