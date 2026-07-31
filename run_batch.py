@@ -94,7 +94,7 @@ def parse_args():
     parser.add_argument("--pop-size", type=int, default=50)
     parser.add_argument("--iterations", type=int, default=200)
     parser.add_argument("--eps", type=int, default=50)
-    parser.add_argument("--p-size", type=float, default=1.0)
+    parser.add_argument("--p-size", type=float, de  fault=1.0)
     parser.add_argument("--pc", type=float, default=0.4)
     parser.add_argument("--pm", type=float, default=0.1)
     parser.add_argument("--zero-probability", type=float, default=0.3)
