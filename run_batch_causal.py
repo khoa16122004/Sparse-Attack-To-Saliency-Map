@@ -31,7 +31,6 @@ from util import (
     build_blur_substrate,
     get_explainable_method,
     get_torchvision_model,
-    save_causal_metric_summary,
 )
 from weightedSUM_GA import Weighted_Sum_GA
 
@@ -252,10 +251,6 @@ def prepare_output_paths(output_dir):
         "adv_map_class_b": output_dir / "adv_map_class_b.png",
         "history_txt": output_dir / "history_scores.txt",
         "non_dominated_front_txt": output_dir / "non_dominated_front_scores.txt",
-        "clean_del_summary": output_dir / "clean_del_summary.png",
-        "clean_ins_summary": output_dir / "clean_ins_summary.png",
-        "adv_del_summary": output_dir / "adv_del_summary.png",
-        "adv_ins_summary": output_dir / "adv_ins_summary.png",
         "summary": output_dir / "summary.json",
     }
 
@@ -307,7 +302,7 @@ def create_fitness(fitness_function, model, x_tensor, normalize, y_true, explain
     raise ValueError(f"Unsupported fitness function: {fitness_function}")
 
 
-def _compute_causal_metrics(model, normalize, clean_batch, adv_batch, clean_saliency_map, adv_saliency_map, class_name, output_dir, args):
+def _compute_causal_metrics(model, normalize, clean_batch, adv_batch, clean_saliency_map, adv_saliency_map, output_dir, args):
     metric_model = SoftmaxModel(model)
 
     blur_fn = build_blur_substrate(args.kernel_size, args.kernel_sigma)
@@ -360,7 +355,6 @@ def _compute_causal_metrics(model, normalize, clean_batch, adv_batch, clean_sali
         "clean_ins_scores": [float(v) for v in clean_scores_ins],
         "adv_del_scores": [float(v) for v in adv_scores_del],
         "adv_ins_scores": [float(v) for v in adv_scores_ins],
-        "class_name": class_name,
     }
 
 
@@ -462,46 +456,8 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         adv_batch=adv_chw_cpu.unsqueeze(0),
         clean_saliency_map=clean_saliency_map,
         adv_saliency_map=adv_saliency_map,
-        class_name=class_name,
         output_dir=output_paths["summary"].parent,
         args=args,
-    )
-
-    save_causal_metric_summary(
-        image_tensor=normalize(x_tensor),
-        final_tensor=torch.zeros_like(normalize(x_tensor)),
-        scores=causal["clean_del_scores"],
-        output_path=str(output_paths["clean_del_summary"]),
-        mode="del",
-        class_name=class_name,
-        preprocess=normalize,
-    )
-    save_causal_metric_summary(
-        image_tensor=normalize(x_tensor),
-        final_tensor=normalize(x_tensor),
-        scores=causal["clean_ins_scores"],
-        output_path=str(output_paths["clean_ins_summary"]),
-        mode="ins",
-        class_name=class_name,
-        preprocess=normalize,
-    )
-    save_causal_metric_summary(
-        image_tensor=normalize(adv_chw_cpu).unsqueeze(0),
-        final_tensor=torch.zeros_like(normalize(adv_chw_cpu).unsqueeze(0)),
-        scores=causal["adv_del_scores"],
-        output_path=str(output_paths["adv_del_summary"]),
-        mode="del",
-        class_name=class_name,
-        preprocess=normalize,
-    )
-    save_causal_metric_summary(
-        image_tensor=normalize(adv_chw_cpu).unsqueeze(0),
-        final_tensor=normalize(adv_chw_cpu).unsqueeze(0),
-        scores=causal["adv_ins_scores"],
-        output_path=str(output_paths["adv_ins_summary"]),
-        mode="ins",
-        class_name=class_name,
-        preprocess=normalize,
     )
 
     history_margin, history_saliency = history_to_lists(history)
@@ -526,14 +482,18 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "non_dominated_front_scores_file": str(output_paths["non_dominated_front_txt"]) if non_nominated_front_fitness is not None else None,
         "history_margin": history_margin,
         "history_saliency": history_saliency,
-        "clean_del_auc": causal["clean_del_auc"],
-        "clean_ins_auc": causal["clean_ins_auc"],
-        "adv_del_auc": causal["adv_del_auc"],
-        "adv_ins_auc": causal["adv_ins_auc"],
-        "clean_del_summary": str(output_paths["clean_del_summary"]),
-        "clean_ins_summary": str(output_paths["clean_ins_summary"]),
-        "adv_del_summary": str(output_paths["adv_del_summary"]),
-        "adv_ins_summary": str(output_paths["adv_ins_summary"]),
+        "causual": {
+            "del": causal["adv_del_scores"],
+            "ins": causal["adv_ins_scores"],
+            "clean_del": causal["clean_del_scores"],
+            "clean_ins": causal["clean_ins_scores"],
+            "auc": {
+                "del": causal["adv_del_auc"],
+                "ins": causal["adv_ins_auc"],
+                "clean_del": causal["clean_del_auc"],
+                "clean_ins": causal["clean_ins_auc"],
+            },
+        },
     }
 
 
