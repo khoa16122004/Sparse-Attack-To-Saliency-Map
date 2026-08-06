@@ -55,7 +55,7 @@ export CUDA_VISIBLE_DEVICES=$BEST_GPU
 # =========================================================
 MODEL_NAMES="resnet18"
 NUM_SAMPLE=100
-EPSILONS="100 50 20"
+EPSILONS="100"
 
 # Objective weights (can override by env or script args)
 # Example:
@@ -64,16 +64,12 @@ EPSILONS="100 50 20"
 W_MARGIN="${W_MARGIN:-0.0}"
 W_SALIENCY="${W_SALIENCY:-1.0}"
 EXPLAIN_METHOD="${EXPLAIN_METHOD:-simple_gradient}"
-SEED="${SEED:-22520692}"
+SEED="${SEED:-22520691}"
 OUTPUT_ROOT="offical/server_run_seed/GA/$SEED/"
 
 # At wm=0, ws=1, both fitness formulations are equivalent (attack objective is off).
-FITNESSES="margin_saliency cross_entropy_saliency"
-case "${W_MARGIN}:${W_SALIENCY}" in
-    "0:1"|"0:1.0"|"0.0:1"|"0.0:1.0")
-        FITNESSES="margin_saliency"
-        ;;
-esac
+FITNESSES="reverse_margin_saliency"
+
 
 
 for MODEL_NAME in $MODEL_NAMES; do

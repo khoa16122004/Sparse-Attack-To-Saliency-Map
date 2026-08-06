@@ -63,12 +63,7 @@ KERNEL_SIGMA="${KERNEL_SIGMA:-5}"
 VERBOSE="${VERBOSE:-0}"
 SAVE_PROCESS="${SAVE_PROCESS:-0}"
 
-FITNESSES="margin_saliency cross_entropy_saliency"
-case "${W_MARGIN}:${W_SALIENCY}" in
-    "0:1"|"0:1.0"|"0.0:1"|"0.0:1.0")
-        FITNESSES="margin_saliency"
-        ;;
-esac
+FITNESSES="reverse_margin_saliency"
 
 for MODEL_NAME in $MODEL_NAMES; do
     for STRATEGY in uniform; do
