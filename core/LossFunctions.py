@@ -86,20 +86,19 @@ class MarginLosssMSESaliency_Fitness(MarginSalinecy_Fitness):
 
         with torch.no_grad():
             logits = self.model(self.normalize(x_tensor))
-            if y_true.numel() == 1:
-                y_true = y_true.expand(logits.size(0))
-            self.true_logits = logits.gather(1, y_true.unsqueeze(1)).squeeze(1)
+            self.true_logits = logits.clone().detach()
             
     def benchmark(self, xadv_tensors):
         saliency_map, logits = self.explain_method(self.model, xadv_tensors, self.normalize, self.y_true)
-        mse_logit_loss = self.cal_marginloss(logits, self.true_logits)
+        mse_logit_loss = self.cal_mse_logit_loss(logits, self.true_logits)
         saliency_loss = self.cal_mse_saliency_loss(saliency_map, self.saliency_true)
         return mse_logit_loss, saliency_loss, logits
     
     def cal_mse_logit_loss(self, logits, true_logits):
-        if true_logits.numel() == 1:
-            true_logits = true_logits.expand(logits.size(0))
-        mse_logit_loss = torch.mean((logits.gather(1, self.y_true.unsqueeze(1)).squeeze(1) - true_logits) ** 2)
+        if true_logits.size(0) == 1 and logits.size(0) > 1:
+            true_logits = true_logits.expand(logits.size(0), -1)
+        # Compare full-logit vectors between adv and clean samples.
+        mse_logit_loss = torch.mean((logits - true_logits) ** 2, dim=1)
         return mse_logit_loss
 
     def cal_mse_saliency_loss(self, saliency_maps, saliency_true):
