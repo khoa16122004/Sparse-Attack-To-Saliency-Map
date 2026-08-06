@@ -55,7 +55,7 @@ W_MARGIN="${W_MARGIN:-0.0}"
 W_SALIENCY="${W_SALIENCY:-1.0}"
 EXPLAIN_METHOD="${EXPLAIN_METHOD:-simple_gradient}"
 SEED="${SEED:-22520691}"
-OUTPUT_ROOT="offical/server_run_seed/GA_causal/$SEED/"
+OUTPUT_ROOT="rivf_offical/server_run_seed/GA_causal/$SEED/"
 
 STEP="${STEP:-224}"
 KERNEL_SIZE="${KERNEL_SIZE:-11}"
