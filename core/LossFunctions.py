@@ -77,6 +77,38 @@ class ReverseNegativeCrossEntropySaliency_Fitness(NegativeCrossEntropySaliency_F
         negative_ce_loss = -self.cal_cross_entropy(logits, self.y_true)  # Reverse the negative cross-entropy loss
         saliency_loss = self.cal_saliency_loss(saliency_maps, self.saliency_true)
         return negative_ce_loss, saliency_loss, logits
+    
+    
+# MSE function
+class MarginLosssMSESaliency_Fitness(MarginSalinecy_Fitness):
+    def __init__(self, model, x_tensor, normalize, y_true, explain_method):
+        super().__init__(model, x_tensor, normalize, y_true, explain_method)
+
+        with torch.no_grad():
+            logits = self.model(self.normalize(x_tensor))
+            if y_true.numel() == 1:
+                y_true = y_true.expand(logits.size(0))
+            self.true_logits = logits.gather(1, y_true.unsqueeze(1)).squeeze(1)
+            
+    def benchmark(self, xadv_tensors):
+        saliency_map, logits = self.explain_method(self.model, xadv_tensors, self.normalize, self.y_true)
+        mse_logit_loss = self.cal_marginloss(logits, self.true_logits)
+        saliency_loss = self.cal_mse_saliency_loss(saliency_map, self.saliency_true)
+        return mse_logit_loss, saliency_loss, logits
+    
+    def cal_mse_logit_loss(self, logits, true_logits):
+        if true_logits.numel() == 1:
+            true_logits = true_logits.expand(logits.size(0))
+        mse_logit_loss = torch.mean((logits.gather(1, self.y_true.unsqueeze(1)).squeeze(1) - true_logits) ** 2)
+        return mse_logit_loss
+
+    def cal_mse_saliency_loss(self, saliency_maps, saliency_true):
+        saliency_maps = saliency_maps.flatten(start_dim=1)
+        saliency_true = saliency_true.flatten(start_dim=1)
+        if saliency_true.size(0) == 1 and saliency_maps.size(0) > 1:
+            saliency_true = saliency_true.expand(saliency_maps.size(0), -1)
+        mse_saliency_loss = -torch.mean((saliency_maps - saliency_true) ** 2, dim=1)
+        return mse_saliency_loss
 
 
             

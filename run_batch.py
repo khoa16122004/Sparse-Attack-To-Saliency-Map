@@ -17,7 +17,13 @@ CORE_DIR = os.path.join(ROOT_DIR, "core")
 if CORE_DIR not in sys.path:
     sys.path.insert(0, CORE_DIR)
 
-from LossFunctions import MarginSalinecy_Fitness, NegativeCrossEntropySaliency_Fitness, ReverseMarginSalinecy_Fitness, ReverseNegativeCrossEntropySaliency_Fitness
+from LossFunctions import (
+    MarginLosssMSESaliency_Fitness,
+    MarginSalinecy_Fitness,
+    NegativeCrossEntropySaliency_Fitness,
+    ReverseMarginSalinecy_Fitness,
+    ReverseNegativeCrossEntropySaliency_Fitness,
+)
 import numpy as np
 from util import get_explainable_method, get_torchvision_model
 from weightedSUM_GA import Weighted_Sum_GA
@@ -104,7 +110,15 @@ def parse_args():
         "--fitness-function",
         type=str,
         default="margin_saliency",
-        choices=["margin_saliency", "negative_cross_entropy_saliency", "cross_entropy_saliency", 'reverse_margin_saliency', 'reverse_negative_cross_entropy_saliency'],
+        choices=[
+            "margin_saliency",
+            "negative_cross_entropy_saliency",
+            "cross_entropy_saliency",
+            "reverse_margin_saliency",
+            "reverse_negative_cross_entropy_saliency",
+            "margin_loss_mse_saliency",
+            "MarginLossMESE",
+        ],
         help="Fitness function to optimize",
     )
     parser.add_argument(
@@ -276,6 +290,8 @@ def build_approach_tag(args):
         fit_name = args.fitness_function
         if fit_name == "cross_entropy_saliency":
             fit_name = "negative_cross_entropy_saliency"
+        if fit_name == "MarginLossMESE":
+            fit_name = "margin_loss_mse_saliency"
         parts.append(f"fit-{fit_name}")
     if args.seed is not None:
         parts.append(f"seed-{args.seed}")
@@ -319,6 +335,15 @@ def create_fitness(fitness_function, model, x_tensor, normalize, y_true, explain
         
     if fitness_function == "reverse_negative_cross_entropy_saliency":
         return ReverseNegativeCrossEntropySaliency_Fitness(
+            model=model,
+            x_tensor=x_tensor,
+            normalize=normalize,
+            y_true=y_true,
+            explain_method=explain_fn,
+        )
+
+    if fitness_function in {"margin_loss_mse_saliency", "MarginLossMESE"}:
+        return MarginLosssMSESaliency_Fitness(
             model=model,
             x_tensor=x_tensor,
             normalize=normalize,
