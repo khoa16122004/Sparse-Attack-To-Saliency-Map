@@ -53,7 +53,10 @@ NUM_SAMPLE=100
 ITERATIONS="${ITERATIONS:-80}"
 ALPHA="${ALPHA:-1.0}"
 TAU="${TAU:-0.5}"
+EPS="${EPS:-50}"
 LAMBDA_MARGIN="${LAMBDA_MARGIN:-0.7}"
+LAMBDA_SPARSE="${LAMBDA_SPARSE:-0.1}"
+SPARSE_TARGET="${SPARSE_TARGET:-}"
 EXPLAIN_METHOD="${EXPLAIN_METHOD:-simple_gradient}"
 SEED="${SEED:-22520691}"
 OUTPUT_ROOT="rivf_offical/server_run_seed/PGD_sparse_causal/$SEED/"
@@ -67,7 +70,7 @@ AUTOCAST="${AUTOCAST:-1}"
 AUTOCAST_DTYPE="${AUTOCAST_DTYPE:-float16}"
 
 for MODEL_NAME in $MODEL_NAMES; do
-    echo "[RUN] model=$MODEL_NAME iter=$ITERATIONS alpha=$ALPHA tau=$TAU lambda_margin=$LAMBDA_MARGIN explain_method=$EXPLAIN_METHOD num_sample=$NUM_SAMPLE output_root=$OUTPUT_ROOT"
+    echo "[RUN] model=$MODEL_NAME iter=$ITERATIONS alpha=$ALPHA tau=$TAU eps=$EPS lambda_margin=$LAMBDA_MARGIN lambda_sparse=$LAMBDA_SPARSE sparse_target=$SPARSE_TARGET explain_method=$EXPLAIN_METHOD num_sample=$NUM_SAMPLE output_root=$OUTPUT_ROOT"
 
     CMD=(
         python run_batch_causal_pgd_sparse.py
@@ -76,7 +79,9 @@ for MODEL_NAME in $MODEL_NAMES; do
         --iterations "$ITERATIONS"
         --alpha "$ALPHA"
         --threshold "$TAU"
+        --eps "$EPS"
         --lambda-margin "$LAMBDA_MARGIN"
+        --lambda-sparse "$LAMBDA_SPARSE"
         --seed "$SEED"
         --output-root "$OUTPUT_ROOT"
         --explain-method "$EXPLAIN_METHOD"
@@ -92,6 +97,9 @@ for MODEL_NAME in $MODEL_NAMES; do
     fi
     if [ "$AUTOCAST" = "1" ]; then
         CMD+=(--autocast)
+    fi
+    if [ -n "$SPARSE_TARGET" ]; then
+        CMD+=(--sparse-target "$SPARSE_TARGET")
     fi
 
     "${CMD[@]}"

@@ -70,6 +70,9 @@ def parse_args():
     parser.add_argument("--alpha", type=float, default=1.0, help="Step size for dense latent perturbation")
     parser.add_argument("--threshold", type=float, default=0.5, help="Threshold tau for sparsification")
     parser.add_argument("--lambda-margin", type=float, default=0.7, help="Weight lambda in -lambda*Lmargin + (1-lambda)*Lsal")
+    parser.add_argument("--eps", type=int, default=50, help="Sparsity target budget used to derive p=eps/(H*W)")
+    parser.add_argument("--sparse-target", type=float, default=None, help="Override p directly in L_sparse=(mean(delta_soft)-p)^2")
+    parser.add_argument("--lambda-sparse", type=float, default=0.1, help="Weight for sparse constraint loss")
 
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
     parser.add_argument("--seed", type=int, default=None)
@@ -219,6 +222,9 @@ def run_attack(args):
         iterations=args.iterations,
         threshold=args.threshold,
         weight_margin=args.lambda_margin,
+        eps_budget=args.eps,
+        sparse_target=args.sparse_target,
+        weight_sparse=args.lambda_sparse,
         use_autocast=args.autocast,
         autocast_dtype=autocast_dtype,
     )
@@ -363,8 +369,12 @@ def run_attack(args):
         "alpha": float(args.alpha),
         "threshold": float(args.threshold),
         "lambda_margin": float(args.lambda_margin),
+        "eps": int(args.eps),
+        "sparse_target": float(result.best_scores["sparse_target"]),
+        "lambda_sparse": float(result.best_scores["weight_sparse"]),
         "margin_loss": float(result.best_scores["margin_loss"]),
         "saliency_loss": float(result.best_scores["saliency_loss"]),
+        "sparse_loss": float(result.best_scores["sparse_loss"]),
         "weighted_fitness": float(result.best_scores["weighted_fitness"]),
         "first_success_iteration": result.best_scores["first_success_iteration"],
         "l0_distance": int(result.best_scores["l0_distance"]),

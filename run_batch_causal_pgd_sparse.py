@@ -68,6 +68,9 @@ def parse_args():
     parser.add_argument("--alpha", type=float, default=1.0)
     parser.add_argument("--threshold", type=float, default=0.5)
     parser.add_argument("--lambda-margin", type=float, default=0.7)
+    parser.add_argument("--eps", type=int, default=50, help="Sparsity target budget used to derive p=eps/(H*W)")
+    parser.add_argument("--sparse-target", type=float, default=None, help="Override p directly in L_sparse=(mean(delta_soft)-p)^2")
+    parser.add_argument("--lambda-sparse", type=float, default=0.1, help="Weight for sparse constraint loss")
 
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
     parser.add_argument("--seed", type=int, default=None)
@@ -242,10 +245,14 @@ def build_approach_tag(args):
         f"iter-{_fmt_num(args.iterations)}",
         f"alpha-{_fmt_num(args.alpha)}",
         f"tau-{_fmt_num(args.threshold)}",
+        f"eps-{_fmt_num(args.eps)}",
         f"wm-{_fmt_num(args.lambda_margin)}",
         f"ws-{_fmt_num(1.0 - float(args.lambda_margin))}",
+        f"wsp-{_fmt_num(args.lambda_sparse)}",
         f"exp-{args.explain_method}",
     ]
+    if args.sparse_target is not None:
+        parts.append(f"pt-{_fmt_num(args.sparse_target)}")
     if args.seed is not None:
         parts.append(f"seed-{args.seed}")
     return "__".join(parts)
@@ -292,6 +299,9 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         iterations=args.iterations,
         threshold=args.threshold,
         weight_margin=args.lambda_margin,
+        eps_budget=args.eps,
+        sparse_target=args.sparse_target,
+        weight_sparse=args.lambda_sparse,
         use_autocast=args.autocast,
         autocast_dtype=autocast_dtype,
     )
@@ -361,6 +371,9 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "l0_distance": int(attack_result.best_scores["l0_distance"]),
         "margin_loss": float(attack_result.best_scores["margin_loss"]),
         "saliency_loss": float(attack_result.best_scores["saliency_loss"]),
+        "sparse_loss": float(attack_result.best_scores["sparse_loss"]),
+        "sparse_target": float(attack_result.best_scores["sparse_target"]),
+        "lambda_sparse": float(attack_result.best_scores["weight_sparse"]),
         "weighted_fitness": float(attack_result.best_scores["weighted_fitness"]),
         "first_success_iteration": attack_result.best_scores["first_success_iteration"],
         "algorithm": "pgd_sparse",

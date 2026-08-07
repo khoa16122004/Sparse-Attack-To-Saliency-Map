@@ -33,6 +33,9 @@ class PGDSparseAttacker:
         iterations: int,
         threshold: float,
         weight_margin: float,
+        eps_budget: Optional[int] = None,
+        sparse_target: Optional[float] = None,
+        weight_sparse: float = 0.0,
         clip_min: float = 0.0,
         clip_max: float = 1.0,
         use_autocast: bool = True,
@@ -48,6 +51,9 @@ class PGDSparseAttacker:
         self.threshold = float(threshold)
         self.weight_margin = float(weight_margin)
         self.weight_saliency = 1.0 - self.weight_margin
+        self.eps_budget = None if eps_budget is None else int(eps_budget)
+        self.sparse_target = None if sparse_target is None else float(sparse_target)
+        self.weight_sparse = float(weight_sparse)
         self.clip_min = float(clip_min)
         self.clip_max = float(clip_max)
         self.use_autocast = bool(use_autocast)
@@ -97,10 +103,12 @@ class PGDSparseAttacker:
 
     def _joint_objective(
         self,
+        delta_soft: torch.Tensor,
         x_adv: torch.Tensor,
         y_target: torch.Tensor,
         clean_saliency: torch.Tensor,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        sparse_target: float,
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         logits = self.model(self.normalize(x_adv))
         margin_loss = self._margin_loss(logits, y_target)
 
@@ -111,9 +119,30 @@ class PGDSparseAttacker:
             detach=False,
         )
         saliency_loss = F.mse_loss(adv_saliency, clean_saliency)
+        sparse_loss = (delta_soft.mean() - float(sparse_target)) ** 2
 
-        total_loss = -self.weight_margin * margin_loss + self.weight_saliency * saliency_loss
-        return total_loss, margin_loss, saliency_loss, logits
+        total_loss = (
+            +self.weight_margin * margin_loss
+            + self.weight_saliency * saliency_loss
+            + self.weight_sparse * sparse_loss
+        )
+        return total_loss, margin_loss, saliency_loss, sparse_loss, logits
+
+    def _resolve_sparse_target(self) -> float:
+        if self.sparse_target is not None:
+            return float(max(0.0, min(1.0, self.sparse_target)))
+
+        if self.eps_budget is None:
+            return 0.0
+
+        # eps/HW follows the requested sparse budget target.
+        h = int(self.x_tensor.shape[-2])
+        w = int(self.x_tensor.shape[-1])
+        if h <= 0 or w <= 0:
+            return 0.0
+
+        p = float(self.eps_budget) / float(h * w)
+        return float(max(0.0, min(1.0, p)))
 
     def attack(self) -> PGDSparseResult:
         y_target = self.y_true
@@ -128,6 +157,7 @@ class PGDSparseAttacker:
                 detach=True,
             )
         clean_saliency = clean_saliency.detach()
+        sparse_target = self._resolve_sparse_target()
 
         dense_delta = torch.zeros_like(self.x_tensor, device=self.device)
         history: List[Dict[str, float]] = []
@@ -139,10 +169,12 @@ class PGDSparseAttacker:
             x_adv = torch.clamp(self.x_tensor + delta_soft, min=self.clip_min, max=self.clip_max)
 
             with self._autocast_context():
-                total_loss, margin_loss, saliency_loss, logits = self._joint_objective(
+                total_loss, margin_loss, saliency_loss, sparse_loss, logits = self._joint_objective(
+                    delta_soft=delta_soft,
                     x_adv=x_adv,
                     y_target=y_target,
                     clean_saliency=clean_saliency,
+                    sparse_target=sparse_target,
                 )
 
             grad = torch.autograd.grad(total_loss, dense_delta, create_graph=False, retain_graph=False)[0]
@@ -160,6 +192,8 @@ class PGDSparseAttacker:
                         "iteration": float(iteration),
                         "margin_loss": float(margin_loss.detach().cpu().item()),
                         "saliency_loss": float(saliency_loss.detach().cpu().item()),
+                        "sparse_loss": float(sparse_loss.detach().cpu().item()),
+                        "sparse_target": float(sparse_target),
                         "weighted_fitness": float(total_loss.detach().cpu().item()),
                         "grad_l1": float(grad.detach().abs().mean().cpu().item()),
                         "first_success_iteration": first_success_iteration,
@@ -173,15 +207,20 @@ class PGDSparseAttacker:
         x_adv_final = torch.clamp(self.x_tensor + delta_sparse, min=self.clip_min, max=self.clip_max)
 
         with self._autocast_context():
-            final_total, final_margin, final_saliency, final_logits = self._joint_objective(
+            final_total, final_margin, final_saliency, final_sparse, final_logits = self._joint_objective(
+                delta_soft=delta_soft,
                 x_adv=x_adv_final,
                 y_target=y_target,
                 clean_saliency=clean_saliency,
+                sparse_target=sparse_target,
             )
 
         best_scores = {
             "margin_loss": float(final_margin.detach().cpu().item()),
             "saliency_loss": float(final_saliency.detach().cpu().item()),
+            "sparse_loss": float(final_sparse.detach().cpu().item()),
+            "sparse_target": float(sparse_target),
+            "weight_sparse": float(self.weight_sparse),
             "weighted_fitness": float(final_total.detach().cpu().item()),
             "first_success_iteration": first_success_iteration,
             "adv_pred": int(final_logits.argmax(dim=1)[0].detach().cpu().item()),
