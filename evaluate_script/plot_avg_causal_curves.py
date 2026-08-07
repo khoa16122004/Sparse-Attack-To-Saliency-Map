@@ -13,6 +13,7 @@ import numpy as np
 @dataclass
 class RunCurves:
     run_dir: Path
+    model_name: Optional[str]
     wm: Optional[float]
     ws: Optional[float]
     adv_del_mean: List[float]
@@ -101,6 +102,14 @@ def _find_run_dirs(root_dir: Path) -> List[Path]:
     return run_dirs
 
 
+def _find_model_dirs(root_dir: Path) -> List[Path]:
+    model_dirs: List[Path] = []
+    for child in sorted([p for p in root_dir.iterdir() if p.is_dir()]):
+        if _find_run_dirs(child):
+            model_dirs.append(child)
+    return model_dirs
+
+
 def _load_summary_paths(run_dir: Path) -> List[Path]:
     paths = list(run_dir.glob("*/*/summary.json")) + list(run_dir.glob("*/*/summarize.json"))
     return sorted(set(paths))
@@ -134,7 +143,7 @@ def _as_float_list(value: object) -> List[float]:
     return out
 
 
-def _collect_run_curves(run_dir: Path) -> Optional[RunCurves]:
+def _collect_run_curves(run_dir: Path, model_name: Optional[str] = None) -> Optional[RunCurves]:
     summary_paths = _load_summary_paths(run_dir)
     if not summary_paths:
         return None
@@ -179,6 +188,7 @@ def _collect_run_curves(run_dir: Path) -> Optional[RunCurves]:
 
     return RunCurves(
         run_dir=run_dir,
+        model_name=model_name,
         wm=wm,
         ws=ws,
         adv_del_mean=_curve_mean_with_last_padding(adv_del_curves),
@@ -191,6 +201,61 @@ def _collect_run_curves(run_dir: Path) -> Optional[RunCurves]:
         clean_ins_curves=clean_ins_curves,
         sample_count=max(len(adv_del_curves), len(adv_ins_curves)),
     )
+
+
+def _group_key_for_cross_model_average(run: RunCurves) -> Tuple[str, object, object]:
+    if run.wm is not None or run.ws is not None:
+        wm = None if run.wm is None else round(float(run.wm), 12)
+        ws = None if run.ws is None else round(float(run.ws), 12)
+        return ("weights", wm, ws)
+    return ("name", run.run_dir.name, None)
+
+
+def _aggregate_across_models(run_curves: List[RunCurves]) -> List[RunCurves]:
+    grouped: Dict[Tuple[str, object, object], List[RunCurves]] = {}
+    for run in run_curves:
+        key = _group_key_for_cross_model_average(run)
+        grouped.setdefault(key, []).append(run)
+
+    merged: List[RunCurves] = []
+    for key, group in grouped.items():
+        wm = group[0].wm
+        ws = group[0].ws
+        label = group[0].run_dir.name
+        if key[0] == "weights":
+            wm_txt = "na" if wm is None else f"{wm:g}"
+            ws_txt = "na" if ws is None else f"{ws:g}"
+            label = f"avg_models__wm-{wm_txt}__ws-{ws_txt}"
+
+        adv_del_curves = [g.adv_del_mean for g in group if g.adv_del_mean]
+        adv_ins_curves = [g.adv_ins_mean for g in group if g.adv_ins_mean]
+
+        adv_del_mean = _curve_mean_with_last_padding(adv_del_curves)
+        adv_ins_mean = _curve_mean_with_last_padding(adv_ins_curves)
+        adv_imd_mean = _curve_diff_with_last_padding(adv_ins_mean, adv_del_mean)
+
+        clean_del_all: List[List[float]] = []
+        clean_ins_all: List[List[float]] = []
+        for g in group:
+            clean_del_all.extend(g.clean_del_curves)
+            clean_ins_all.extend(g.clean_ins_curves)
+
+        merged.append(
+            RunCurves(
+                run_dir=Path(label),
+                model_name=None,
+                wm=wm,
+                ws=ws,
+                adv_del_mean=adv_del_mean,
+                adv_ins_mean=adv_ins_mean,
+                adv_imd_mean=adv_imd_mean,
+                clean_del_curves=clean_del_all,
+                clean_ins_curves=clean_ins_all,
+                sample_count=sum(g.sample_count for g in group),
+            )
+        )
+
+    return merged
 
 
 def _format_lambda_label(wm: Optional[float], ws: Optional[float], sample_count: int) -> str:
@@ -520,31 +585,51 @@ def main() -> None:
         default=340,
         help="Output image DPI.",
     )
+    parser.add_argument(
+        "--average-models",
+        action="store_true",
+        help="If root contains multiple model folders, average corresponding runs across models.",
+    )
     args = parser.parse_args()
 
     root_dir = Path(args.root)
     if not root_dir.exists() or not root_dir.is_dir():
         raise FileNotFoundError(f"root not found or not a directory: {root_dir}")
 
-    run_dirs = _find_run_dirs(root_dir)
-    if not run_dirs:
-        raise RuntimeError(f"No run directories with summary files found under: {root_dir}")
+    model_dirs = _find_model_dirs(root_dir)
+    use_cross_model_average = bool(model_dirs) and args.average_models
 
-    run_curves: List[RunCurves] = []
+    run_curves_raw: List[RunCurves] = []
     all_clean_del_curves: List[List[float]] = []
     all_clean_ins_curves: List[List[float]] = []
 
-    for run_dir in run_dirs:
-        packed = _collect_run_curves(run_dir)
-        if packed is None:
-            continue
+    if model_dirs:
+        for model_dir in model_dirs:
+            run_dirs = _find_run_dirs(model_dir)
+            for run_dir in run_dirs:
+                packed = _collect_run_curves(run_dir, model_name=model_dir.name)
+                if packed is None:
+                    continue
+                run_curves_raw.append(packed)
+                all_clean_del_curves.extend(packed.clean_del_curves)
+                all_clean_ins_curves.extend(packed.clean_ins_curves)
+    else:
+        run_dirs = _find_run_dirs(root_dir)
+        for run_dir in run_dirs:
+            packed = _collect_run_curves(run_dir, model_name=None)
+            if packed is None:
+                continue
+            run_curves_raw.append(packed)
+            all_clean_del_curves.extend(packed.clean_del_curves)
+            all_clean_ins_curves.extend(packed.clean_ins_curves)
 
-        run_curves.append(packed)
-        all_clean_del_curves.extend(packed.clean_del_curves)
-        all_clean_ins_curves.extend(packed.clean_ins_curves)
+    if not run_curves_raw:
+        raise RuntimeError(f"No valid curves found under: {root_dir}")
 
-    if not run_curves:
-        raise RuntimeError("No valid curves found from summary files.")
+    if use_cross_model_average:
+        run_curves = _aggregate_across_models(run_curves_raw)
+    else:
+        run_curves = run_curves_raw
 
     clean_del_mean = _curve_mean_with_last_padding(all_clean_del_curves)
     clean_ins_mean = _curve_mean_with_last_padding(all_clean_ins_curves)
@@ -568,10 +653,13 @@ def main() -> None:
     metadata = {
         "root": str(root_dir),
         "output_image": str(output_path),
+        "average_models": bool(use_cross_model_average),
+        "model_dirs": [p.name for p in model_dirs],
         "num_runs": len(run_curves),
         "runs": [
             {
                 "run_dir": str(r.run_dir),
+                "model_name": r.model_name,
                 "wm": r.wm,
                 "ws": r.ws,
                 "sample_count": r.sample_count,

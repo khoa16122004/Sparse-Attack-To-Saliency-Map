@@ -25,6 +25,33 @@ DEFAULT_IMAGENET_VAL_ROOT = r"E:\ImageNet1K\imagenet\ImageNet1K\val"
 DEFAULT_REMOTE_VAL_ROOT = "/datastore/elo/quanphm/dataset/ImageNet1K/val"
 
 
+def _fmt_num(value):
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, float):
+        return f"{value:.6g}".replace("+", "")
+    return str(value)
+
+
+def _build_approach_tag(args):
+    parts = [
+        f"wm-{_fmt_num(args.w_margin)}",
+        f"ws-{_fmt_num(args.w_saliency)}",
+        f"eps-{_fmt_num(args.epsilon)}",
+        f"k-{_fmt_num(args.k)}",
+        f"iter-{_fmt_num(args.iterations)}",
+        f"alpha-{_fmt_num(args.alpha)}",
+        f"beta-{_fmt_num(args.beta)}",
+        f"exp-{args.explain_method}",
+        f"mode-{args.attack_mode}",
+    ]
+    if args.sparsity_ratio is not None:
+        parts.append(f"sr-{_fmt_num(args.sparsity_ratio)}")
+    if args.seed is not None:
+        parts.append(f"seed-{args.seed}")
+    return "__".join(parts)
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Batch runner for saliency-based sparse gradient attack")
     parser.add_argument("--selection-file", type=str, default=None, help="Path to *_selection.json")
@@ -92,6 +119,14 @@ def _soft_iou(s1, s2, eps=1e-12):
     inter = torch.minimum(s1, s2).sum(dim=1)
     union = torch.maximum(s1, s2).sum(dim=1)
     return inter / (union + eps)
+
+
+def _mse_per_sample(s1, s2):
+    s1 = s1.flatten(start_dim=1)
+    s2 = s2.flatten(start_dim=1)
+    if s1.size(0) == 1 and s2.size(0) > 1:
+        s1 = s1.expand(s2.size(0), -1)
+    return ((s1 - s2) ** 2).mean(dim=1)
 
 
 def _margin_loss(logits, y_true):
@@ -187,7 +222,7 @@ def _run_one(model, spatial, normalize, explain_fn, args, image_path, output_dir
     _save_saliency_map(adv_saliency[0], str(adv_map_path))
 
     margin = _margin_loss(adv_logits, y_true).mean().item()
-    soft_iou = _soft_iou(clean_saliency, adv_saliency).mean().item()
+    saliency_mse = _mse_per_sample(clean_saliency, adv_saliency).mean().item()
 
     payload = {
         "image": str(image_path),
@@ -195,8 +230,8 @@ def _run_one(model, spatial, normalize, explain_fn, args, image_path, output_dir
         "clean_pred": int(clean_pred[0].item()),
         "adv_pred": int(adv_pred[0].item()),
         "margin_loss": float(margin),
-        "saliency_loss_softiou": float(soft_iou),
-        "objective": float(args.w_margin * margin + args.w_saliency * soft_iou),
+        "saliency_mse": float(saliency_mse),
+        "objective": float(args.w_margin * margin + args.w_saliency * saliency_mse),
         "history": history,
         "output_adv": str(adv_path),
         "output_clean": str(clean_path),
@@ -251,8 +286,11 @@ def run(args):
 
     explain_fn = get_explainable_method_backprop(args.explain_method)
 
+    approach_tag = _build_approach_tag(args)
     output_root = Path(args.output_root) / model_name
-    output_root.mkdir(parents=True, exist_ok=True)
+    run_root = output_root / approach_tag
+    run_root.mkdir(parents=True, exist_ok=True)
+    print(f"[INFO] run_dir={run_root}")
 
     items = list(selection.items())
     if args.num_sample is not None:
@@ -263,7 +301,7 @@ def run(args):
     for idx, (class_name, raw_path) in enumerate(iterator):
         image_path = _resolve_image_path(raw_path, class_name, args.imagenet_val_root, args.replace_from_root)
         sample_name = f"{idx:04d}_{class_name}"
-        sample_dir = output_root / sample_name
+        sample_dir = run_root / sample_name
         summary_file = sample_dir / "summary.json"
 
         if summary_file.exists() and not args.replace:
@@ -302,13 +340,14 @@ def run(args):
     report = {
         "selection_file": str(selection_file),
         "model": model_name,
+        "approach_tag": approach_tag,
         "num_requested": args.num_sample,
         "num_processed": len(results),
-        "output_root": str(output_root),
+        "output_root": str(run_root),
         "results": results,
     }
 
-    summary_path = output_root / "batch_summary.json"
+    summary_path = run_root / "batch_summary.json"
     with open(summary_path, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)
 

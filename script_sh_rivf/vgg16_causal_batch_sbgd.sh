@@ -109,4 +109,4 @@ for MODEL_NAME in $MODEL_NAMES; do
     "${CMD[@]}"
 done
 
-echo "DONE. Outputs stored under: $OUTPUT_ROOT"
+echo "DONE. Outputs stored under: $OUTPUT_ROOT/<model>/<approach_tag>/"
