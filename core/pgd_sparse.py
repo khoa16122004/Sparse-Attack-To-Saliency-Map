@@ -145,25 +145,23 @@ class PGDSparseAttacker:
         return float(max(0.0, min(1.0, p)))
 
     def _build_sparse_mask(self, delta_soft: torch.Tensor) -> torch.Tensor:
-        # Prefer top-k spatial selection based on eps budget.
+        # Prefer top-k channel-wise selection based on eps budget.
         if self.eps_budget is not None:
+            c = int(delta_soft.shape[1])
             h = int(delta_soft.shape[-2])
             w = int(delta_soft.shape[-1])
-            spatial_size = h * w
-            k = int(max(0, min(int(self.eps_budget), spatial_size)))
+            total_channels = c * h * w
+            k = int(max(0, min(int(self.eps_budget) * c, total_channels)))
 
             if k <= 0:
                 return torch.zeros_like(delta_soft)
 
-            # Aggregate channels to one spatial score map, then broadcast mask back to channels.
-            spatial_score = delta_soft.mean(dim=1)
-            flat = spatial_score.reshape(spatial_score.shape[0], -1)
+            flat = delta_soft.reshape(delta_soft.shape[0], -1)
             topk_idx = torch.topk(flat, k=k, dim=1, largest=True, sorted=False).indices
 
             flat_mask = torch.zeros_like(flat)
             flat_mask.scatter_(1, topk_idx, 1.0)
-            spatial_mask = flat_mask.view(spatial_score.shape[0], h, w)
-            return spatial_mask.unsqueeze(1).expand_as(delta_soft)
+            return flat_mask.view_as(delta_soft)
 
         # Backward-compatible fallback if eps is not provided.
         return (delta_soft > self.threshold).to(delta_soft.dtype)
@@ -230,9 +228,8 @@ class PGDSparseAttacker:
         delta_sparse = sparse_mask * delta_soft
         x_adv_final = torch.clamp(self.x_tensor + delta_sparse, min=self.clip_min, max=self.clip_max)
 
-        spatial_mask = (sparse_mask[:, :1, :, :] > 0).to(sparse_mask.dtype)
-        spatial_l0 = int(spatial_mask.sum().detach().cpu().item())
-        spatial_ratio = float(spatial_mask.detach().float().mean().cpu().item())
+        channel_l0 = int((sparse_mask > 0).sum().detach().cpu().item())
+        channel_ratio = float(sparse_mask.detach().float().mean().cpu().item())
 
         with self._autocast_context():
             final_total, final_margin, final_saliency, final_sparse, final_logits = self._joint_objective(
@@ -252,10 +249,10 @@ class PGDSparseAttacker:
             "weighted_fitness": float(final_total.detach().cpu().item()),
             "first_success_iteration": first_success_iteration,
             "adv_pred": int(final_logits.argmax(dim=1)[0].detach().cpu().item()),
-            "l0_distance": spatial_l0,
-            "sparse_ratio": spatial_ratio,
+            "l0_distance": channel_l0,
+            "sparse_ratio": channel_ratio,
             "mask_mode": "topk_eps" if self.eps_budget is not None else "threshold",
-            "k_selected": spatial_l0 if self.eps_budget is not None else None,
+            "k_selected": channel_l0 if self.eps_budget is not None else None,
         }
 
         return PGDSparseResult(
