@@ -184,27 +184,48 @@ class SaliencySparsePGD:
     def _normalize_grad_l1(grad):
         return grad / (1e-10 + grad.abs().sum(dim=(1, 2, 3), keepdim=True))
 
-    def _project_l0_box(self, y, x, k):
+    @staticmethod
+    def _hard_topk_ste(prob, k):
+        flat = prob.view(prob.size(0), -1)
+        _, idx = torch.topk(flat, k=k, dim=1, largest=True, sorted=False)
+        hard = torch.zeros_like(flat).scatter_(1, idx, 1.0).view_as(prob)
+        # Forward uses hard top-k mask; backward follows soft probabilities.
+        st = prob + (hard - prob).detach()
+        return st, hard
+
+    def _topk_support_mask(self, y, x, k):
+        if self.attack_mode == "pixel":
+            lb = -x
+            ub = 1.0 - x
+            p1 = y.pow(2).sum(dim=1)
+            p2 = torch.minimum(torch.minimum(ub - y, y - lb), torch.zeros_like(y)).pow(2).sum(dim=1)
+            score = p1 - p2
+            flat = score.view(score.size(0), -1)
+            _, idx = torch.topk(flat, k=k, dim=1, largest=True, sorted=False)
+            return torch.zeros_like(flat).scatter_(1, idx, 1.0).view(score.size(0), 1, score.size(1), score.size(2))
+
+        flat = y.view(y.size(0), -1)
+        score = flat.pow(2)
+        _, idx = torch.topk(score, k=k, dim=1, largest=True, sorted=False)
+        return torch.zeros_like(flat).scatter_(1, idx, 1.0).view_as(y)
+
+    def _project_l0_box(self, y, x, k, fixed_support=None):
         # Project perturbation y to satisfy: <=k changed pixels and box bounds around x.
         lb = -x
         ub = 1.0 - x
 
         y_clamped = torch.min(torch.max(y, lb), ub)
 
+        if fixed_support is not None:
+            return y_clamped * fixed_support
+
         if self.attack_mode == "pixel":
-            p1 = y.pow(2).sum(dim=1)
-            p2 = torch.minimum(torch.minimum(ub - y, y - lb), torch.zeros_like(y)).pow(2).sum(dim=1)
-            score = p1 - p2
-            flat = score.view(score.size(0), -1)
-            _, idx = torch.topk(flat, k=k, dim=1, largest=True, sorted=False)
-            mask = torch.zeros_like(flat).scatter_(1, idx, 1.0).view(score.size(0), 1, score.size(1), score.size(2))
+            mask = self._topk_support_mask(y, x, k)
             return y_clamped * mask
 
         # feature mode: sparsity across all channel-spatial entries
         flat = y_clamped.view(y_clamped.size(0), -1)
-        score = y.view(y.size(0), -1).pow(2)
-        _, idx = torch.topk(score, k=k, dim=1, largest=True, sorted=False)
-        mask = torch.zeros_like(flat).scatter_(1, idx, 1.0)
+        mask = self._topk_support_mask(y, x, k).view(flat.size(0), -1)
         return (flat * mask).view_as(y_clamped)
 
     @staticmethod
@@ -236,12 +257,35 @@ class SaliencySparsePGD:
         best_score = torch.full((x.size(0),), float("-inf"), device=x.device)
         best_perturb = perturb.detach().clone()
         zero_grad_streak = 0
+        fixed_support = None
+        mask_logits = None
+        best_mask_logits = None
+        if self.fixed_mask_location:
+            fixed_support = self._topk_support_mask(perturb.detach(), x, k_eff)
+        else:
+            init_support = self._topk_support_mask(perturb.detach(), x, k_eff)
+            mask_logits = torch.where(
+                init_support > 0.5,
+                torch.full_like(init_support, 2.0),
+                torch.full_like(init_support, -2.0),
+            )
+            best_mask_logits = mask_logits.detach().clone()
 
         for _ in range(self.t):
             perturb = perturb.detach().requires_grad_(True)
+            if mask_logits is not None:
+                mask_logits = mask_logits.detach().requires_grad_(True)
 
-            sparse_perturb = self._project_l0_box(perturb, x, k_eff)
-            sparse_perturb = torch.clamp(sparse_perturb, -self.epsilon, self.epsilon)
+            if mask_logits is None:
+                sparse_perturb = self._project_l0_box(perturb, x, k_eff, fixed_support=fixed_support)
+                sparse_perturb = torch.clamp(sparse_perturb, -self.epsilon, self.epsilon)
+                hard_support = fixed_support
+            else:
+                mask_prob = torch.sigmoid(mask_logits)
+                mask_st, hard_support = self._hard_topk_ste(mask_prob, k_eff)
+                sparse_perturb = torch.clamp(perturb, -self.epsilon, self.epsilon) * self._expand_to_input(mask_st, x)
+                sparse_perturb = torch.min(torch.max(sparse_perturb, -x), 1.0 - x)
+
             x_adv_raw = x + sparse_perturb
             x_adv = self._ste_clip(x_adv_raw, 0.0, 1.0)
 
@@ -272,17 +316,32 @@ class SaliencySparsePGD:
                     allow_unused=True,
                 )[0]
 
+                grad_mask_dbg = None
+                if mask_logits is not None:
+                    grad_mask_dbg = torch.autograd.grad(
+                        total_mean,
+                        mask_logits,
+                        retain_graph=True,
+                        create_graph=False,
+                        allow_unused=True,
+                    )[0]
+
                 def _safe_norm(t):
                     if t is None:
                         return 0.0
                     return float(t.detach().norm().cpu().item())
+
+                if mask_logits is None:
+                    grad_mask_info = "N/A(hard top-k support)"
+                else:
+                    grad_mask_info = _safe_norm(grad_mask_dbg)
 
                 print(
                     "Margin loss:",
                     float(margin.mean().detach().cpu().item()),
                     "Saliency MSE:",
                     float(saliency_mse.mean().detach().cpu().item()),
-                    "Saliency objective(-MSE):",
+                    "Saliency objective(MSE):",
                     float(saliency_objective.mean().detach().cpu().item()),
                     "Weighted fitness:",
                     float(total_mean.detach().cpu().item()),
@@ -291,18 +350,21 @@ class SaliencySparsePGD:
                     "| grad_saliency(delta)=",
                     _safe_norm(grad_saliency),
                     "| grad_mask=",
-                    0.0,
+                    grad_mask_info,
                     "| saliency_requires_grad=",
                     bool(saliency_adv.requires_grad),
                 )
 
-            grad_perturb = torch.autograd.grad(
+            grad_targets = [perturb] if mask_logits is None else [perturb, mask_logits]
+            grads = torch.autograd.grad(
                 total_mean,
-                perturb,
+                grad_targets,
                 retain_graph=False,
                 create_graph=False,
                 allow_unused=False,
-            )[0]
+            )
+            grad_perturb = grads[0]
+            grad_mask = grads[1] if mask_logits is not None else None
 
             with torch.no_grad():
                 grad_perturb_norm = float(grad_perturb.detach().abs().mean().cpu().item())
@@ -315,11 +377,19 @@ class SaliencySparsePGD:
                 if improve.any():
                     best_score[improve] = total[improve]
                     best_perturb[improve] = perturb.detach()[improve]
+                    if best_mask_logits is not None:
+                        best_mask_logits[improve] = mask_logits.detach()[improve]
 
                 grad_update = self._normalize_grad_l1(grad_perturb)
                 perturb = perturb + self.alpha * grad_update
-                perturb = self._project_l0_box(perturb, x, k_eff)
-                perturb = torch.clamp(perturb, -self.epsilon, self.epsilon)
+
+                if mask_logits is None:
+                    perturb = self._project_l0_box(perturb, x, k_eff, fixed_support=fixed_support)
+                    perturb = torch.clamp(perturb, -self.epsilon, self.epsilon)
+                else:
+                    mask_logits = mask_logits + self.beta * self._normalize_grad_l1(grad_mask)
+                    perturb = torch.clamp(perturb, -self.epsilon, self.epsilon)
+                    perturb = torch.min(torch.max(perturb, -x), 1.0 - x)
 
                 if zero_grad_streak >= self.zero_grad_patience and self.zero_grad_jitter > 0.0:
                     perturb = perturb + self.zero_grad_jitter * torch.randn_like(perturb)
@@ -338,8 +408,14 @@ class SaliencySparsePGD:
                     )
 
         with torch.no_grad():
-            sparse_perturb = self._project_l0_box(best_perturb, x, k_eff)
-            sparse_perturb = torch.clamp(sparse_perturb, -self.epsilon, self.epsilon)
+            if best_mask_logits is None:
+                sparse_perturb = self._project_l0_box(best_perturb, x, k_eff, fixed_support=fixed_support)
+                sparse_perturb = torch.clamp(sparse_perturb, -self.epsilon, self.epsilon)
+            else:
+                best_mask_prob = torch.sigmoid(best_mask_logits)
+                _, best_hard_support = self._hard_topk_ste(best_mask_prob, k_eff)
+                sparse_perturb = torch.clamp(best_perturb, -self.epsilon, self.epsilon) * self._expand_to_input(best_hard_support, x)
+                sparse_perturb = torch.min(torch.max(sparse_perturb, -x), 1.0 - x)
             x_adv_best = torch.clamp(x + sparse_perturb, 0.0, 1.0)
 
         if training:

@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 import torch
+from torch import nn
 from PIL import Image
 from torchvision.utils import save_image
 from tqdm.auto import tqdm
@@ -17,12 +18,23 @@ if CORE_DIR not in sys.path:
     sys.path.insert(0, CORE_DIR)
 
 from explain_method_backprop import get_explainable_method_backprop
+from RISE.evaluation import CausalMetric, auc
 from spgd import SaliencySparsePGD
-from util import get_torchvision_model
+from util import build_blur_substrate, get_torchvision_model
 
 
 DEFAULT_IMAGENET_VAL_ROOT = r"E:\ImageNet1K\imagenet\ImageNet1K\val"
 DEFAULT_REMOTE_VAL_ROOT = "/datastore/elo/quanphm/dataset/ImageNet1K/val"
+
+
+class SoftmaxModel(nn.Module):
+    def __init__(self, model, dim=1):
+        super().__init__()
+        self.model = model
+        self.softmax = nn.Softmax(dim=dim)
+
+    def forward(self, inputs):
+        return self.softmax(self.model(inputs))
 
 
 def _fmt_num(value):
@@ -88,6 +100,11 @@ def parse_args():
     parser.add_argument("--debug-grad", action="store_true")
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
     parser.add_argument("--seed", type=int, default=None)
+    parser.add_argument("--step", type=int, default=224)
+    parser.add_argument("--kernel-size", type=int, default=11)
+    parser.add_argument("--kernel-sigma", type=int, default=5)
+    parser.add_argument("--save-process", action="store_true")
+    parser.add_argument("--verbose", type=int, default=0, choices=[0, 1, 2])
 
     return parser.parse_args()
 
@@ -135,6 +152,62 @@ def _margin_loss(logits, y_true):
     others.scatter_(1, y_true.view(-1, 1), float("-inf"))
     other_logits = others.max(dim=1).values
     return -(true_logits - other_logits)
+
+
+def _compute_causal_metrics(model, normalize, clean_batch, adv_batch, clean_saliency_map, adv_saliency_map, output_dir, args):
+    metric_model = SoftmaxModel(model)
+
+    blur_fn = build_blur_substrate(args.kernel_size, args.kernel_sigma)
+    insertion = CausalMetric(metric_model, "ins", args.step, substrate_fn=blur_fn)
+    deletion = CausalMetric(metric_model, "del", args.step, substrate_fn=lambda x: torch.zeros_like(x))
+
+    clean_del_steps_dir = output_dir / "clean_deletion_steps"
+    clean_ins_steps_dir = output_dir / "clean_insertion_steps"
+    adv_del_steps_dir = output_dir / "adv_deletion_steps"
+    adv_ins_steps_dir = output_dir / "adv_insertion_steps"
+
+    if args.save_process:
+        clean_del_steps_dir.mkdir(parents=True, exist_ok=True)
+        clean_ins_steps_dir.mkdir(parents=True, exist_ok=True)
+        adv_del_steps_dir.mkdir(parents=True, exist_ok=True)
+        adv_ins_steps_dir.mkdir(parents=True, exist_ok=True)
+
+    clean_scores_del = deletion.single_run(
+        normalize(clean_batch).cpu().detach(),
+        clean_saliency_map.cpu().detach().numpy(),
+        verbose=args.verbose,
+        save_to=str(clean_del_steps_dir) if args.save_process else None,
+    )
+    clean_scores_ins = insertion.single_run(
+        normalize(clean_batch).cpu().detach(),
+        clean_saliency_map.cpu().detach().numpy(),
+        verbose=args.verbose,
+        save_to=str(clean_ins_steps_dir) if args.save_process else None,
+    )
+
+    adv_scores_del = deletion.single_run(
+        normalize(adv_batch).cpu().detach(),
+        clean_saliency_map.cpu().detach().numpy(),
+        verbose=args.verbose,
+        save_to=str(adv_del_steps_dir) if args.save_process else None,
+    )
+    adv_scores_ins = insertion.single_run(
+        normalize(adv_batch).cpu().detach(),
+        adv_saliency_map[0].cpu().detach().numpy(),
+        verbose=args.verbose,
+        save_to=str(adv_ins_steps_dir) if args.save_process else None,
+    )
+
+    return {
+        "clean_del_auc": float(auc(clean_scores_del)),
+        "clean_ins_auc": float(auc(clean_scores_ins)),
+        "adv_del_auc": float(auc(adv_scores_del)),
+        "adv_ins_auc": float(auc(adv_scores_ins)),
+        "clean_del_scores": [float(v) for v in clean_scores_del],
+        "clean_ins_scores": [float(v) for v in clean_scores_ins],
+        "adv_del_scores": [float(v) for v in adv_scores_del],
+        "adv_ins_scores": [float(v) for v in adv_scores_ins],
+    }
 
 
 def _infer_model_name(selection_path):
@@ -221,6 +294,17 @@ def _run_one(model, spatial, normalize, explain_fn, args, image_path, output_dir
     _save_saliency_map(clean_saliency[0], str(clean_map_path))
     _save_saliency_map(adv_saliency[0], str(adv_map_path))
 
+    causal = _compute_causal_metrics(
+        model=model,
+        normalize=normalize,
+        clean_batch=x,
+        adv_batch=x_adv.detach(),
+        clean_saliency_map=clean_saliency,
+        adv_saliency_map=adv_saliency,
+        output_dir=output_dir,
+        args=args,
+    )
+
     margin = _margin_loss(adv_logits, y_true).mean().item()
     saliency_mse = _mse_per_sample(clean_saliency, adv_saliency).mean().item()
 
@@ -235,6 +319,18 @@ def _run_one(model, spatial, normalize, explain_fn, args, image_path, output_dir
         "history": history,
         "output_adv": str(adv_path),
         "output_clean": str(clean_path),
+        "causual": {
+            "del": causal["adv_del_scores"],
+            "ins": causal["adv_ins_scores"],
+            "clean_del": causal["clean_del_scores"],
+            "clean_ins": causal["clean_ins_scores"],
+            "auc": {
+                "del": causal["adv_del_auc"],
+                "ins": causal["adv_ins_auc"],
+                "clean_del": causal["clean_del_auc"],
+                "clean_ins": causal["clean_ins_auc"],
+            },
+        },
     }
 
     with open(summary_path, "w", encoding="utf-8") as f:
