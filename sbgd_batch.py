@@ -20,7 +20,7 @@ if CORE_DIR not in sys.path:
 from explain_method_backprop import get_explainable_method_backprop
 from RISE.evaluation import CausalMetric, auc
 from spgd import SaliencySparsePGD
-from util import build_blur_substrate, get_torchvision_model
+from util import build_blur_substrate, get_explainable_method, get_torchvision_model
 
 
 DEFAULT_IMAGENET_VAL_ROOT = r"E:\ImageNet1K\imagenet\ImageNet1K\val"
@@ -236,7 +236,7 @@ def _resolve_image_path(raw_path, class_name, imagenet_val_root, replace_from_ro
     return Path(imagenet_val_root) / class_name / image_name
 
 
-def _run_one(model, spatial, normalize, explain_fn, args, image_path, output_dir, sample_seed):
+def _run_one(model, spatial, normalize, explain_fn_opt, explain_fn_eval, args, image_path, output_dir, sample_seed):
     if sample_seed is not None:
         random.seed(sample_seed)
         torch.manual_seed(sample_seed)
@@ -256,7 +256,7 @@ def _run_one(model, spatial, normalize, explain_fn, args, image_path, output_dir
     attacker = SaliencySparsePGD(
         model=model,
         normalize=normalize,
-        explain_method=explain_fn,
+        explain_method=explain_fn_opt,
         epsilon=args.epsilon,
         k=args.k,
         sparsity_ratio=args.sparsity_ratio,
@@ -275,7 +275,10 @@ def _run_one(model, spatial, normalize, explain_fn, args, image_path, output_dir
         debug_grad=args.debug_grad,
     )
 
-    x_adv, history = attacker.attack(x, y_true, return_history=True)
+    # Clean saliency for reference/evaluation should use the non-backprop explain method.
+    clean_saliency, _ = explain_fn_eval(model, x, normalize, target_class=y_true)
+
+    x_adv, history = attacker.attack(x, y_true, saliency_ref=clean_saliency, return_history=True)
 
     adv_path = output_dir / "adv.png"
     clean_path = output_dir / "clean.png"
@@ -287,8 +290,7 @@ def _run_one(model, spatial, normalize, explain_fn, args, image_path, output_dir
     save_image(x[0].detach().cpu(), str(clean_path))
     save_image(x_adv[0].detach().cpu(), str(adv_path))
 
-    clean_saliency, _ = explain_fn(model, x, normalize, target_class=y_true)
-    adv_saliency, adv_logits = explain_fn(model, x_adv, normalize, target_class=y_true)
+    adv_saliency, adv_logits = explain_fn_eval(model, x_adv, normalize, target_class=y_true)
     adv_pred = adv_logits.argmax(dim=1)
 
     _save_saliency_map(clean_saliency[0], str(clean_map_path))
@@ -380,7 +382,8 @@ def run(args):
     model = model.to(torch.device(args.device))
     model.eval()
 
-    explain_fn = get_explainable_method_backprop(args.explain_method)
+    explain_fn_opt = get_explainable_method_backprop(args.explain_method)
+    explain_fn_eval = get_explainable_method(args.explain_method)
 
     approach_tag = _build_approach_tag(args)
     output_root = Path(args.output_root) / model_name
@@ -424,7 +427,8 @@ def run(args):
             model=model,
             spatial=spatial,
             normalize=normalize,
-            explain_fn=explain_fn,
+            explain_fn_opt=explain_fn_opt,
+            explain_fn_eval=explain_fn_eval,
             args=args,
             image_path=image_path,
             output_dir=sample_dir,

@@ -16,7 +16,7 @@ if CORE_DIR not in sys.path:
 
 from explain_method_backprop import get_explainable_method_backprop
 from spgd import SaliencySparsePGD
-from util import get_torchvision_model
+from util import get_explainable_method, get_torchvision_model
 
 
 def parse_args():
@@ -113,7 +113,8 @@ def run(args):
     model = model.to(device)
     model.eval()
 
-    explain_fn = get_explainable_method_backprop(args.explain_method)
+    explain_fn_opt = get_explainable_method_backprop(args.explain_method)
+    explain_fn_eval = get_explainable_method(args.explain_method)
 
     image = Image.open(args.image).convert("RGB")
     x = spatial(image).to(device).unsqueeze(0)
@@ -127,7 +128,7 @@ def run(args):
     attacker = SaliencySparsePGD(
         model=model,
         normalize=normalize,
-        explain_method=explain_fn,
+        explain_method=explain_fn_opt,
         epsilon=args.epsilon,
         k=args.k,
         sparsity_ratio=args.sparsity_ratio,
@@ -146,12 +147,14 @@ def run(args):
         debug_grad=args.debug_grad,
     )
 
-    x_adv, history = attacker.attack(x, y_true, return_history=True)
+    # Clean saliency for reference/evaluation should use the non-backprop explain method.
+    clean_saliency, _ = explain_fn_eval(model, x, normalize, target_class=y_true)
+
+    x_adv, history = attacker.attack(x, y_true, saliency_ref=clean_saliency, return_history=True)
 
     save_image(x_adv[0].detach().cpu(), args.output)
 
-    clean_saliency, _ = explain_fn(model, x, normalize, target_class=y_true)
-    adv_saliency, adv_logits = explain_fn(model, x_adv, normalize, target_class=y_true)
+    adv_saliency, adv_logits = explain_fn_eval(model, x_adv, normalize, target_class=y_true)
     adv_pred = adv_logits.argmax(dim=1)
 
     clean_map_output = args.clean_map_output
