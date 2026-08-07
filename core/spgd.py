@@ -125,11 +125,12 @@ class SaliencySparsePGD:
             a = a.expand(b.size(0), -1)
         return ((a - b) ** 2).mean(dim=1)
 
-    def _call_explain_method(self, x_tensor, y_true, detach):
+    def _call_explain_method(self, x_tensor, y_true, detach, use_surrogate=True):
         # Prefer backprop-capable APIs from explain_method_backprop.
+        explain_model = self.saliency_model if use_surrogate else self.model
         try:
             saliency, logits = self.explain_method(
-                self.saliency_model,
+                explain_model,
                 x_tensor,
                 self.normalize,
                 target_class=y_true,
@@ -144,7 +145,7 @@ class SaliencySparsePGD:
             return saliency, logits
         except TypeError as exc:
             saliency, logits = self.explain_method(
-                self.saliency_model,
+                explain_model,
                 x_tensor,
                 self.normalize,
                 y_true,
@@ -246,7 +247,8 @@ class SaliencySparsePGD:
         k_eff = self._resolve_k(x)
 
         if saliency_ref is None:
-            saliency_ref, _ = self._call_explain_method(x, y_true, detach=True)
+            # Reference map should come from the original model, not surrogate.
+            saliency_ref, _ = self._call_explain_method(x, y_true, detach=True, use_surrogate=False)
         saliency_ref = saliency_ref.to(device=x.device, dtype=x.dtype)
         if saliency_ref.dim() == 2:
             saliency_ref = saliency_ref.unsqueeze(0)
@@ -289,7 +291,8 @@ class SaliencySparsePGD:
             x_adv_raw = x + sparse_perturb
             x_adv = self._ste_clip(x_adv_raw, 0.0, 1.0)
 
-            saliency_adv, _ = self._call_explain_method(x_adv, y_true, detach=False)
+            # Use surrogate only while optimizing to keep gradients stable.
+            saliency_adv, _ = self._call_explain_method(x_adv, y_true, detach=False, use_surrogate=True)
             logits_adv = self.model(self.normalize(x_adv))
             margin = self._margin_loss(logits_adv, y_true)
             saliency_mse = self._mse_per_sample(saliency_ref, saliency_adv)
