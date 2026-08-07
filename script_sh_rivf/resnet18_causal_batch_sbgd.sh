@@ -49,11 +49,12 @@ export CUDA_VISIBLE_DEVICES=$BEST_GPU
 
 MODEL_NAMES="resnet50"
 NUM_SAMPLE=100
+SELECTION_FILE="${SELECTION_FILE:-}"
 
 EPSILON="${EPSILON:-1}"
 K="${K:-50}"
 ITERATIONS="${ITERATIONS:-200}"
-ALPHA="${ALPHA:-0.1}"
+ALPHA="${ALPHA:-0.0039215686}"
 BETA="${BETA:-0.1}"
 W_MARGIN="${W_MARGIN:-0.0}"
 W_SALIENCY="${W_SALIENCY:-1.0}"
@@ -94,6 +95,9 @@ for MODEL_NAME in $MODEL_NAMES; do
 
     if [ -n "$SPARSITY_RATIO" ]; then
         CMD+=(--sparsity-ratio "$SPARSITY_RATIO")
+    fi
+    if [ -n "$SELECTION_FILE" ]; then
+        CMD+=(--selection-file "$SELECTION_FILE")
     fi
     if [ "$DEBUG_GRAD" = "1" ]; then
         CMD+=(--debug-grad)
