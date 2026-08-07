@@ -16,6 +16,12 @@ def _maybe_detach_outputs(saliency, logits, detach):
     return saliency, logits
 
 
+def _normalize_saliency_map(saliency: torch.Tensor) -> torch.Tensor:
+    h, w = saliency.shape[-2:]
+    denom = saliency.view(saliency.size(0), -1).sum(dim=1).view(-1, 1, 1) + 1e-8
+    return (h * w) * saliency / denom
+
+
 def _prepare_target_class(output, target_class):
     if target_class is None:
         return output.argmax(dim=1)
@@ -51,9 +57,9 @@ def simple_gradient_map(model, input_tensor, normalize, target_class=None, creat
         create_graph=create_graph,
     )[0]
 
+    # InterpretationFragility formula: sum over channels of absolute input gradient.
     saliency = grad.abs().sum(dim=1)
-    h, w = saliency.shape[-2:]
-    saliency = (h * w) * saliency / (saliency.view(saliency.size(0), -1).sum(dim=1).view(-1, 1, 1) + 1e-8)
+    saliency = _normalize_saliency_map(saliency)
     return _maybe_detach_outputs(saliency, output_logits, detach)
 
 
@@ -74,8 +80,7 @@ def input_gradient_map(model, input_tensor, normalize, target_class=None, create
     )[0]
 
     saliency = (x * grad).abs().sum(dim=1)
-    h, w = saliency.shape[-2:]
-    saliency = (h * w) * saliency / (saliency.view(saliency.size(0), -1).sum(dim=1).view(-1, 1, 1) + 1e-8)
+    saliency = _normalize_saliency_map(saliency)
     return _maybe_detach_outputs(saliency, output_logits, detach)
 
 
@@ -93,43 +98,54 @@ def integrated_gradients(
 
     x = _ensure_grad_input(input_tensor)
     bsz = x.size(0)
+    steps = max(1, int(steps))
 
     if baseline is None:
         baseline = torch.zeros_like(x)
+    else:
+        baseline = baseline.to(device=x.device, dtype=x.dtype)
+        if baseline.shape != x.shape:
+            if baseline.dim() == x.dim() - 1:
+                baseline = baseline.unsqueeze(0).expand_as(x)
+            elif baseline.shape[0] == 1:
+                baseline = baseline.expand_as(x)
+            else:
+                raise ValueError(
+                    f"baseline shape {tuple(baseline.shape)} is incompatible with input shape {tuple(x.shape)}"
+                )
 
-    with torch.no_grad():
-        output_ref = model(normalize(x))
+    output_ref = model(normalize(x))
 
     if target_class is None:
         target_class = output_ref.argmax(dim=1)
     target_class = _prepare_target_class(output_ref, target_class)
 
-    grads = torch.zeros_like(x)
-    output_logits = output_ref
+    # InterpretationFragility-style IG: average gradients along linear path from baseline to input.
+    alphas = torch.arange(1, steps + 1, device=x.device, dtype=x.dtype) / float(steps)
+    diff = x - baseline
+    scaled = baseline.unsqueeze(0) + alphas.view(steps, 1, 1, 1, 1) * diff.unsqueeze(0)
+    scaled_flat = scaled.reshape(steps * bsz, *x.shape[1:])
 
-    for i in range(1, steps + 1):
-        alpha = float(i) / steps
-        inp = baseline + alpha * (x - baseline)
+    model.zero_grad()
+    output = model(normalize(scaled_flat))
+    target_rep = target_class.repeat(steps)
+    score = output.gather(1, target_rep.view(-1, 1)).sum()
 
-        model.zero_grad()
-        output = model(normalize(inp))
-        output_logits = output
+    grads = torch.autograd.grad(
+        score,
+        scaled_flat,
+        retain_graph=create_graph,
+        create_graph=create_graph,
+    )[0]
 
-        score = output.gather(1, target_class.view(-1, 1)).sum()
-        grad = torch.autograd.grad(
-            score,
-            inp,
-            retain_graph=True,
-            create_graph=create_graph,
-        )[0]
-        grads = grads + grad
-
-    avg_grad = grads / steps
-    ig = (x - baseline) * avg_grad
+    grads = grads.view(steps, bsz, *x.shape[1:])
+    avg_grad = grads.mean(dim=0)
+    ig = diff * avg_grad
 
     saliency = ig.abs().sum(dim=1)
-    h, w = saliency.shape[-2:]
-    saliency = (h * w) * saliency / (saliency.view(bsz, -1).sum(dim=1).view(-1, 1, 1) + 1e-8)
+    saliency = _normalize_saliency_map(saliency)
+
+    output_logits = output.view(steps, bsz, -1)[-1]
     return _maybe_detach_outputs(saliency, output_logits, detach)
 
 

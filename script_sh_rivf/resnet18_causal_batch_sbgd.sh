@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=CAUSAL_BATCH_PGD
+#SBATCH --job-name=CAUSAL_BATCH_SBGD
 #SBATCH --output=logs_FaithFUll/mps_%j.out
 #SBATCH --error=logs_FaithFUll/mps_%j.err
 #SBATCH --nodes=1
@@ -47,62 +47,62 @@ mkdir -p "$CUDA_MPS_PIPE_DIRECTORY" "$CUDA_MPS_LOG_DIRECTORY"
 
 export CUDA_VISIBLE_DEVICES=$BEST_GPU
 
-MODEL_NAMES="vgg16"
+MODEL_NAMES="resnet50"
 NUM_SAMPLE=100
 
-ITERATIONS="${ITERATIONS:-100}"
+EPSILON="${EPSILON:-1}"
+K="${K:-50}"
+ITERATIONS="${ITERATIONS:-200}"
 ALPHA="${ALPHA:-1.0}"
-TAU="${TAU:-0.5}"
-EPS="${EPS:-100}"
-LAMBDA_MARGIN="${LAMBDA_MARGIN:-0.0}"
-LAMBDA_SPARSE="${LAMBDA_SPARSE:-0.1}"
-SPARSE_TARGET="${SPARSE_TARGET:-}"
-EXPLAIN_METHOD="${EXPLAIN_METHOD:-simple_gradient}"
+BETA="${BETA:-0.1}"
+W_MARGIN="${W_MARGIN:-0.0}"
+W_SALIENCY="${W_SALIENCY:-1.0}"
+EXPLAIN_METHOD="${EXPLAIN_METHOD:-input_gradient}"
 SEED="${SEED:-22520691}"
-OUTPUT_ROOT="rivf_offical/server_run_seed/PGD_sparse_causal/$SEED/"
+OUTPUT_ROOT="${OUTPUT_ROOT:-rivf_offical/server_run_seed/SBGD_causal/$SEED/}"
 
-STEP="${STEP:-224}"
-KERNEL_SIZE="${KERNEL_SIZE:-11}"
-KERNEL_SIGMA="${KERNEL_SIGMA:-5}"
-VERBOSE="${VERBOSE:-0}"
-SAVE_PROCESS="${SAVE_PROCESS:-0}"
-AUTOCAST="${AUTOCAST:-1}"
-AUTOCAST_DTYPE="${AUTOCAST_DTYPE:-float16}"
+SPARSITY_RATIO="${SPARSITY_RATIO:-}"
+TAU="${TAU:-0.5}"
+DEBUG_GRAD="${DEBUG_GRAD:-1}"
+DYNAMIC_MASK="${DYNAMIC_MASK:-1}"
+SOFTPLUS_BETA="${SOFTPLUS_BETA:-10.0}"
+ZERO_GRAD_PATIENCE="${ZERO_GRAD_PATIENCE:-3}"
+ZERO_GRAD_JITTER="${ZERO_GRAD_JITTER:-1e-2}"
 
 for MODEL_NAME in $MODEL_NAMES; do
-    echo "[RUN] model=$MODEL_NAME iter=$ITERATIONS alpha=$ALPHA tau=$TAU eps=$EPS lambda_margin=$LAMBDA_MARGIN lambda_sparse=$LAMBDA_SPARSE sparse_target=$SPARSE_TARGET explain_method=$EXPLAIN_METHOD num_sample=$NUM_SAMPLE output_root=$OUTPUT_ROOT"
+    echo "[RUN] model=$MODEL_NAME epsilon=$EPSILON k=$K iter=$ITERATIONS alpha=$ALPHA beta=$BETA w_margin=$W_MARGIN w_saliency=$W_SALIENCY explain_method=$EXPLAIN_METHOD num_sample=$NUM_SAMPLE output_root=$OUTPUT_ROOT"
 
     CMD=(
-        python run_batch_causal_pgd_sparse.py
+        python sbgd_batch.py
         --model-name "$MODEL_NAME"
         --num_sample "$NUM_SAMPLE"
+        --epsilon "$EPSILON"
+        --k "$K"
         --iterations "$ITERATIONS"
         --alpha "$ALPHA"
-        --threshold "$TAU"
-        --eps "$EPS"
-        --lambda-margin "$LAMBDA_MARGIN"
-        --lambda-sparse "$LAMBDA_SPARSE"
+        --beta "$BETA"
+        --tau "$TAU"
+        --w-margin "$W_MARGIN"
+        --w-saliency "$W_SALIENCY"
         --seed "$SEED"
         --output-root "$OUTPUT_ROOT"
         --explain-method "$EXPLAIN_METHOD"
-        --step "$STEP"
-        --kernel-size "$KERNEL_SIZE"
-        --kernel-sigma "$KERNEL_SIGMA"
-        --verbose "$VERBOSE"
-        --autocast-dtype "$AUTOCAST_DTYPE"
+        --softplus-beta "$SOFTPLUS_BETA"
+        --zero-grad-patience "$ZERO_GRAD_PATIENCE"
+        --zero-grad-jitter "$ZERO_GRAD_JITTER"
     )
 
-    if [ "$SAVE_PROCESS" = "1" ]; then
-        CMD+=(--save-process)
+    if [ -n "$SPARSITY_RATIO" ]; then
+        CMD+=(--sparsity-ratio "$SPARSITY_RATIO")
     fi
-    if [ "$AUTOCAST" = "1" ]; then
-        CMD+=(--autocast)
+    if [ "$DEBUG_GRAD" = "1" ]; then
+        CMD+=(--debug-grad)
     fi
-    if [ -n "$SPARSE_TARGET" ]; then
-        CMD+=(--sparse-target "$SPARSE_TARGET")
+    if [ "$DYNAMIC_MASK" = "1" ]; then
+        CMD+=(--disable-fixed-mask-location)
     fi
 
     "${CMD[@]}"
 done
 
-echo "DONE. Outputs stored under: $OUTPUT_ROOT/$MODEL_NAME"
+echo "DONE. Outputs stored under: $OUTPUT_ROOT"
