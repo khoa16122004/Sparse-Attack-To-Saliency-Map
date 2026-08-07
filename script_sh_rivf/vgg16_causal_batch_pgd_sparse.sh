@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=CAUSAL_BATCH_50
+#SBATCH --job-name=CAUSAL_BATCH_PGD
 #SBATCH --output=logs_FaithFUll/mps_%j.out
 #SBATCH --error=logs_FaithFUll/mps_%j.err
 #SBATCH --nodes=1
@@ -47,56 +47,54 @@ mkdir -p "$CUDA_MPS_PIPE_DIRECTORY" "$CUDA_MPS_LOG_DIRECTORY"
 
 export CUDA_VISIBLE_DEVICES=$BEST_GPU
 
-MODEL_NAMES="resnet18"
+MODEL_NAMES="vgg16"
 NUM_SAMPLE=100
-EPSILONS="100"
 
-W_MARGIN="${W_MARGIN:-0.0}"
-W_SALIENCY="${W_SALIENCY:-1.0}"
+ITERATIONS="${ITERATIONS:-80}"
+ALPHA="${ALPHA:-1.0}"
+TAU="${TAU:-0.5}"
+LAMBDA_MARGIN="${LAMBDA_MARGIN:-0.7}"
 EXPLAIN_METHOD="${EXPLAIN_METHOD:-simple_gradient}"
 SEED="${SEED:-22520691}"
-OUTPUT_ROOT="rivf_offical/server_run_seed/GA_causal/$SEED/"
+OUTPUT_ROOT="rivf_offical/server_run_seed/PGD_sparse_causal/$SEED/"
 
 STEP="${STEP:-224}"
 KERNEL_SIZE="${KERNEL_SIZE:-11}"
 KERNEL_SIGMA="${KERNEL_SIGMA:-5}"
 VERBOSE="${VERBOSE:-0}"
 SAVE_PROCESS="${SAVE_PROCESS:-0}"
-
-FITNESSES="reverse_margin_saliency"
+AUTOCAST="${AUTOCAST:-1}"
+AUTOCAST_DTYPE="${AUTOCAST_DTYPE:-float16}"
 
 for MODEL_NAME in $MODEL_NAMES; do
-    for STRATEGY in uniform; do
-        for EPS in $EPSILONS; do
-            for FITNESS in $FITNESSES; do
-                echo "[RUN] model=$MODEL_NAME strategy=$STRATEGY fitness=$FITNESS eps=$EPS w_margin=$W_MARGIN w_saliency=$W_SALIENCY explain_method=$EXPLAIN_METHOD num_sample=$NUM_SAMPLE output_root=$OUTPUT_ROOT"
+    echo "[RUN] model=$MODEL_NAME iter=$ITERATIONS alpha=$ALPHA tau=$TAU lambda_margin=$LAMBDA_MARGIN explain_method=$EXPLAIN_METHOD num_sample=$NUM_SAMPLE output_root=$OUTPUT_ROOT"
 
-                CMD=(
-                    python run_batch_causal.py
-                    --model-name "$MODEL_NAME"
-                    --num_sample "$NUM_SAMPLE"
-                    --operator-strategy "$STRATEGY"
-                    --eps "$EPS"
-                    --w-margin "$W_MARGIN"
-                    --w-saliency "$W_SALIENCY"
-                    --seed "$SEED"
-                    --fitness-function "$FITNESS"
-                    --output-root "$OUTPUT_ROOT"
-                    --explain-method "$EXPLAIN_METHOD"
-                    --step "$STEP"
-                    --kernel-size "$KERNEL_SIZE"
-                    --kernel-sigma "$KERNEL_SIGMA"
-                    --verbose "$VERBOSE"
-                )
+    CMD=(
+        python run_batch_causal_pgd_sparse.py
+        --model-name "$MODEL_NAME"
+        --num_sample "$NUM_SAMPLE"
+        --iterations "$ITERATIONS"
+        --alpha "$ALPHA"
+        --threshold "$TAU"
+        --lambda-margin "$LAMBDA_MARGIN"
+        --seed "$SEED"
+        --output-root "$OUTPUT_ROOT"
+        --explain-method "$EXPLAIN_METHOD"
+        --step "$STEP"
+        --kernel-size "$KERNEL_SIZE"
+        --kernel-sigma "$KERNEL_SIGMA"
+        --verbose "$VERBOSE"
+        --autocast-dtype "$AUTOCAST_DTYPE"
+    )
 
-                if [ "$SAVE_PROCESS" = "1" ]; then
-                    CMD+=(--save-process)
-                fi
+    if [ "$SAVE_PROCESS" = "1" ]; then
+        CMD+=(--save-process)
+    fi
+    if [ "$AUTOCAST" = "1" ]; then
+        CMD+=(--autocast)
+    fi
 
-                "${CMD[@]}"
-            done
-        done
-    done
+    "${CMD[@]}"
 done
 
 echo "DONE. Outputs stored under: $OUTPUT_ROOT/$MODEL_NAME"
