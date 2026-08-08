@@ -1,8 +1,26 @@
 import torch
 import torch.nn.functional as F
-from pytorch_grad_cam import GradCAM
-from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
-from pytorch_grad_cam.utils.image import show_cam_on_image
+import sys
+from pathlib import Path
+
+try:
+    from pytorch_grad_cam import GradCAM
+    from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
+    from pytorch_grad_cam.utils.image import show_cam_on_image
+except ModuleNotFoundError:
+    # Fallback to bundled source tree so Grad-CAM can run without pip install.
+    _THIS_DIR = Path(__file__).resolve().parent
+    _LOCAL_CANDIDATES = [
+        _THIS_DIR / "pytorch-grad-cam",
+        _THIS_DIR.parent / "pytorch-grad-cam",
+    ]
+    for _candidate in _LOCAL_CANDIDATES:
+        if _candidate.exists() and str(_candidate) not in sys.path:
+            sys.path.insert(0, str(_candidate))
+
+    from pytorch_grad_cam import GradCAM
+    from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
+    from pytorch_grad_cam.utils.image import show_cam_on_image
 
 
 def _prepare_target_class(output, target_class):
