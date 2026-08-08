@@ -1,0 +1,534 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+#
+# IceCream - Never use print() to debug again
+#
+# Ansgar Grunseid
+# grunseid.com
+# grunseid@gmail.com
+#
+# License: MIT
+#
+
+import ast
+import enum
+import inspect
+import pprint
+import sys
+from types import FrameType
+from typing import (
+    Optional,
+    cast,
+    Any,
+    Callable,
+    Generator,
+    List,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+    Literal,
+)
+import warnings
+from datetime import datetime
+import functools
+from contextlib import contextmanager
+from os.path import basename, realpath
+from textwrap import dedent
+
+import colorama  # type: ignore
+import executing  # type: ignore
+from pygments import highlight  # type: ignore
+
+# See https://gist.github.com/XVilka/8346728 for color support in various
+# terminals and thus whether to use Terminal256Formatter or
+# TerminalTrueColorFormatter.
+from pygments.formatters import Terminal256Formatter  # type: ignore
+from pygments.lexers import Python3Lexer as Py3Lexer  # type: ignore
+
+from .coloring import SolarizedDark
+
+
+class Sentinel(enum.Enum):
+    absent = object()
+
+
+def bindStaticVariable(name: str, value: Any) -> Callable:
+    def decorator(fn: Callable) -> Callable:
+        setattr(fn, name, value)
+        return fn
+    return decorator
+
+
+def has_non_ascii_chars(s: str) -> bool:
+    """Check if string contains non-ASCII characters."""
+    return any(ord(char) > 127 for char in s)
+
+
+@bindStaticVariable('formatter', Terminal256Formatter(style=SolarizedDark))
+@bindStaticVariable('lexer', Py3Lexer(ensurenl=False))
+def colorize(s: str) -> str:
+    self = colorize
+
+    # skip syntax highlighting for strings with non-ASCII characters to avoid
+    # encoding issues with pygments (fixes issue #222)
+    if has_non_ascii_chars(s):
+        return s
+
+    return highlight(
+        s,
+        cast(Py3Lexer, self.lexer),  # type: ignore
+        cast(Terminal256Formatter, self.formatter)  # type: ignore
+    )  # pyright: ignore[reportFunctionMemberAccess]
+
+
+@contextmanager
+def supportTerminalColorsInWindows() -> Generator:
+
+    # filter and replace ANSI escape sequences on Windows with equivalent Win32
+    # API calls. This code does nothing on non-Windows systems.
+    if sys.platform.startswith('win'):
+        colorama.init()
+        yield
+        colorama.deinit()
+    else:
+        yield
+
+
+def stderr_print(*args: object) -> None:
+    print(*args, file=sys.stderr)
+
+
+def stdout_print(*args: object) -> None:
+    print(*args)
+
+
+def isLiteral(s: str) -> bool:
+    try:
+        ast.literal_eval(s)
+    except Exception:
+        return False
+    return True
+
+
+def colorizedStderrPrint(s: str) -> None:
+    colored = colorize(s)
+    with supportTerminalColorsInWindows():
+        stderr_print(colored)
+
+
+def colorizedStdoutPrint(s: str) -> None:
+    colored = colorize(s)
+    with supportTerminalColorsInWindows():
+        print(colored)
+
+
+def safe_pformat(obj: object, *args: Any, **kwargs: Any) -> str:
+    """pprint.pformat() with a couple of small safety/usability tweaks.
+
+    In addition to the usual TypeError handling below, we special–case
+    "medium sized" flat lists. For those, the standard pprint heuristics
+    sometimes choose a one-item-per-line layout which makes the order of
+    values hard to visually follow in ic()'s output. For such lists we
+    prefer the more compact repr()-style representation.
+    """
+
+    def _pformat(extra_kwargs: Optional[dict] = None) -> str:
+        # Helper so we always pass the same args/kwargs to pprint.
+        final_kwargs = dict(kwargs)
+        if extra_kwargs:
+            final_kwargs.update(extra_kwargs)
+        return pprint.pformat(obj, *args, **final_kwargs)
+
+    try:
+        # For flat lists we try a slightly wider layout first. This keeps
+        # simple medium-sized lists on a single line in the common case.
+        is_flat_list = (
+            isinstance(obj, list)
+            and not args
+            and 'width' not in kwargs
+            and not any(isinstance(el, (list, tuple, dict, set)) for el in obj)
+        )
+        if is_flat_list:
+            formatted = _pformat({'width': 120})
+        else:
+            formatted = _pformat(None)
+    except TypeError as e:
+        # Sorting likely tripped on symbolic/elementwise comparisons.
+        warnings.warn(f"pprint failed ({e}); retrying without dict sorting")
+        try:
+            # Py 3.8+: disable sorting globally for all nested dicts.
+            return _pformat({'sort_dicts': False})
+        except TypeError:
+            # Py < 3.8: last-ditch, always works.
+            return repr(obj)
+
+    # Heuristic: if pprint decided to break a flat, medium-sized list across
+    # many lines, fall back to repr() which keeps the list visually compact
+    # and easier to read in ic()'s prefix/value layout.
+    if is_flat_list and isinstance(obj, list) and 13 <= len(obj) <= 35:
+        lines = formatted.splitlines()
+        if len(lines) > 10:
+            one_line = repr(obj)
+            if len(one_line) <= 120:
+                return one_line
+
+    return formatted
+
+
+DEFAULT_PREFIX = 'ic| '
+DEFAULT_LINE_WRAP_WIDTH = 70  # Characters.
+DEFAULT_CONTEXT_DELIMITER = '- '
+DEFAULT_OUTPUT_FUNCTION = colorizedStderrPrint
+DEFAULT_ARG_TO_STRING_FUNCTION = safe_pformat
+
+"""
+This info message is printed instead of the arguments when icecream
+fails to find or access source code that's required to parse and analyze.
+This can happen, for example, when
+
+  - ic() is invoked inside a REPL or interactive shell, e.g. from the
+    command line (CLI) or with python -i.
+
+  - The source code is mangled and/or packaged, e.g. with a project
+    freezer like PyInstaller.
+
+  - The underlying source code changed during execution. See
+    https://stackoverflow.com/a/33175832.
+"""
+NO_SOURCE_AVAILABLE_WARNING_MESSAGE = (
+    'Failed to access the underlying source code for analysis. Was ic() '
+    'invoked in a REPL (e.g. from the command line), a frozen application '
+    '(e.g. packaged with PyInstaller), or did the underlying source code '
+    'change during execution?')
+
+
+def call_or_value(obj: object) -> object:
+    return obj() if callable(obj) else obj
+
+
+class Source(executing.Source):
+    def get_text_with_indentation(self, node: ast.expr) -> str:
+        result = self.asttokens().get_text(node)
+        if '\n' in result:
+            result = ' ' * node.first_token.start[1] + result  # type: ignore[attr-defined]
+            result = dedent(result)
+        result = result.strip()
+        return result
+
+
+def prefix_lines(prefix: str, s: str, startAtLine: int = 0) -> List[str]:
+    lines = s.splitlines()
+
+    for i in range(startAtLine, len(lines)):
+        lines[i] = prefix + lines[i]
+
+    return lines
+
+
+def prefix_first_line_indent_remaining(prefix: str, s: str) -> List[str]:
+    indent = ' ' * len(prefix)
+    lines = prefix_lines(indent, s, startAtLine=1)
+    lines[0] = prefix + lines[0]
+    return lines
+
+
+def formatPair(prefix: str, arg: Union[str, Sentinel], value: str) -> str:
+    if arg is Sentinel.absent:
+        argLines = []
+        valuePrefix = prefix
+    else:
+        argLines = prefix_first_line_indent_remaining(prefix, arg)
+        valuePrefix = argLines[-1] + ': '
+
+    looksLikeAString = len(value) >= 2 and (value[0] + value[-1]) in ["''", '""']
+    if looksLikeAString:  # Align the start of multiline strings.
+        valueLines = prefix_lines(' ', value, startAtLine=1)
+        value = '\n'.join(valueLines)
+
+    valueLines = prefix_first_line_indent_remaining(valuePrefix, value)
+    lines = argLines[:-1] + valueLines
+    return '\n'.join(lines)
+
+
+class _SingleDispatchCallable:
+    def __call__(self, *_: object) -> str:
+        # This is a marker class, not a real thing you should use
+        raise NotImplementedError("This is a marker class, not a real thing you should use")
+
+    register: Callable[[Type], Callable]
+
+
+def singledispatch(func: Callable) -> _SingleDispatchCallable:
+    func = functools.singledispatch(func)
+
+    # add unregister based on https://stackoverflow.com/a/25951784
+    assert func.register.__closure__ is not None
+    closure = dict(zip(func.register.__code__.co_freevars,
+                       func.register.__closure__))
+    registry = closure['registry'].cell_contents
+    dispatch_cache = closure['dispatch_cache'].cell_contents
+
+    def unregister(cls: Type) -> None:
+        del registry[cls]
+        dispatch_cache.clear()
+
+    func.unregister = unregister  # type: ignore[attr-defined]
+    return cast(_SingleDispatchCallable, func)
+
+
+@singledispatch
+def argumentToString(obj: object) -> str:
+    s = DEFAULT_ARG_TO_STRING_FUNCTION(obj)
+    s = s.replace('\\n', '\n')  # Preserve string newlines in output.
+    return s
+
+
+@argumentToString.register(str)
+def _(obj: str) -> str:
+    if '\n' in obj:
+        return "'''" + obj + "'''"
+    return "'" + obj.replace('\\', '\\\\') + "'"
+
+
+class IceCreamDebugger:
+    _pairDelimiter = ', '  # Used by the tests in tests/.
+    lineWrapWidth = DEFAULT_LINE_WRAP_WIDTH
+    contextDelimiter = DEFAULT_CONTEXT_DELIMITER
+    outputFunction: Callable[..., None]
+
+    def __init__(self, prefix: Union[str, Callable[[], str]] =DEFAULT_PREFIX,
+                 outputFunction: Callable[..., None]=DEFAULT_OUTPUT_FUNCTION,
+                 argToStringFunction: Union[_SingleDispatchCallable, Callable[[Any], str]]=argumentToString, includeContext: bool=False,
+                 contextAbsPath: bool=False,
+                 noColor: bool=False):
+        self.enabled = True
+        self.prefix = prefix
+        self.includeContext = includeContext
+        self.argToStringFunction = argToStringFunction
+        self.contextAbsPath = contextAbsPath
+        self.noColor = noColor
+
+        if self.noColor and outputFunction is DEFAULT_OUTPUT_FUNCTION:
+            self.outputFunction = stderr_print
+        else:
+            self.outputFunction = outputFunction
+
+    def __call__(self, *args: object) -> object:
+        if self.enabled:
+            currentFrame = inspect.currentframe()
+            assert currentFrame is not None and currentFrame.f_back is not None
+            callFrame = currentFrame.f_back
+            self.outputFunction(self._format(callFrame, *args))
+
+        if not args:  # E.g. ic().
+            passthrough = None
+        elif len(args) == 1:  # E.g. ic(1).
+            passthrough = args[0]
+        else:  # E.g. ic(1, 2, 3).
+            passthrough = args
+
+        return passthrough
+
+    def format(self, *args: object) -> str:
+        currentFrame = inspect.currentframe()
+        assert currentFrame is not None and currentFrame.f_back is not None
+        callFrame = currentFrame.f_back
+        out = self._format(callFrame, *args)
+        return out
+
+    def _format(self, callFrame: FrameType, *args: object) -> str:
+
+        prefix = cast(str, call_or_value(self.prefix))
+        context = self._formatContext(callFrame)
+
+        if not args:
+            time = self._formatTime()
+            out = prefix + context + time
+        else:
+            if not self.includeContext:
+                context = ''
+            out = self._formatArgs(
+                callFrame, prefix, context, args)
+
+        return out
+
+    def _formatArgs(
+        self,
+        callFrame: FrameType,
+        prefix: str,
+        context: str,
+        args: Sequence[object]
+    ) -> str:
+
+        callNode = Source.executing(callFrame).node
+        if callNode is not None:
+            assert isinstance(callNode, ast.Call)
+            source = cast(Source, Source.for_frame(callFrame))
+            sanitizedArgStrs = [
+                source.get_text_with_indentation(arg)
+                for arg in callNode.args]
+        else:
+            warnings.warn(
+                NO_SOURCE_AVAILABLE_WARNING_MESSAGE,
+                category=RuntimeWarning, stacklevel=4)
+            sanitizedArgStrs = [Sentinel.absent] * len(args)
+
+        pairs = list(zip(sanitizedArgStrs, cast(List[str], args)))
+
+        out = self._constructArgumentOutput(prefix, context, pairs)
+        return out
+
+    def _constructArgumentOutput(self, prefix: str, context: str, pairs: Sequence[Tuple[Union[str, Sentinel], str]]) -> str:
+        def argPrefix(arg: str) -> str:
+            return '%s: ' % arg
+
+        pairs = [(arg, self.argToStringFunction(val)) for arg, val in pairs]
+        # For cleaner output, if <arg> is a literal, eg 3, "a string",
+        # b'bytes', etc, only output the value, not the argument and the
+        # value, because the argument and the value will be identical or
+        # nigh identical. Ex: with ic("hello"), just output
+        #
+        #   ic| 'hello',
+        #
+        # instead of
+        #
+        #   ic| "hello": 'hello'.
+        #
+        # When the source for an arg is missing we also only print the value,
+        # since we can't know anything about the argument itself.
+        pairStrs = [
+            val if (arg is Sentinel.absent or isLiteral(arg))
+            else (argPrefix(arg) + val)
+            for arg, val in pairs]
+
+        allArgsOnOneLine = self._pairDelimiter.join(pairStrs)
+        multilineArgs = len(allArgsOnOneLine.splitlines()) > 1
+
+        contextDelimiter = self.contextDelimiter if context else ''
+        allPairs = prefix + context + contextDelimiter + allArgsOnOneLine
+        firstLineTooLong = len(allPairs.splitlines()[0]) > self.lineWrapWidth
+
+        if multilineArgs or firstLineTooLong:
+            # ic| foo.py:11 in foo()
+            #     multilineStr: 'line1
+            #                    line2'
+            #
+            # ic| foo.py:11 in foo()
+            #     a: 11111111111111111111
+            #     b: 22222222222222222222
+            if context:
+                lines = [prefix + context] + [
+                    formatPair(len(prefix) * ' ', arg, value)
+                    for arg, value in pairs
+                ]
+            # ic| multilineStr: 'line1
+            #                    line2'
+            #
+            # ic| a: 11111111111111111111
+            #     b: 22222222222222222222
+            else:
+                argLines = [
+                    formatPair('', arg, value)
+                    for arg, value in pairs
+                ]
+                lines = prefix_first_line_indent_remaining(prefix, '\n'.join(argLines))
+        # ic| foo.py:11 in foo()- a: 1, b: 2
+        # ic| a: 1, b: 2, c: 3
+        else:
+            lines = [prefix + context + contextDelimiter + allArgsOnOneLine]
+
+        return '\n'.join(lines)
+
+    def _formatContext(self, callFrame: FrameType) -> str:
+        filename, lineNumber, parentFunction = self._getContext(callFrame)
+
+        if parentFunction != '<module>':
+            parentFunction = '%s()' % parentFunction
+
+        context = '%s:%s in %s' % (filename, lineNumber, parentFunction)
+        return context
+
+    def _formatTime(self) -> str:
+        now = datetime.now()
+        formatted = now.strftime('%H:%M:%S.%f')[:-3]
+        return ' at %s' % formatted
+
+    def _getContext(self, callFrame: FrameType) -> Tuple[str, int, str]:
+        frameInfo = inspect.getframeinfo(callFrame)
+        lineNumber = frameInfo.lineno
+        parentFunction = frameInfo.function
+
+        filepath = (realpath if self.contextAbsPath else basename)(frameInfo.filename)  # type: ignore[operator]
+        return filepath, lineNumber, parentFunction
+
+    def enable(self) -> None:
+        self.enabled = True
+
+    def disable(self) -> None:
+        self.enabled = False
+
+    def use_stdout(self) -> None:
+        if self.noColor:
+            self.outputFunction = stdout_print
+        else:
+            self.outputFunction = colorizedStdoutPrint
+
+    def use_stderr(self) -> None:
+        if self.noColor:
+            self.outputFunction = stderr_print
+        else:
+            self.outputFunction = colorizedStderrPrint
+
+    def configureOutput(
+        self: "IceCreamDebugger",
+        prefix: Union[str, Literal[Sentinel.absent]] = Sentinel.absent,
+        outputFunction: Union[Callable, Literal[Sentinel.absent]] = Sentinel.absent,
+        argToStringFunction: Union[Callable, Literal[Sentinel.absent]] = Sentinel.absent,
+        includeContext: Union[bool, Literal[Sentinel.absent]] = Sentinel.absent,
+        contextAbsPath: Union[bool, Literal[Sentinel.absent]] = Sentinel.absent,
+        lineWrapWidth: Union[bool, Literal[Sentinel.absent]] = Sentinel.absent,
+        noColor: Union[bool, Literal[Sentinel.absent]] = Sentinel.absent,
+    ) -> None:
+        noParameterProvided = all(
+            v is Sentinel.absent for k, v in locals().items() if k != 'self')
+        if noParameterProvided:
+            raise TypeError('configureOutput() missing at least one argument')
+
+        if noColor is not Sentinel.absent:
+            self.noColor = noColor
+            # Auto-swap built-in output functions when no explicit
+            # outputFunction is provided alongside noColor.
+            if outputFunction is Sentinel.absent:
+                if self.noColor:
+                    if self.outputFunction is colorizedStderrPrint:
+                        self.outputFunction = stderr_print
+                    elif self.outputFunction is colorizedStdoutPrint:
+                        self.outputFunction = stdout_print
+                else:
+                    if self.outputFunction is stderr_print:
+                        self.outputFunction = colorizedStderrPrint
+                    elif self.outputFunction is stdout_print:
+                        self.outputFunction = colorizedStdoutPrint
+
+        if prefix is not Sentinel.absent:
+            self.prefix = prefix
+
+        if outputFunction is not Sentinel.absent:
+            self.outputFunction = outputFunction
+
+        if argToStringFunction is not Sentinel.absent:
+            self.argToStringFunction = argToStringFunction
+
+        if includeContext is not Sentinel.absent:
+            self.includeContext = includeContext
+
+        if contextAbsPath is not Sentinel.absent:
+            self.contextAbsPath = contextAbsPath
+
+        if lineWrapWidth is not Sentinel.absent:
+            self.lineWrapWidth = lineWrapWidth
+
+
+ic = IceCreamDebugger()

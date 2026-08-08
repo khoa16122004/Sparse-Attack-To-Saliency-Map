@@ -1,4 +1,4 @@
-from icecream import Any
+from typing import Any
 import numpy as np
 from operator import attrgetter
 from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
