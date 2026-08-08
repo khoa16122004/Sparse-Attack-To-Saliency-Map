@@ -235,3 +235,6 @@ def get_explainable_method_backprop(method_name):
     if method_name == "attention_grad":
         return attention_grad
     raise ValueError(f"Unknown backprop explainable method: {method_name}")
+
+
+# Adversarial Backpropagation methods (not used in the main script)
