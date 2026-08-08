@@ -127,11 +127,13 @@ def _plot_overlay_curves(
         x_clean = np.linspace(0.0, 1.0, num=len(clean_curve), endpoint=True)
         y_clean = np.asarray(clean_curve, dtype=float)
         ax.plot(x_clean, y_clean, linewidth=1.8, color="#1f77b4")
+        ax.fill_between(x_clean, y_clean, 0.0, color="#1f77b4", alpha=0.22)
 
     if adv_curve:
         x_adv = np.linspace(0.0, 1.0, num=len(adv_curve), endpoint=True)
         y_adv = np.asarray(adv_curve, dtype=float)
         ax.plot(x_adv, y_adv, linewidth=1.8, color="#d62728")
+        ax.fill_between(x_adv, y_adv, 0.0, color="#d62728", alpha=0.22)
 
     ax.set_xlim(0.0, 1.0)
     ax.set_ylim(-0.05, 1.05)
