@@ -2,7 +2,7 @@ import argparse
 import json
 import math
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -79,55 +79,35 @@ def _find_summary_files(run_dir: Path) -> List[Path]:
     return sorted(set(summary_paths))
 
 
-def _resolve_output_dir(summary_path: Path, output_root: Optional[Path]) -> Path:
-    sample_dir = summary_path.parent
-    if output_root is None:
-        return sample_dir
-
-    relative = sample_dir
-    try:
-        relative = sample_dir.relative_to(output_root)
-    except ValueError:
-        pass
-    return output_root / relative
-
-
-def _plot_single_metric(
-    adv_curve: List[float],
-    clean_curve: List[float],
+def _plot_one_curve(
+    curve: List[float],
     output_path: Path,
     dpi: int,
 ) -> None:
-    fig, axes = plt.subplots(2, 1, figsize=(8.0, 5.8), sharex=True)
+    fig, ax = plt.subplots(1, 1, figsize=(8.0, 4.2))
 
-    plot_payload: Tuple[Tuple[object, List[float]], ...] = (
-        (axes[0], adv_curve),
-        (axes[1], clean_curve),
-    )
+    if curve:
+        x = np.linspace(0.0, 1.0, num=len(curve), endpoint=True)
+        y = np.asarray(curve, dtype=float)
+        ax.plot(x, y, linewidth=1.5, color="#1f77b4")
+        ax.fill_between(x, y, 0.0, color="#1f77b4", alpha=0.28)
+        auc_value = _auc(curve)
+        if auc_value is not None:
+            ax.text(
+                0.5,
+                0.5,
+                f"AUC={auc_value:.4f}",
+                color="#8B0000",
+                fontsize=22,
+                fontweight="bold",
+                ha="center",
+                va="center",
+                transform=ax.transAxes,
+            )
 
-    for ax, curve in plot_payload:
-        if curve:
-            x = np.linspace(0.0, 1.0, num=len(curve), endpoint=True)
-            y = np.asarray(curve, dtype=float)
-            ax.plot(x, y, linewidth=1.5, color="#1f77b4")
-            ax.fill_between(x, y, 0.0, color="#1f77b4", alpha=0.28)
-            auc_value = _auc(curve)
-            if auc_value is not None:
-                ax.text(
-                    0.5,
-                    0.5,
-                    f"AUC={auc_value:.4f}",
-                    color="#8B0000",
-                    fontsize=22,
-                    fontweight="bold",
-                    ha="center",
-                    va="center",
-                    transform=ax.transAxes,
-                )
-
-        ax.set_xlim(0.0, 1.0)
-        ax.set_ylim(-0.05, 1.05)
-        ax.grid(True, alpha=0.3)
+    ax.set_xlim(0.0, 1.0)
+    ax.set_ylim(-0.05, 1.05)
+    ax.grid(True, alpha=0.3)
 
     fig.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -144,7 +124,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
             "Generate per-sample deletion/insertion curve images from summary files. "
-            "Each image contains adv (top) and clean (bottom) curves, without title/legend."
+            "Save separate images for deletion/insertion and clean/adv curves, without title/legend."
         )
     )
     parser.add_argument(
@@ -160,16 +140,28 @@ def main() -> None:
         help="Optional root to write outputs. Default: save inside each sample folder.",
     )
     parser.add_argument(
-        "--deletion-name",
+        "--deletion-clean-name",
         type=str,
-        default="deletion_curve.png",
-        help="Output filename for deletion figure.",
+        default="deletion_clean.png",
+        help="Output filename for clean deletion curve image.",
     )
     parser.add_argument(
-        "--insertion-name",
+        "--deletion-adv-name",
         type=str,
-        default="insertion_curve.png",
-        help="Output filename for insertion figure.",
+        default="deletion_adv.png",
+        help="Output filename for adv deletion curve image.",
+    )
+    parser.add_argument(
+        "--insertion-clean-name",
+        type=str,
+        default="insertion_clean.png",
+        help="Output filename for clean insertion curve image.",
+    )
+    parser.add_argument(
+        "--insertion-adv-name",
+        type=str,
+        default="insertion_adv.png",
+        help="Output filename for adv insertion curve image.",
     )
     parser.add_argument(
         "--dpi",
@@ -219,26 +211,22 @@ def main() -> None:
 
         sample_output_dir = summary_path.parent if output_root is None else (output_root / summary_path.parent.relative_to(run_dir))
 
-        deletion_path = sample_output_dir / args.deletion_name
-        insertion_path = sample_output_dir / args.insertion_name
+        deletion_clean_path = sample_output_dir / args.deletion_clean_name
+        deletion_adv_path = sample_output_dir / args.deletion_adv_name
+        insertion_clean_path = sample_output_dir / args.insertion_clean_name
+        insertion_adv_path = sample_output_dir / args.insertion_adv_name
 
         try:
-            _plot_single_metric(
-                adv_curve=curves["adv_del"],
-                clean_curve=curves["clean_del"],
-                output_path=deletion_path,
-                dpi=args.dpi,
-            )
-            _plot_single_metric(
-                adv_curve=curves["adv_ins"],
-                clean_curve=curves["clean_ins"],
-                output_path=insertion_path,
-                dpi=args.dpi,
-            )
+            _plot_one_curve(curves["clean_del"], deletion_clean_path, args.dpi)
+            _plot_one_curve(curves["adv_del"], deletion_adv_path, args.dpi)
+            _plot_one_curve(curves["clean_ins"], insertion_clean_path, args.dpi)
+            _plot_one_curve(curves["adv_ins"], insertion_adv_path, args.dpi)
             ok += 1
             print(f"[OK] {summary_path.parent}")
-            print(f"      - {deletion_path}")
-            print(f"      - {insertion_path}")
+            print(f"      - {deletion_clean_path}")
+            print(f"      - {deletion_adv_path}")
+            print(f"      - {insertion_clean_path}")
+            print(f"      - {insertion_adv_path}")
         except Exception as exc:
             failed += 1
             print(f"[FAILED] {summary_path} error={exc}")
