@@ -115,6 +115,34 @@ def _plot_one_curve(
     plt.close(fig)
 
 
+def _plot_overlay_curves(
+    clean_curve: List[float],
+    adv_curve: List[float],
+    output_path: Path,
+    dpi: int,
+) -> None:
+    fig, ax = plt.subplots(1, 1, figsize=(8.0, 4.2))
+
+    if clean_curve:
+        x_clean = np.linspace(0.0, 1.0, num=len(clean_curve), endpoint=True)
+        y_clean = np.asarray(clean_curve, dtype=float)
+        ax.plot(x_clean, y_clean, linewidth=1.8, color="#1f77b4")
+
+    if adv_curve:
+        x_adv = np.linspace(0.0, 1.0, num=len(adv_curve), endpoint=True)
+        y_adv = np.asarray(adv_curve, dtype=float)
+        ax.plot(x_adv, y_adv, linewidth=1.8, color="#d62728")
+
+    ax.set_xlim(0.0, 1.0)
+    ax.set_ylim(-0.05, 1.05)
+    ax.grid(True, alpha=0.3)
+
+    fig.tight_layout()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=dpi)
+    plt.close(fig)
+
+
 def _iter_targets(summary_paths: Iterable[Path]) -> Iterable[Path]:
     for path in summary_paths:
         yield path
@@ -162,6 +190,18 @@ def main() -> None:
         type=str,
         default="insertion_adv.png",
         help="Output filename for adv insertion curve image.",
+    )
+    parser.add_argument(
+        "--deletion-overlay-name",
+        type=str,
+        default="deletion_overlay.png",
+        help="Output filename for overlay deletion curve image (clean blue, adv red).",
+    )
+    parser.add_argument(
+        "--insertion-overlay-name",
+        type=str,
+        default="insertion_overlay.png",
+        help="Output filename for overlay insertion curve image (clean blue, adv red).",
     )
     parser.add_argument(
         "--dpi",
@@ -215,18 +255,24 @@ def main() -> None:
         deletion_adv_path = sample_output_dir / args.deletion_adv_name
         insertion_clean_path = sample_output_dir / args.insertion_clean_name
         insertion_adv_path = sample_output_dir / args.insertion_adv_name
+        deletion_overlay_path = sample_output_dir / args.deletion_overlay_name
+        insertion_overlay_path = sample_output_dir / args.insertion_overlay_name
 
         try:
             _plot_one_curve(curves["clean_del"], deletion_clean_path, args.dpi)
             _plot_one_curve(curves["adv_del"], deletion_adv_path, args.dpi)
             _plot_one_curve(curves["clean_ins"], insertion_clean_path, args.dpi)
             _plot_one_curve(curves["adv_ins"], insertion_adv_path, args.dpi)
+            _plot_overlay_curves(curves["clean_del"], curves["adv_del"], deletion_overlay_path, args.dpi)
+            _plot_overlay_curves(curves["clean_ins"], curves["adv_ins"], insertion_overlay_path, args.dpi)
             ok += 1
             print(f"[OK] {summary_path.parent}")
             print(f"      - {deletion_clean_path}")
             print(f"      - {deletion_adv_path}")
             print(f"      - {insertion_clean_path}")
             print(f"      - {insertion_adv_path}")
+            print(f"      - {deletion_overlay_path}")
+            print(f"      - {insertion_overlay_path}")
         except Exception as exc:
             failed += 1
             print(f"[FAILED] {summary_path} error={exc}")

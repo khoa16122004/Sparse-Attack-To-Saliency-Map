@@ -57,6 +57,12 @@ def parse_args():
     parser.add_argument("--imagenet-val-root", type=str, default=DEFAULT_IMAGENET_VAL_ROOT)
     parser.add_argument("--replace-from-root", type=str, default=DEFAULT_REMOTE_VAL_ROOT)
     parser.add_argument("--output-root", type=str, default="batch_outputs_causal")
+    parser.add_argument(
+        "--checkpoint-dir",
+        type=str,
+        default=None,
+        help="Directory containing local pretrained checkpoints named <model>.pth",
+    )
     parser.add_argument("--replace", action="store_true")
 
     parser.add_argument(
@@ -532,7 +538,11 @@ def main():
     print(f"[INFO] device={args.device}")
     print(f"[INFO] seed={args.seed}")
 
-    model, spatial, normalize = get_torchvision_model(model_name, pretrained=True)
+    model, spatial, normalize = get_torchvision_model(
+        model_name,
+        pretrained=True,
+        checkpoint_dir=args.checkpoint_dir,
+    )
     model = model.to(device)
     model.eval()
 

@@ -41,6 +41,12 @@ def parse_args():
     parser.add_argument("--margin-chart-output", type=str, default=None, help="Path to save margin score chart")
     parser.add_argument("--saliency-chart-output", type=str, default=None, help="Path to save saliency score chart")
     parser.add_argument("--model", type=str, default="resnet50", help="Torchvision model name")
+    parser.add_argument(
+        "--checkpoint-dir",
+        type=str,
+        default=None,
+        help="Directory containing local pretrained checkpoints named <model>.pth",
+    )
     parser.add_argument("--label", type=int, default=None, help="True label index. If omitted, uses model prediction")
     parser.add_argument(
         "--explain-method",
@@ -252,7 +258,11 @@ def run_attack(args):
         args.device = "cpu"
 
     device = torch.device(args.device)
-    model, spatial, normalize = get_torchvision_model(args.model, pretrained=True)
+    model, spatial, normalize = get_torchvision_model(
+        args.model,
+        pretrained=True,
+        checkpoint_dir=args.checkpoint_dir,
+    )
     model = model.to(device)
     model.eval()
 

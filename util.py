@@ -6,6 +6,7 @@ from torchvision.models import get_model_weights
 import torchvision.transforms as T
 import numpy as np
 import torch
+from pathlib import Path
 from explain_method import (
     simple_gradient_map,
     integrated_gradients,
@@ -76,14 +77,35 @@ def get_torchvision_model(
     model_name,
     pretrained=True,
     num_classes=None,
+    checkpoint_dir=None,
 ):
     model_fn = getattr(tv_models, model_name)
 
     if pretrained:
         weights_enum = get_model_weights(model_name).DEFAULT
-        model = model_fn(weights=weights_enum)
-
         spatial, normalize = split_transform_from_weights(weights_enum)
+
+        if checkpoint_dir is not None:
+            checkpoint_root = Path(checkpoint_dir)
+            checkpoint_path = checkpoint_root / f"{model_name}.pth"
+
+            if not checkpoint_path.exists():
+                raise FileNotFoundError(
+                    f"Checkpoint not found for model '{model_name}': {checkpoint_path}. "
+                    f"Please generate it first with the checkpoint download script."
+                )
+
+            payload = torch.load(checkpoint_path, map_location="cpu")
+            if isinstance(payload, dict) and "state_dict" in payload and isinstance(payload["state_dict"], dict):
+                payload = payload["state_dict"]
+            if not isinstance(payload, dict):
+                raise ValueError(f"Invalid checkpoint format: {checkpoint_path}")
+
+            model = model_fn(weights=None)
+            model.load_state_dict(payload)
+            return model, spatial, normalize
+
+        model = model_fn(weights=weights_enum)
 
         return model, spatial, normalize
 
