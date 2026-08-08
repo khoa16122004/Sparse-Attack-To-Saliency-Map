@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=COMPARE_LOSS_50
-#SBATCH --output=logs_COMPARE_LOSS_50/mps_%j.out
-#SBATCH --error=logs_COMPARE_LOSS_50/mps_%j.err
+#SBATCH --output=faithfull/mps_%j.out
+#SBATCH --error=faithfull/mps_%j.err
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -25,7 +25,7 @@ echo "PREFIX: $CONDA_PREFIX"
 which python
 python -c "import sys; print(sys.executable)"
 
-mkdir -p logs_COMPARE_LOSS_50
+mkdir -p faithfull
 
 unset CUDA_VISIBLE_DEVICES
 CHECK_OUT=$(/usr/local/bin/gpu_check.sh $REQUIRED_VRAM $SLURM_JOB_ID)
@@ -55,21 +55,21 @@ export CUDA_VISIBLE_DEVICES=$BEST_GPU
 # =========================================================
 MODEL_NAMES="vgg16"
 NUM_SAMPLE=100
-EPSILONS="100 50 20"
+EPSILONS="50"
 
 # Objective weights (can override by env or script args)
 # Example:
-#   W_MARGIN=0.7 W_DEL=0.2 W_INS=0.1 sbatch scrip_vgg16.sh
+#   W_MARGIN=0.7 W_DEL=0.2 W_INS=0.1 sbatch resnet18.sh
 W_MARGIN="${W_MARGIN:-0.0}"
 W_DEL="${W_DEL:-0.5}"
 W_INS="${W_INS:-0.5}"
-EXPLAIN_METHOD="${EXPLAIN_METHOD:-input_gradient}"
+EXPLAIN_METHOD="${EXPLAIN_METHOD:-simple_gradient}"
 SEED="${SEED:-22520691}"
-OUTPUT_ROOT="offical/server_run_seed/GA/$SEED/"
+OUTPUT_ROOT="rivf_official/server_run_seed/GA/$SEED/"
 
 # Example override:
-#   FITNESSES="ce_margin_loss_saliency" sbatch scrip_vgg16.sh
-#   FITNESSES="margin_loss_causal_faithfull ce_margin_loss_saliency" sbatch scrip_vgg16.sh
+#   FITNESSES="ce_margin_loss_saliency" sbatch resnet18.sh
+#   FITNESSES="margin_loss_causal_faithfull ce_margin_loss_saliency" sbatch resnet18.sh
 FITNESSES="${FITNESSES:-margin_loss_causal_faithfull}"
 
 
