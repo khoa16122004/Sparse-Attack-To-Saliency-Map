@@ -1,6 +1,5 @@
 from icecream import Any
 import numpy as np
-from copy import deepcopy
 from operator import attrgetter
 from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
 import torch
@@ -69,10 +68,36 @@ class Solution:
         self.p_size = p_size
 
     def copy(self):
-        return deepcopy(self)
+        # Avoid Python deepcopy on tensors that may not be graph leaves.
+        pixels = self.pixels.clone() if torch.is_tensor(self.pixels) else np.array(self.pixels, copy=True)
+        values = self.values.clone() if torch.is_tensor(self.values) else np.array(self.values, copy=True)
+        x = self.x.clone() if torch.is_tensor(self.x) else np.array(self.x, copy=True)
+
+        cloned = Solution(pixels=pixels, values=values, x=x, p_size=self.p_size)
+        cloned.fitnesses = list(self.fitnesses)
+        cloned.is_adversarial = self.is_adversarial
+        cloned.w = self.w
+        cloned.delta = self.delta
+        cloned.domination_count = self.domination_count
+        cloned.dominated_solutions = self.dominated_solutions
+        cloned.rank = self.rank
+        cloned.crowding_distance = self.crowding_distance
+        cloned.loss = self.loss
+        cloned.pred_label = self.pred_label
+
+        for name in ("margin_loss", "saliency_loss", "del_loss", "ins_loss", "l0"):
+            if hasattr(self, name):
+                value = getattr(self, name)
+                if torch.is_tensor(value):
+                    value = value.detach().clone()
+                cloned.__dict__[name] = value
+
+        return cloned
 
     def euc_distance(self, img):
-        return np.sum((img - self.x.copy()) ** 2)
+        if torch.is_tensor(self.x):
+            return torch.sum((img - self.x) ** 2)
+        return np.sum((img - np.array(self.x, copy=True)) ** 2)
 
     def l0_distance(self, img):
         base = self.x.squeeze(0)
