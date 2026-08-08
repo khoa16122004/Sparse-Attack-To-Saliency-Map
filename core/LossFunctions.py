@@ -21,26 +21,28 @@ class MarginSalinecy_Fitness:
     
         
     def cal_marginloss(self, logits, y_true):
-        if y_true.numel() == 1:
-            y_true = y_true.expand(logits.size(0))
-        true_logits = logits.gather(1, y_true.unsqueeze(1)).squeeze(1)
-        tmp = logits.clone()
-        tmp.scatter_(1, y_true.unsqueeze(1), float("-inf"))
-        max_other_logits = tmp.max(dim=1).values
-        margin = true_logits - max_other_logits
+        with torch.no_grad():
+            if y_true.numel() == 1:
+                y_true = y_true.expand(logits.size(0))
+            true_logits = logits.gather(1, y_true.unsqueeze(1)).squeeze(1)
+            tmp = logits.clone()
+            tmp.scatter_(1, y_true.unsqueeze(1), float("-inf"))
+            max_other_logits = tmp.max(dim=1).values
+            margin = true_logits - max_other_logits
 
-        return margin
+            return margin
     
     
     def cal_saliency_loss(self, saliency_maps, saliency_true, eps=1e-12):
-        saliency_maps = saliency_maps.flatten(start_dim=1)
-        saliency_true = saliency_true.flatten(start_dim=1)
-        if saliency_true.size(0) == 1 and saliency_maps.size(0) > 1:
-            saliency_true = saliency_true.expand(saliency_maps.size(0), -1)
-        inter = torch.minimum(saliency_maps, saliency_true).sum(dim=1)
-        union = torch.maximum(saliency_maps, saliency_true).sum(dim=1)
-        soft_iou = inter / (union + eps)
-        return soft_iou
+        with torch.no_grad():
+            saliency_maps = saliency_maps.flatten(start_dim=1)
+            saliency_true = saliency_true.flatten(start_dim=1)
+            if saliency_true.size(0) == 1 and saliency_maps.size(0) > 1:
+                saliency_true = saliency_true.expand(saliency_maps.size(0), -1)
+            inter = torch.minimum(saliency_maps, saliency_true).sum(dim=1)
+            union = torch.maximum(saliency_maps, saliency_true).sum(dim=1)
+            soft_iou = inter / (union + eps)
+            return soft_iou
     
 class NegativeCrossEntropySaliency_Fitness(MarginSalinecy_Fitness):
     def benchmark(self, xadv_tensors):
@@ -50,11 +52,12 @@ class NegativeCrossEntropySaliency_Fitness(MarginSalinecy_Fitness):
         return negative_ce_loss, saliency_loss, logits
 
     def cal_cross_entropy(self, logits, y_true):
-        if y_true.numel() == 1:
-            y_true = y_true.expand(logits.size(0))
-        log_probs = torch.nn.functional.log_softmax(logits, dim=1)
-        negative_ce_loss = log_probs.gather(1, y_true.unsqueeze(1)).squeeze(1) + 1e-12
-        return negative_ce_loss
+        with torch.no_grad():
+            if y_true.numel() == 1:
+                y_true = y_true.expand(logits.size(0))
+            log_probs = torch.nn.functional.log_softmax(logits, dim=1)
+            negative_ce_loss = log_probs.gather(1, y_true.unsqueeze(1)).squeeze(1) + 1e-12
+            return negative_ce_loss
     
     
 
@@ -92,19 +95,21 @@ class CEMarrginLossSaliency_Fitness(MarginSalinecy_Fitness):
         return ce_margin_loss, saliency_loss, logits
     
     def cal_ce_margin_loss(self, logits, y_true):
-        if y_true.numel() == 1:
-            y_true = y_true.expand(logits.size(0))
-        # Minimize CE of the original class to preserve class prediction.
-        ce_loss = torch.nn.functional.cross_entropy(logits, y_true, reduction='none')
-        return ce_loss
+        with torch.no_grad():
+            if y_true.numel() == 1:
+                y_true = y_true.expand(logits.size(0))
+            # Minimize CE of the original class to preserve class prediction.
+            ce_loss = torch.nn.functional.cross_entropy(logits, y_true, reduction='none')
+            return ce_loss
 
     def cal_mse_saliency_loss(self, saliency_maps, saliency_true):
-        saliency_maps = saliency_maps.flatten(start_dim=1)
-        saliency_true = saliency_true.flatten(start_dim=1)
-        if saliency_true.size(0) == 1 and saliency_maps.size(0) > 1:
-            saliency_true = saliency_true.expand(saliency_maps.size(0), -1)
-        mse_saliency_loss = -torch.mean((saliency_maps - saliency_true) ** 2, dim=1)
-        return mse_saliency_loss
+        with torch.no_grad():
+            saliency_maps = saliency_maps.flatten(start_dim=1)
+            saliency_true = saliency_true.flatten(start_dim=1)
+            if saliency_true.size(0) == 1 and saliency_maps.size(0) > 1:
+                saliency_true = saliency_true.expand(saliency_maps.size(0), -1)
+            mse_saliency_loss = -torch.mean((saliency_maps - saliency_true) ** 2, dim=1)
+            return mse_saliency_loss
 
 
 
@@ -201,8 +206,9 @@ class MarginLossCausalFaithFull(MarginSalinecy_Fitness):
         x_batch_del = x_batch_del.reshape(BM, C, H, W)
         x_batch_ins = x_batch_ins.reshape(BM, C, H, W)
 
-        logits_del = self.model(self.normalize(x_batch_del))
-        logits_ins = self.model(self.normalize(x_batch_ins))
+        with torch.no_grad():
+            logits_del = self.model(self.normalize(x_batch_del))
+            logits_ins = self.model(self.normalize(x_batch_ins))
 
         probs_del = torch.softmax(logits_del, dim=-1)[torch.arange(BM, device=x_tensors.device), labels]
         probs_ins = torch.softmax(logits_ins, dim=-1)[torch.arange(BM, device=x_tensors.device), labels]
@@ -216,7 +222,7 @@ class MarginLossCausalFaithFull(MarginSalinecy_Fitness):
         del_loss = -mean_del
         ins_loss = mean_ins
 
-        return del_loss, ins_loss
+        return del_loss.detach(), ins_loss.detach()
 
 
 # Backward-compatible alias.
