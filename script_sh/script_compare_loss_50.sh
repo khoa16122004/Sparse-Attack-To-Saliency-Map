@@ -58,11 +58,12 @@ MODEL_NAMES="resnet50 densenet121 vit_b_32"
 NUM_SAMPLE=50
 EPSILONS="5 10 20 50"
 EXPLAIN_METHOD="${EXPLAIN_METHOD:-integrated_gradients}"
+FITNESSES="${FITNESSES:-margin_loss_causal_faithfull}"
 
 for MODEL_NAME in $MODEL_NAMES; do
     for STRATEGY in uniform saliency_guided; do
         for EPS in $EPSILONS; do
-            for FITNESS in margin_saliency cross_entropy_saliency; do
+            for FITNESS in $FITNESSES; do
                 echo "[RUN] model=$MODEL_NAME strategy=$STRATEGY fitness=$FITNESS eps=$EPS explain_method=$EXPLAIN_METHOD num_sample=$NUM_SAMPLE output_root=$OUTPUT_ROOT"
                 python run_batch.py \
                     --model-name "$MODEL_NAME" \

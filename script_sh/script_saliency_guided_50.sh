@@ -57,7 +57,7 @@ OUTPUT_ROOT="saliency_guided_outputs_50"
 MODEL_NAMES="vgg16 resnet50 densenet121 vit_b_32"
 NUM_SAMPLE=50
 EPSILONS="5 10 20 50"
-FITNESSES="margin_saliency cross_entropy_saliency"
+FITNESSES="${FITNESSES:-margin_loss_causal_faithfull}"
 EXPLAIN_METHOD="${EXPLAIN_METHOD:-integrated_gradients}"
 
 for MODEL_NAME in $MODEL_NAMES; do

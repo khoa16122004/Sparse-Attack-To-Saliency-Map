@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 import torch
+from torch import nn
 from PIL import Image
 from torchvision.utils import save_image
 from tqdm.auto import tqdm
@@ -18,14 +19,16 @@ if CORE_DIR not in sys.path:
     sys.path.insert(0, CORE_DIR)
 
 from LossFunctions import (
-    MarginLosssMSESaliency_Fitness,
+    CEMarrginLossSaliency_Fitness,
+    MarginLossCausalFaithFull,
     MarginSalinecy_Fitness,
     NegativeCrossEntropySaliency_Fitness,
     ReverseMarginSalinecy_Fitness,
     ReverseNegativeCrossEntropySaliency_Fitness,
 )
 import numpy as np
-from util import get_explainable_method, get_torchvision_model
+from RISE.evaluation import CausalMetric, auc
+from util import build_blur_substrate, get_explainable_method, get_torchvision_model
 from weightedSUM_GA import Weighted_Sum_GA
 from NSGAII import NSGAII
 
@@ -33,6 +36,16 @@ from NSGAII import NSGAII
 DEFAULT_IMAGENET_VAL_ROOT = r"E:\ImageNet1K\imagenet\ImageNet1K\val"
 DEFAULT_REMOTE_VAL_ROOT = "/datastore/elo/quanphm/dataset/ImageNet1K/val"
 # DEFAULT_REMOTE_VAL_ROOT = DEFAULT_IMAGENET_VAL_ROOT
+
+
+class SoftmaxModel(nn.Module):
+    def __init__(self, model, dim=1):
+        super().__init__()
+        self.model = model
+        self.softmax = nn.Softmax(dim=dim)
+
+    def forward(self, inputs):
+        return self.softmax(self.model(inputs))
 
 
 def parse_args():
@@ -100,12 +113,14 @@ def parse_args():
     parser.add_argument("--pop-size", type=int, default=50)
     parser.add_argument("--iterations", type=int, default=200)
     parser.add_argument("--eps", type=int, default=50)
-    parser.add_argument("--p-size", type=float, de  fault=1.0)
+    parser.add_argument("--p-size", type=float, default=1.0)
     parser.add_argument("--pc", type=float, default=0.4)
     parser.add_argument("--pm", type=float, default=0.1)
     parser.add_argument("--zero-probability", type=float, default=0.3)
     parser.add_argument("--w-margin", type=float, default=0.5)
     parser.add_argument("--w-saliency", type=float, default=0.5)
+    parser.add_argument("--w-del", type=float, default=None, help="Weight for deletion loss when fitness has 3 objectives")
+    parser.add_argument("--w-ins", type=float, default=None, help="Weight for insertion loss when fitness has 3 objectives")
     parser.add_argument(
         "--fitness-function",
         type=str,
@@ -118,6 +133,10 @@ def parse_args():
             "reverse_negative_cross_entropy_saliency",
             "margin_loss_mse_saliency",
             "MarginLossMESE",
+            "ce_margin_loss_saliency",
+            "CEMarrginLoss",
+            "margin_loss_causal_faithfull",
+            "ce_loss_causal_faithfull",
         ],
         help="Fitness function to optimize",
     )
@@ -175,6 +194,57 @@ def _save_four_class_maps(model, explain_fn, normalize, clean_chw, adv_chw, clas
     _save_saliency_map(clean_map_b[0], str(output_paths["clean_b"]))
     _save_saliency_map(adv_map_a[0], str(output_paths["adv_a"]))
     _save_saliency_map(adv_map_b[0], str(output_paths["adv_b"]))
+
+
+def _compute_faithfulness_metrics(model, normalize, clean_batch, adv_batch, clean_saliency_map, adv_saliency_map):
+    metric_model = SoftmaxModel(model)
+    blur_fn = build_blur_substrate(11, 5)
+    insertion = CausalMetric(metric_model, "ins", 224, substrate_fn=blur_fn)
+    deletion = CausalMetric(metric_model, "del", 224, substrate_fn=lambda x: torch.zeros_like(x))
+
+    clean_scores_del = deletion.single_run(
+        normalize(clean_batch).detach().cpu(),
+        clean_saliency_map.detach().cpu().numpy(),
+        verbose=0,
+        save_to=None,
+    )
+    clean_scores_ins = insertion.single_run(
+        normalize(clean_batch).detach().cpu(),
+        clean_saliency_map.detach().cpu().numpy(),
+        verbose=0,
+        save_to=None,
+    )
+
+    adv_scores_del = deletion.single_run(
+        normalize(adv_batch).detach().cpu(),
+        adv_saliency_map[0].detach().cpu().numpy(),
+        verbose=0,
+        save_to=None,
+    )
+    adv_scores_ins = insertion.single_run(
+        normalize(adv_batch).detach().cpu(),
+        adv_saliency_map[0].detach().cpu().numpy(),
+        verbose=0,
+        save_to=None,
+    )
+
+    adv_del_auc = float(auc(adv_scores_del))
+    adv_ins_auc = float(auc(adv_scores_ins))
+    clean_del_auc = float(auc(clean_scores_del))
+    clean_ins_auc = float(auc(clean_scores_ins))
+
+    return {
+        "clean_del_auc": clean_del_auc,
+        "clean_ins_auc": clean_ins_auc,
+        "adv_del_auc": adv_del_auc,
+        "adv_ins_auc": adv_ins_auc,
+        "avg_adv_faithfulness_auc": 0.5 * (adv_del_auc + adv_ins_auc),
+        "avg_clean_faithfulness_auc": 0.5 * (clean_del_auc + clean_ins_auc),
+        "clean_del_scores": [float(v) for v in clean_scores_del],
+        "clean_ins_scores": [float(v) for v in clean_scores_ins],
+        "adv_del_scores": [float(v) for v in adv_scores_del],
+        "adv_ins_scores": [float(v) for v in adv_scores_ins],
+    }
 
 
 def load_selection_file(selection_file):
@@ -258,10 +328,19 @@ def save_non_dominated_front_txt(front_fitness, output_path):
 def history_to_lists(history):
     margin = []
     saliency = []
+    del_hist = []
+    ins_hist = []
+    spearman_hist = []
     for item in history:
         margin.append(_to_float(item["margin_loss"]))
-        saliency.append(_to_float(item["saliency_loss"]))
-    return margin, saliency
+        saliency.append(_to_float(item.get("saliency_loss", float("nan"))))
+        if "del_loss" in item:
+            del_hist.append(_to_float(item["del_loss"]))
+        if "ins_loss" in item:
+            ins_hist.append(_to_float(item["ins_loss"]))
+        if "spearman" in item:
+            spearman_hist.append(_to_float(item["spearman"]))
+    return margin, saliency, del_hist, ins_hist, spearman_hist
 
 
 def _fmt_num(value):
@@ -284,6 +363,10 @@ def build_approach_tag(args):
         f"temp-{_fmt_num(args.saliency_temperature)}",
         f"exp-{args.explain_method}",
     ]
+    if args.w_del is not None:
+        parts.append(f"wd-{_fmt_num(args.w_del)}")
+    if args.w_ins is not None:
+        parts.append(f"wi-{_fmt_num(args.w_ins)}")
     if args.algorithm != "weighted_sum_ga":
         parts.append(f"algo-{args.algorithm}")
     if args.fitness_function != "margin_saliency":
@@ -342,8 +425,17 @@ def create_fitness(fitness_function, model, x_tensor, normalize, y_true, explain
             explain_method=explain_fn,
         )
 
-    if fitness_function in {"margin_loss_mse_saliency", "MarginLossMESE"}:
-        return MarginLosssMSESaliency_Fitness(
+    if fitness_function in {"margin_loss_mse_saliency", "MarginLossMESE", "ce_margin_loss_saliency", "CEMarrginLoss"}:
+        return CEMarrginLossSaliency_Fitness(
+            model=model,
+            x_tensor=x_tensor,
+            normalize=normalize,
+            y_true=y_true,
+            explain_method=explain_fn,
+        )
+
+    if fitness_function in {"margin_loss_causal_faithfull", "ce_loss_causal_faithfull"}:
+        return MarginLossCausalFaithFull(
             model=model,
             x_tensor=x_tensor,
             normalize=normalize,
@@ -400,6 +492,8 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "all_pixels": torch.arange(x_tensor.shape[-2] * x_tensor.shape[-1], device=device),
         "w_margin": args.w_margin,
         "w_saliency": args.w_saliency,
+        "w_del": args.w_del,
+        "w_ins": args.w_ins,
         "operator_strategy": args.operator_strategy,
         "saliency_temperature": args.saliency_temperature,
         "device": args.device,
@@ -425,6 +519,14 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
 
     clean_saliency_map = fitness.saliency_true[0]
     adv_saliency_map, _ = explain_fn(model, adv_chw.unsqueeze(0).to(device), normalize, y_true)
+    faithfulness = _compute_faithfulness_metrics(
+        model=model,
+        normalize=normalize,
+        clean_batch=x_tensor,
+        adv_batch=adv_chw.unsqueeze(0).to(device),
+        clean_saliency_map=clean_saliency_map,
+        adv_saliency_map=adv_saliency_map,
+    )
     _save_saliency_map(clean_saliency_map, str(output_paths["clean_map"]))
     _save_saliency_map(adv_saliency_map[0], str(output_paths["adv_map"]))
     _save_four_class_maps(
@@ -446,10 +548,19 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
 
     save_history_scores_txt(history, str(output_paths["history_txt"]))
     save_non_dominated_front_txt(non_nominated_front_fitness, str(output_paths["non_dominated_front_txt"]))
-    history_margin, history_saliency = history_to_lists(history)
+    history_margin, history_saliency, history_del, history_ins, history_spearman = history_to_lists(history)
     weighted_fitness = best_scores.get("weighted_fitness")
     if weighted_fitness is None:
-        weighted_fitness = args.w_margin * float(best_scores["margin_loss"]) + args.w_saliency * float(best_scores["saliency_loss"])
+        if "del_loss" in best_scores and "ins_loss" in best_scores:
+            w_del = args.w_del if args.w_del is not None else args.w_saliency * 0.5
+            w_ins = args.w_ins if args.w_ins is not None else args.w_saliency * 0.5
+            weighted_fitness = (
+                args.w_margin * float(best_scores["margin_loss"])
+                + float(w_del) * float(best_scores["del_loss"])
+                + float(w_ins) * float(best_scores["ins_loss"])
+            )
+        else:
+            weighted_fitness = args.w_margin * float(best_scores["margin_loss"]) + args.w_saliency * float(best_scores["saliency_loss"])
 
     return {
         "model": model_name,
@@ -459,8 +570,11 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "adv_pred": int(adv_pred),
         "l0_distance": int(best_candidate.l0_distance(adv_chw_cpu.to(device))),
         "margin_loss": float(best_scores["margin_loss"]),
-        "saliency_loss": float(best_scores["saliency_loss"]),
+        "saliency_loss": float(best_scores.get("saliency_loss", float("nan"))),
+        "del_loss": float(best_scores["del_loss"]) if "del_loss" in best_scores else None,
+        "ins_loss": float(best_scores["ins_loss"]) if "ins_loss" in best_scores else None,
         "weighted_fitness": float(weighted_fitness),
+        "spearman_best_adv_vs_clean": float(best_scores.get("spearman", float("nan"))),
         "first_success_iteration": best_scores.get("first_success_iteration"),
         "algorithm": args.algorithm,
         "fitness_function": args.fitness_function,
@@ -474,6 +588,23 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "adv_map_class_b": str(output_paths["adv_map_class_b"]),
         "history_margin": history_margin,
         "history_saliency": history_saliency,
+        "history_del": history_del,
+        "history_ins": history_ins,
+        "history_spearman": history_spearman,
+        "faithfulness": {
+            "del": faithfulness["adv_del_scores"],
+            "ins": faithfulness["adv_ins_scores"],
+            "clean_del": faithfulness["clean_del_scores"],
+            "clean_ins": faithfulness["clean_ins_scores"],
+            "auc": {
+                "del": faithfulness["adv_del_auc"],
+                "ins": faithfulness["adv_ins_auc"],
+                "clean_del": faithfulness["clean_del_auc"],
+                "clean_ins": faithfulness["clean_ins_auc"],
+                "avg_adv": faithfulness["avg_adv_faithfulness_auc"],
+                "avg_clean": faithfulness["avg_clean_faithfulness_auc"],
+            },
+        },
     }
 
 

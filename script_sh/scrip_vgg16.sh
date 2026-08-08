@@ -59,35 +59,33 @@ EPSILONS="100 50 20"
 
 # Objective weights (can override by env or script args)
 # Example:
-#   W_MARGIN=0.7 W_SALIENCY=0.3 sbatch resnet18.sh
-#   sbatch resnet18.sh 0.7 0.3
+#   W_MARGIN=0.7 W_DEL=0.2 W_INS=0.1 sbatch scrip_vgg16.sh
 W_MARGIN="${W_MARGIN:-0.0}"
-W_SALIENCY="${W_SALIENCY:-1.0}"
+W_DEL="${W_DEL:-0.5}"
+W_INS="${W_INS:-0.5}"
 EXPLAIN_METHOD="${EXPLAIN_METHOD:-input_gradient}"
 SEED="${SEED:-22520691}"
 OUTPUT_ROOT="offical/server_run_seed/GA/$SEED/"
 
-# At wm=0, ws=1, both fitness formulations are equivalent (attack objective is off).
-FITNESSES="margin_saliency cross_entropy_saliency"
-case "${W_MARGIN}:${W_SALIENCY}" in
-    "0:1"|"0:1.0"|"0.0:1"|"0.0:1.0")
-        FITNESSES="margin_saliency"
-        ;;
-esac
+# Example override:
+#   FITNESSES="ce_margin_loss_saliency" sbatch scrip_vgg16.sh
+#   FITNESSES="margin_loss_causal_faithfull ce_margin_loss_saliency" sbatch scrip_vgg16.sh
+FITNESSES="${FITNESSES:-margin_loss_causal_faithfull}"
 
 
 for MODEL_NAME in $MODEL_NAMES; do
     for STRATEGY in uniform; do
         for EPS in $EPSILONS; do
             for FITNESS in $FITNESSES; do
-                echo "[RUN] model=$MODEL_NAME strategy=$STRATEGY fitness=$FITNESS eps=$EPS w_margin=$W_MARGIN w_saliency=$W_SALIENCY explain_method=$EXPLAIN_METHOD num_sample=$NUM_SAMPLE output_root=$OUTPUT_ROOT"
+                echo "[RUN] model=$MODEL_NAME strategy=$STRATEGY fitness=$FITNESS eps=$EPS w_margin=$W_MARGIN w_del=$W_DEL w_ins=$W_INS explain_method=$EXPLAIN_METHOD num_sample=$NUM_SAMPLE output_root=$OUTPUT_ROOT"
                 python run_batch.py \
                     --model-name "$MODEL_NAME" \
                     --num_sample "$NUM_SAMPLE" \
                     --operator-strategy "$STRATEGY" \
                     --eps "$EPS" \
                     --w-margin "$W_MARGIN" \
-                    --w-saliency "$W_SALIENCY" \
+                    --w-del "$W_DEL" \
+                    --w-ins "$W_INS" \
                     --seed "$SEED" \
                     --fitness-function "$FITNESS" \
                     --output-root "$OUTPUT_ROOT" \
