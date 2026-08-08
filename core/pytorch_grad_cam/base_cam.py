@@ -2,7 +2,11 @@ from typing import Callable, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
-import ttach as tta
+try:
+    import ttach as tta
+except ModuleNotFoundError:
+    # Fallback to vendored ttach under pytorch_grad_cam/ttach.
+    from . import ttach as tta
 
 from pytorch_grad_cam.activations_and_gradients import ActivationsAndGradients
 from pytorch_grad_cam.utils.image import scale_cam_image
