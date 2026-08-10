@@ -100,6 +100,8 @@ class Weighted_Sum_GA:
         del_losses=None,
         ins_losses=None,
         spearman=None,
+        logged_del_loss=None,
+        logged_ins_loss=None,
     ):
         best_scores = {
             'margin_loss': margin_losses[best_candidate_id],
@@ -110,9 +112,45 @@ class Weighted_Sum_GA:
         if del_losses is not None and ins_losses is not None:
             best_scores['del_loss'] = del_losses[best_candidate_id]
             best_scores['ins_loss'] = ins_losses[best_candidate_id]
+        elif logged_del_loss is not None and logged_ins_loss is not None:
+            best_scores['del_loss'] = logged_del_loss
+            best_scores['ins_loss'] = logged_ins_loss
         if spearman is not None:
             best_scores['spearman'] = spearman
         return best_scores
+
+    def _compute_logged_objectives(self, best_candidate, del_losses=None, ins_losses=None, best_candidate_id=None):
+        if del_losses is not None and ins_losses is not None and best_candidate_id is not None:
+            return del_losses[best_candidate_id], ins_losses[best_candidate_id]
+
+        metric_fitness = self.params.get("metric_fitness")
+        if metric_fitness is None:
+            return None, None
+
+        x_adv = best_candidate.generate_adv_image().unsqueeze(0)
+        try:
+            # Some explainers (e.g. CAM variants) require autograd to build saliency.
+            with torch.enable_grad():
+                saliency_maps, _ = metric_fitness.explain_method(
+                    metric_fitness.model,
+                    x_adv,
+                    metric_fitness.normalize,
+                    metric_fitness.y_true,
+                )
+
+            # cal_faithfulnessloss handles inference in no_grad internally.
+            del_loss, ins_loss = metric_fitness.cal_faithfulnessloss(
+                x_adv,
+                saliency_maps,
+                metric_fitness.y_true,
+            )
+        except Exception:
+            return None, None
+
+        if del_loss.numel() == 0 or ins_loss.numel() == 0:
+            return None, None
+
+        return del_loss[0].detach(), ins_loss[0].detach()
 
     def _pick_final_candidate_idx(
         self,
@@ -155,6 +193,12 @@ class Weighted_Sum_GA:
         best_candidate_id = torch.argmin(pop_weighted_fitness)
         best_candidate = population.population[best_candidate_id].copy()
         best_spearman = self._compute_history_spearman(best_candidate)
+        logged_del_loss, logged_ins_loss = self._compute_logged_objectives(
+            best_candidate,
+            pop_del_losses,
+            pop_ins_losses,
+            best_candidate_id,
+        )
         best_scores = self._build_best_scores(
             pop_margin_losses,
             pop_saliency_losses,
@@ -164,6 +208,8 @@ class Weighted_Sum_GA:
             pop_del_losses,
             pop_ins_losses,
             best_spearman,
+            logged_del_loss,
+            logged_ins_loss,
         )
         history = [best_scores]
         stack_fitness = np.stack([pop_margin_losses.cpu().numpy(), pop_saliency_losses.cpu().numpy()], axis=1)
@@ -217,6 +263,12 @@ class Weighted_Sum_GA:
             best_candidate_id = torch.argmin(pop_weighted_fitness)
             best_candidate = population.population[best_candidate_id].copy()
             best_spearman = self._compute_history_spearman(best_candidate)
+            logged_del_loss, logged_ins_loss = self._compute_logged_objectives(
+                best_candidate,
+                pop_del_losses,
+                pop_ins_losses,
+                best_candidate_id,
+            )
             best_scores = self._build_best_scores(
                 pop_margin_losses,
                 pop_saliency_losses,
@@ -226,6 +278,8 @@ class Weighted_Sum_GA:
                 pop_del_losses,
                 pop_ins_losses,
                 best_spearman,
+                logged_del_loss,
+                logged_ins_loss,
             )
             history.append(best_scores)
             if 'del_loss' in best_scores and 'ins_loss' in best_scores:
@@ -248,6 +302,12 @@ class Weighted_Sum_GA:
         )
         best_candidate = population.population[final_candidate_id].copy()
         best_spearman = self._compute_history_spearman(best_candidate)
+        logged_del_loss, logged_ins_loss = self._compute_logged_objectives(
+            best_candidate,
+            pop_del_losses,
+            pop_ins_losses,
+            final_candidate_id,
+        )
         best_scores = self._build_best_scores(
             pop_margin_losses,
             pop_saliency_losses,
@@ -257,6 +317,8 @@ class Weighted_Sum_GA:
             pop_del_losses,
             pop_ins_losses,
             best_spearman,
+            logged_del_loss,
+            logged_ins_loss,
         )
 
         return best_candidate.generate_adv_image(), best_candidate, best_scores, history, non_nominated_front_fitness

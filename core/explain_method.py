@@ -4,7 +4,18 @@ import sys
 from pathlib import Path
 
 try:
-    from pytorch_grad_cam import GradCAM
+    from pytorch_grad_cam import (
+        AblationCAM,
+        EigenCAM,
+        EigenGradCAM,
+        FullGrad,
+        GradCAM,
+        GradCAMPlusPlus,
+        HiResCAM,
+        LayerCAM,
+        ScoreCAM,
+        XGradCAM,
+    )
     from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
     from pytorch_grad_cam.utils.image import show_cam_on_image
 except ModuleNotFoundError:
@@ -18,9 +29,34 @@ except ModuleNotFoundError:
         if _candidate.exists() and str(_candidate) not in sys.path:
             sys.path.insert(0, str(_candidate))
 
-    from pytorch_grad_cam import GradCAM
+    from pytorch_grad_cam import (
+        AblationCAM,
+        EigenCAM,
+        EigenGradCAM,
+        FullGrad,
+        GradCAM,
+        GradCAMPlusPlus,
+        HiResCAM,
+        LayerCAM,
+        ScoreCAM,
+        XGradCAM,
+    )
     from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
     from pytorch_grad_cam.utils.image import show_cam_on_image
+
+
+_CAM_METHODS = {
+    "grad_cam": GradCAM,
+    "grad_cam_plusplus": GradCAMPlusPlus,
+    "xgrad_cam": XGradCAM,
+    "layer_cam": LayerCAM,
+    "hires_cam": HiResCAM,
+    "score_cam": ScoreCAM,
+    "ablation_cam": AblationCAM,
+    "eigen_cam": EigenCAM,
+    "eigen_grad_cam": EigenGradCAM,
+    "fullgrad": FullGrad,
+}
 
 
 def _prepare_target_class(output, target_class):
@@ -173,6 +209,17 @@ def _infer_gradcam_model_name(model):
 
 
 def grad_cam(model, input_tensor, normalize, target_class=None, model_name=None):
+    return cam_method_map(
+        model=model,
+        input_tensor=input_tensor,
+        normalize=normalize,
+        target_class=target_class,
+        model_name=model_name,
+        method_name="grad_cam",
+    )
+
+
+def cam_method_map(model, input_tensor, normalize, target_class=None, model_name=None, method_name="grad_cam"):
     if model_name is None:
         model_name = _infer_gradcam_model_name(model)
 
@@ -182,6 +229,7 @@ def grad_cam(model, input_tensor, normalize, target_class=None, model_name=None)
         input_tensor=input_tensor,
         normalize=normalize,
         target_class=target_class,
+        method_name=method_name,
     )
 
     saliency = torch.as_tensor(
@@ -199,6 +247,42 @@ def grad_cam(model, input_tensor, normalize, target_class=None, model_name=None)
     )
 
     return saliency.detach(), output_logits
+
+
+def grad_cam_plusplus(model, input_tensor, normalize, target_class=None, model_name=None):
+    return cam_method_map(model, input_tensor, normalize, target_class, model_name, method_name="grad_cam_plusplus")
+
+
+def xgrad_cam(model, input_tensor, normalize, target_class=None, model_name=None):
+    return cam_method_map(model, input_tensor, normalize, target_class, model_name, method_name="xgrad_cam")
+
+
+def layer_cam(model, input_tensor, normalize, target_class=None, model_name=None):
+    return cam_method_map(model, input_tensor, normalize, target_class, model_name, method_name="layer_cam")
+
+
+def hires_cam(model, input_tensor, normalize, target_class=None, model_name=None):
+    return cam_method_map(model, input_tensor, normalize, target_class, model_name, method_name="hires_cam")
+
+
+def score_cam(model, input_tensor, normalize, target_class=None, model_name=None):
+    return cam_method_map(model, input_tensor, normalize, target_class, model_name, method_name="score_cam")
+
+
+def ablation_cam(model, input_tensor, normalize, target_class=None, model_name=None):
+    return cam_method_map(model, input_tensor, normalize, target_class, model_name, method_name="ablation_cam")
+
+
+def eigen_cam(model, input_tensor, normalize, target_class=None, model_name=None):
+    return cam_method_map(model, input_tensor, normalize, target_class, model_name, method_name="eigen_cam")
+
+
+def eigen_grad_cam(model, input_tensor, normalize, target_class=None, model_name=None):
+    return cam_method_map(model, input_tensor, normalize, target_class, model_name, method_name="eigen_grad_cam")
+
+
+def fullgrad(model, input_tensor, normalize, target_class=None, model_name=None):
+    return cam_method_map(model, input_tensor, normalize, target_class, model_name, method_name="fullgrad")
 
 
 # For ViT
@@ -405,7 +489,7 @@ def get_gradcam_target_layer(model, model_name):
     raise ValueError(f"Grad-CAM target layer is not configured for model {model_name}")
 
 
-def get_gradcam_map(model, model_name, input_tensor, normalize, target_class=None):
+def get_gradcam_map(model, model_name, input_tensor, normalize, target_class=None, method_name="grad_cam"):
     model.eval()
 
     with torch.no_grad():
@@ -438,7 +522,12 @@ def get_gradcam_map(model, model_name, input_tensor, normalize, target_class=Non
     if reshape_transform is not None:
         cam_kwargs["reshape_transform"] = reshape_transform
 
-    with GradCAM(**cam_kwargs) as cam:
+    cam_cls = _CAM_METHODS.get(method_name)
+    if cam_cls is None:
+        supported = ", ".join(sorted(_CAM_METHODS.keys()))
+        raise ValueError(f"Unknown CAM method '{method_name}'. Supported methods: {supported}")
+
+    with cam_cls(**cam_kwargs) as cam:
         grayscale_cam = cam(input_tensor=normalize(input_tensor), targets=targets)
 
     output_logits = cam.outputs.detach()

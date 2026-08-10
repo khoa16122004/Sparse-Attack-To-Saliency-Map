@@ -8,12 +8,21 @@ import numpy as np
 import torch
 from pathlib import Path
 from explain_method import (
+    ablation_cam,
+    eigen_cam,
+    eigen_grad_cam,
+    fullgrad,
     simple_gradient_map,
     integrated_gradients,
     input_gradient_map,
     grad_cam,
+    grad_cam_plusplus,
+    hires_cam,
+    layer_cam,
     raw_attention,
+    score_cam,
     attention_grad,
+    xgrad_cam,
 )
 from torch import nn
 import matplotlib.pyplot as plt
@@ -127,6 +136,24 @@ def get_explainable_method(method_name):
         explain_method = input_gradient_map
     elif method_name == "grad_cam":
         explain_method = grad_cam
+    elif method_name == "grad_cam_plusplus":
+        explain_method = grad_cam_plusplus
+    elif method_name == "xgrad_cam":
+        explain_method = xgrad_cam
+    elif method_name == "layer_cam":
+        explain_method = layer_cam
+    elif method_name == "hires_cam":
+        explain_method = hires_cam
+    elif method_name == "score_cam":
+        explain_method = score_cam
+    elif method_name == "ablation_cam":
+        explain_method = ablation_cam
+    elif method_name == "eigen_cam":
+        explain_method = eigen_cam
+    elif method_name == "eigen_grad_cam":
+        explain_method = eigen_grad_cam
+    elif method_name == "fullgrad":
+        explain_method = fullgrad
     elif method_name == "raw_attention":
         explain_method = raw_attention
     elif method_name == "attention_grad":

@@ -110,6 +110,15 @@ def parse_args():
             "integrated_gradients",
             "input_gradient",
             "grad_cam",
+            "grad_cam_plusplus",
+            "xgrad_cam",
+            "layer_cam",
+            "hires_cam",
+            "score_cam",
+            "ablation_cam",
+            "eigen_cam",
+            "eigen_grad_cam",
+            "fullgrad",
             "raw_attention",
             "attention_grad",
         ],
@@ -349,6 +358,14 @@ def history_to_lists(history):
     return margin, saliency, del_hist, ins_hist, spearman_hist
 
 
+def _causal_objective_from_faithfulness_scores(adv_del_scores, adv_ins_scores):
+    del_vals = [float(v) for v in adv_del_scores]
+    ins_vals = [float(v) for v in adv_ins_scores]
+    del_obj = None if not del_vals else float(-np.mean(del_vals))
+    ins_obj = None if not ins_vals else float(np.mean(ins_vals))
+    return del_obj, ins_obj
+
+
 def _fmt_num(value):
     if isinstance(value, int):
         return str(value)
@@ -356,6 +373,50 @@ def _fmt_num(value):
         text = f"{value:.6g}"
         return text.replace("+", "")
     return str(value)
+
+
+def _is_close(a, b, tol=1e-9):
+    return abs(float(a) - float(b)) <= tol
+
+
+def _resolve_wd_wi_for_tag(args):
+    # Mirror weighting fallback in GA: if both are omitted, split saliency weight equally.
+    if args.w_del is None and args.w_ins is None:
+        base = float(args.w_saliency)
+        return base * 0.5, base * 0.5
+
+    w_del = 0.0 if args.w_del is None else float(args.w_del)
+    w_ins = 0.0 if args.w_ins is None else float(args.w_ins)
+    return w_del, w_ins
+
+
+def _is_saliency_optimized_fitness(fitness_function):
+    saliency_fitnesses = {
+        "margin_saliency",
+        "negative_cross_entropy_saliency",
+        "cross_entropy_saliency",
+        "reverse_margin_saliency",
+        "reverse_negative_cross_entropy_saliency",
+        "margin_loss_mse_saliency",
+        "MarginLossMESE",
+        "ce_margin_loss_saliency",
+        "CEMarrginLoss",
+    }
+    return fitness_function in saliency_fitnesses
+
+
+def _build_wd_wi_mode_tag(args):
+    if _is_saliency_optimized_fitness(args.fitness_function):
+        return "saliency_optimized"
+
+    w_del, w_ins = _resolve_wd_wi_for_tag(args)
+
+    if _is_close(w_del, 1.0) and not _is_close(w_ins, 1.0):
+        return "delete_oriented"
+    if _is_close(w_ins, 1.0) and not _is_close(w_del, 1.0):
+        return "insert_oriented"
+
+    return f"both_wd={_fmt_num(w_del)}_wi={_fmt_num(w_ins)}"
 
 
 def build_approach_tag(args):
@@ -369,10 +430,7 @@ def build_approach_tag(args):
         f"temp-{_fmt_num(args.saliency_temperature)}",
         f"exp-{args.explain_method}",
     ]
-    if args.w_del is not None:
-        parts.append(f"wd-{_fmt_num(args.w_del)}")
-    if args.w_ins is not None:
-        parts.append(f"wi-{_fmt_num(args.w_ins)}")
+    parts.append(_build_wd_wi_mode_tag(args))
     if args.algorithm != "weighted_sum_ga":
         parts.append(f"algo-{args.algorithm}")
     if args.fitness_function != "margin_saliency":
@@ -385,6 +443,12 @@ def build_approach_tag(args):
     if args.seed is not None:
         parts.append(f"seed-{args.seed}")
     return "__".join(parts)
+
+
+def build_compact_run_root(output_root, model_name, args):
+    mode_tag = _build_wd_wi_mode_tag(args)
+    eps_tag = f"eps_{_fmt_num(args.eps)}"
+    return Path(output_root) / args.explain_method / model_name / eps_tag / mode_tag
 
 
 def create_attacker(ga_params, algorithm):
@@ -484,6 +548,18 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         explain_fn=explain_fn,
     )
 
+    metric_fitness = None
+    if _is_saliency_optimized_fitness(args.fitness_function):
+        # Auxiliary evaluator used to log deletion/insertion objectives each iteration
+        # for saliency-optimized runs.
+        metric_fitness = MarginLossCausalFaithFull(
+            model=model,
+            x_tensor=x_tensor,
+            normalize=normalize,
+            y_true=y_true,
+            explain_method=explain_fn,
+        )
+
     ga_params = {
         "x_tensor": x_tensor,
         "normalize": normalize,
@@ -503,6 +579,7 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "operator_strategy": args.operator_strategy,
         "saliency_temperature": args.saliency_temperature,
         "device": args.device,
+        "metric_fitness": metric_fitness,
     }
 
     attacker = create_attacker(ga_params, args.algorithm)
@@ -555,15 +632,29 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
     save_history_scores_txt(history, str(output_paths["history_txt"]))
     save_non_dominated_front_txt(non_nominated_front_fitness, str(output_paths["non_dominated_front_txt"]))
     history_margin, history_saliency, history_del, history_ins, history_spearman = history_to_lists(history)
+
+    faith_del_obj, faith_ins_obj = _causal_objective_from_faithfulness_scores(
+        faithfulness["adv_del_scores"],
+        faithfulness["adv_ins_scores"],
+    )
+
+    del_loss_value = float(best_scores["del_loss"]) if "del_loss" in best_scores else faith_del_obj
+    ins_loss_value = float(best_scores["ins_loss"]) if "ins_loss" in best_scores else faith_ins_obj
+
+    if not history_del and del_loss_value is not None:
+        history_del = [float(del_loss_value)]
+    if not history_ins and ins_loss_value is not None:
+        history_ins = [float(ins_loss_value)]
+
     weighted_fitness = best_scores.get("weighted_fitness")
     if weighted_fitness is None:
-        if "del_loss" in best_scores and "ins_loss" in best_scores:
+        if del_loss_value is not None and ins_loss_value is not None:
             w_del = args.w_del if args.w_del is not None else args.w_saliency * 0.5
             w_ins = args.w_ins if args.w_ins is not None else args.w_saliency * 0.5
             weighted_fitness = (
                 args.w_margin * float(best_scores["margin_loss"])
-                + float(w_del) * float(best_scores["del_loss"])
-                + float(w_ins) * float(best_scores["ins_loss"])
+                + float(w_del) * float(del_loss_value)
+                + float(w_ins) * float(ins_loss_value)
             )
         else:
             weighted_fitness = args.w_margin * float(best_scores["margin_loss"]) + args.w_saliency * float(best_scores["saliency_loss"])
@@ -577,8 +668,8 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "l0_distance": int(best_candidate.l0_distance(adv_chw_cpu.to(device))),
         "margin_loss": float(best_scores["margin_loss"]),
         "saliency_loss": float(best_scores.get("saliency_loss", float("nan"))),
-        "del_loss": float(best_scores["del_loss"]) if "del_loss" in best_scores else None,
-        "ins_loss": float(best_scores["ins_loss"]) if "ins_loss" in best_scores else None,
+        "del_loss": del_loss_value,
+        "ins_loss": ins_loss_value,
         "weighted_fitness": float(weighted_fitness),
         "spearman_best_adv_vs_clean": float(best_scores.get("spearman", float("nan"))),
         "first_success_iteration": best_scores.get("first_success_iteration"),
@@ -597,6 +688,11 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "history_del": history_del,
         "history_ins": history_ins,
         "history_spearman": history_spearman,
+        "causal_objective": {
+            "deletion_obj": del_loss_value,
+            "insertion_obj": ins_loss_value,
+            "source": "history_best_scores" if ("del_loss" in best_scores and "ins_loss" in best_scores) else "faithfulness_adv_scores",
+        },
         "faithfulness": {
             "del": faithfulness["adv_del_scores"],
             "ins": faithfulness["adv_ins_scores"],
@@ -667,7 +763,7 @@ def main():
         items = items[: args.num_sample]
 
     approach_tag = build_approach_tag(args)
-    run_root = Path(args.output_root) / model_name / approach_tag
+    run_root = build_compact_run_root(args.output_root, model_name, args)
     run_root.mkdir(parents=True, exist_ok=True)
 
     print(f"[INFO] approach={approach_tag}")

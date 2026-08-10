@@ -52,6 +52,12 @@ class NSGAII(Weighted_Sum_GA):
         best_candidate_id = self._pick_best_candidate_idx(population, pop_weighted_fitness, pop_del_losses, pop_ins_losses)
         best_candidate = population.population[best_candidate_id].copy()
         best_spearman = self._compute_history_spearman(best_candidate)
+        logged_del_loss, logged_ins_loss = self._compute_logged_objectives(
+            best_candidate,
+            pop_del_losses,
+            pop_ins_losses,
+            best_candidate_id,
+        )
         best_scores = self._build_best_scores(
             pop_margin_losses,
             pop_saliency_losses,
@@ -61,6 +67,8 @@ class NSGAII(Weighted_Sum_GA):
             pop_del_losses,
             pop_ins_losses,
             best_spearman,
+            logged_del_loss,
+            logged_ins_loss,
         )
         history = [best_scores]
         
@@ -109,6 +117,12 @@ class NSGAII(Weighted_Sum_GA):
             best_candidate = population.population[best_candidate_id].copy()
 
             best_spearman = self._compute_history_spearman(best_candidate)
+            logged_del_loss, logged_ins_loss = self._compute_logged_objectives(
+                best_candidate,
+                pop_del_losses,
+                pop_ins_losses,
+                best_candidate_id,
+            )
             best_scores = self._build_best_scores(
                 pop_margin_losses,
                 pop_saliency_losses,
@@ -118,6 +132,8 @@ class NSGAII(Weighted_Sum_GA):
                 pop_del_losses,
                 pop_ins_losses,
                 best_spearman,
+                logged_del_loss,
+                logged_ins_loss,
             )
             history.append(best_scores)
             # print(f"Iteration {it}: Best margin_loss={best_scores['margin_loss']:.4f}, Best saliency_loss={best_scores['saliency_loss']:.4f}")
@@ -130,6 +146,12 @@ class NSGAII(Weighted_Sum_GA):
         )
         best_candidate = population.population[final_candidate_id].copy()
         best_spearman = self._compute_history_spearman(best_candidate)
+        logged_del_loss, logged_ins_loss = self._compute_logged_objectives(
+            best_candidate,
+            pop_del_losses,
+            pop_ins_losses,
+            final_candidate_id,
+        )
         best_scores = self._build_best_scores(
             pop_margin_losses,
             pop_saliency_losses,
@@ -139,6 +161,8 @@ class NSGAII(Weighted_Sum_GA):
             pop_del_losses,
             pop_ins_losses,
             best_spearman,
+            logged_del_loss,
+            logged_ins_loss,
         )
 
         return best_candidate.generate_adv_image(), best_candidate, best_scores, history, non_nominated_front_fitness
