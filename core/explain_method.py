@@ -499,6 +499,10 @@ def _normalize_patch_size(patch_size):
 
 
 def _resolve_vit_gradcam_target_layer(model):
+    # torchvision VisionTransformer (e.g. vit_b_16 / vit_b_32)
+    if _is_torchvision_vit_model(model):
+        return model.encoder.layers[-1].ln_1
+
     # timm / DeiT / many ViT implementations
     if hasattr(model, "blocks") and len(model.blocks) > 0:
         last_block = model.blocks[-1]
@@ -520,6 +524,12 @@ def _resolve_vit_gradcam_target_layer(model):
 
 
 def _resolve_vit_reshape_transform(model, model_name):
+    if _is_torchvision_vit_model(model):
+        patch_size = _normalize_patch_size(getattr(model, "patch_size", None))
+        if patch_size == 32:
+            return _vit_reshape_transform_vit_b_32
+        return _vit_reshape_transform_vit_b_16
+
     if model_name == "vit_b_32":
         return _vit_reshape_transform_vit_b_32
     if model_name == "vit_b_16":
