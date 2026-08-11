@@ -195,12 +195,15 @@ def _infer_gradcam_model_name(model):
     if class_name.startswith("densenet"):
         return "densenet"
 
-    if class_name == "visiontransformer" or hasattr(model, "encoder"):
+    if class_name == "visiontransformer" or hasattr(model, "encoder") or hasattr(model, "blocks"):
         patch_size = getattr(model, "patch_size", None)
+        if isinstance(patch_size, (tuple, list)) and len(patch_size) > 0:
+            patch_size = patch_size[0]
         if patch_size == 16:
             return "vit_b_16"
         if patch_size == 32:
             return "vit_b_32"
+        return "vit"
 
     raise ValueError(
         f"Could not infer Grad-CAM model name for class {model.__class__.__name__}. "
@@ -294,7 +297,7 @@ def _is_vit_model(model, model_name=None):
         return str(model_name).lower().startswith("vit")
 
     class_name = model.__class__.__name__.lower()
-    return class_name == "visiontransformer" or hasattr(model, "encoder")
+    return class_name == "visiontransformer" or hasattr(model, "encoder") or hasattr(model, "blocks")
 
 
 def _is_torchvision_vit_model(model):
@@ -457,15 +460,34 @@ def attention_grad(model, input_tensor, normalize, target_class=None, model_name
 
 
 
-def _vit_reshape_transform_vit_b_32(tensor, weight=7, height=7):
-    tensor = tensor[:, 1:, :]
-    tensor = tensor.reshape(tensor.size(0), weight, height, tensor.size(2))
-    return tensor.permute(0, 3, 1, 2)
-    
-def _vit_reshape_transform_vit_b_16(tensor, weight=14, height=14):
-    tensor = tensor[:, 1:, :]
-    tensor = tensor.reshape(tensor.size(0), weight, height, tensor.size(2))
-    return tensor.permute(0, 3, 1, 2)
+def _vit_reshape_transform(tensor, height=None, width=None):
+    # Remove class token and reshape patch tokens to a spatial map.
+    result = tensor[:, 1:, :]
+
+    if height is None or width is None:
+        num_patches = result.size(1)
+        side = int(num_patches ** 0.5)
+        if side * side != num_patches:
+            raise ValueError(
+                f"Cannot infer square feature map from {num_patches} patch tokens. "
+                "Pass a ViT input size that yields a square token grid."
+            )
+        height = side
+        width = side
+
+    result = result.reshape(result.size(0), height, width, result.size(2))
+
+    # Bring channels to first dimension (B, C, H, W), like CNNs.
+    result = result.transpose(2, 3).transpose(1, 2)
+    return result
+
+
+def _vit_reshape_transform_vit_b_32(tensor, width=7, height=7):
+    return _vit_reshape_transform(tensor, height=height, width=width)
+
+
+def _vit_reshape_transform_vit_b_16(tensor, width=14, height=14):
+    return _vit_reshape_transform(tensor, height=height, width=width)
 
 
 def _normalize_patch_size(patch_size):
@@ -506,7 +528,9 @@ def _resolve_vit_reshape_transform(model, model_name):
     patch_size = _normalize_patch_size(getattr(model, "patch_size", None))
     if patch_size == 32:
         return _vit_reshape_transform_vit_b_32
-    return _vit_reshape_transform_vit_b_16
+    if patch_size == 16:
+        return _vit_reshape_transform_vit_b_16
+    return _vit_reshape_transform
 
 
 def get_gradcam_target_layer(model, model_name):
