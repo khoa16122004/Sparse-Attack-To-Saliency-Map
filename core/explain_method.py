@@ -468,6 +468,47 @@ def _vit_reshape_transform_vit_b_16(tensor, weight=14, height=14):
     return tensor.permute(0, 3, 1, 2)
 
 
+def _normalize_patch_size(patch_size):
+    if isinstance(patch_size, (tuple, list)) and len(patch_size) > 0:
+        return int(patch_size[0])
+    if patch_size is None:
+        return None
+    return int(patch_size)
+
+
+def _resolve_vit_gradcam_target_layer(model):
+    # timm / DeiT / many ViT implementations
+    if hasattr(model, "blocks") and len(model.blocks) > 0:
+        last_block = model.blocks[-1]
+        if hasattr(last_block, "norm1"):
+            return last_block.norm1
+
+    # torchvision ViT fallback
+    if hasattr(model, "encoder") and hasattr(model.encoder, "layers") and len(model.encoder.layers) > 0:
+        last_block = model.encoder.layers[-1]
+        if hasattr(last_block, "ln_1"):
+            return last_block.ln_1
+        if hasattr(last_block, "norm1"):
+            return last_block.norm1
+
+    raise ValueError(
+        "Could not resolve ViT Grad-CAM target layer. Expected model.blocks[-1].norm1 "
+        "or model.encoder.layers[-1].ln_1."
+    )
+
+
+def _resolve_vit_reshape_transform(model, model_name):
+    if model_name == "vit_b_32":
+        return _vit_reshape_transform_vit_b_32
+    if model_name == "vit_b_16":
+        return _vit_reshape_transform_vit_b_16
+
+    patch_size = _normalize_patch_size(getattr(model, "patch_size", None))
+    if patch_size == 32:
+        return _vit_reshape_transform_vit_b_32
+    return _vit_reshape_transform_vit_b_16
+
+
 def get_gradcam_target_layer(model, model_name):
     model_name = model_name.lower()
 
@@ -478,10 +519,7 @@ def get_gradcam_target_layer(model, model_name):
         return [model.features[-1]], None
 
     if model_name.startswith("vit"):
-        if model_name == "vit_b_32":
-            return [model.encoder.layers[-1].ln_1], _vit_reshape_transform_vit_b_32
-        elif model_name == "vit_b_16":
-            return [model.encoder.layers[-1].ln_1], _vit_reshape_transform_vit_b_16
+        return [_resolve_vit_gradcam_target_layer(model)], _resolve_vit_reshape_transform(model, model_name)
     
     if model_name.startswith("densenet"):
         return [model.features[-1]], None

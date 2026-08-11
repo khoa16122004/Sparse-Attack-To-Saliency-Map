@@ -473,6 +473,22 @@ def _split_summary_relpath(
     return model_name, explain_method, approach
 
 
+def _extract_model_name(
+    summary_path: Path,
+    run_dir: Path,
+    payload: Dict[str, object],
+) -> Optional[str]:
+    location = _split_summary_relpath(summary_path, run_dir, payload)
+    if location is not None:
+        model_name, _, _ = location
+        return model_name
+
+    model_field = payload.get("model")
+    if isinstance(model_field, str) and model_field.strip():
+        return model_field.strip()
+    return None
+
+
 def _resolve_method_output_dir(
     run_dir: Path,
     output_root: Optional[Path],
@@ -495,6 +511,7 @@ def _aggregate_and_plot(
     aggregate_y_max: float,
     aggregate_marker_count: int,
     aggregate_points_only: bool,
+    run_model: Optional[str],
 ) -> None:
     per_run_curves: Dict[Tuple[str, str, str], Dict[str, List[List[float]]]] = {}
     per_run_spearman: Dict[Tuple[str, str, str], List[List[float]]] = {}
@@ -509,6 +526,11 @@ def _aggregate_and_plot(
             continue
         if not allow_non_ok and payload.get("status") not in {None, "ok"}:
             continue
+
+        if run_model:
+            model_name_in_payload = _extract_model_name(summary_path, run_dir, payload)
+            if model_name_in_payload != run_model:
+                continue
 
         location = _split_summary_relpath(summary_path, run_dir, payload)
         if location is None:
@@ -1059,6 +1081,12 @@ def main() -> None:
         help="Run folder path. Script recursively scans summary.json/summarize.json.",
     )
     parser.add_argument(
+        "--run-model",
+        type=str,
+        default=None,
+        help="Optional model name filter (exact match). If set, only this model is processed.",
+    )
+    parser.add_argument(
         "--output-root",
         type=str,
         default=None,
@@ -1150,6 +1178,10 @@ def main() -> None:
         raise ValueError("aggregate-y-min must be smaller than aggregate-y-max")
     if args.aggregate_marker_count < 0:
         raise ValueError("aggregate-marker-count must be >= 0")
+    if args.run_model is not None and not str(args.run_model).strip():
+        raise ValueError("run-model must be a non-empty string")
+
+    run_model = str(args.run_model).strip() if args.run_model is not None else None
 
     run_dir = Path(args.run_dir)
     if not run_dir.exists() or not run_dir.is_dir():
@@ -1175,6 +1207,12 @@ def main() -> None:
                 failed += 1
                 print(f"[FAILED] invalid json: {summary_path}")
                 continue
+
+            if run_model:
+                model_name_in_payload = _extract_model_name(summary_path, run_dir, payload)
+                if model_name_in_payload != run_model:
+                    skipped += 1
+                    continue
 
             if not args.allow_non_ok and payload.get("status") not in {None, "ok"}:
                 skipped += 1
@@ -1225,6 +1263,7 @@ def main() -> None:
         aggregate_y_max=float(args.aggregate_y_max),
         aggregate_marker_count=int(args.aggregate_marker_count),
         aggregate_points_only=bool(args.aggregate_points_only),
+        run_model=run_model,
     )
 
     print("=== Done ===")
@@ -1237,6 +1276,8 @@ def main() -> None:
         print(f"skipped: {skipped}")
         print(f"failed: {failed}")
         print("per-sample plots: enabled")
+    if run_model:
+        print(f"model filter: {run_model}")
     print("aggregate plots generated at method/model directories and _method_aggregates/")
 
 
