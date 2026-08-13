@@ -311,8 +311,32 @@ def _is_torchvision_vit_model(model):
     )
 
 
+def _torchvision_self_attention(block, tokens):
+    """Run torchvision self-attention while retaining differentiable weights."""
+    attention = block.self_attention
+    batch_size, num_tokens, embed_dim = tokens.shape
+    num_heads = attention.num_heads
+    head_dim = embed_dim // num_heads
+
+    qkv = F.linear(tokens, attention.in_proj_weight, attention.in_proj_bias)
+    query, key, value = qkv.chunk(3, dim=-1)
+    query = query.reshape(batch_size, num_tokens, num_heads, head_dim).transpose(1, 2)
+    key = key.reshape(batch_size, num_tokens, num_heads, head_dim).transpose(1, 2)
+    value = value.reshape(batch_size, num_tokens, num_heads, head_dim).transpose(1, 2)
+
+    attentions = (query * (head_dim ** -0.5)) @ key.transpose(-2, -1)
+    attentions = attentions.softmax(dim=-1)
+    if attention.dropout > 0 and attention.training:
+        attentions = F.dropout(attentions, p=attention.dropout)
+
+    attn_out = attentions @ value
+    attn_out = attn_out.transpose(1, 2).reshape(batch_size, num_tokens, embed_dim)
+    attn_out = attention.out_proj(attn_out)
+    return attn_out, attentions
+
+
 def _forward_torchvision_vit_with_attentions(model, x):
-    # Re-implement torchvision ViT forward so we can request attention weights per block.
+    # Re-implement torchvision ViT forward so attention weights stay in the graph.
     tokens = model._process_input(x)
     batch_size = tokens.shape[0]
     class_token = model.class_token.expand(batch_size, -1, -1)
@@ -326,13 +350,7 @@ def _forward_torchvision_vit_with_attentions(model, x):
     for block in encoder.layers:
         residual = tokens
         x_norm = block.ln_1(tokens)
-        attn_out, attn_weights = block.self_attention(
-            x_norm,
-            x_norm,
-            x_norm,
-            need_weights=True,
-            average_attn_weights=False,
-        )
+        attn_out, attn_weights = _torchvision_self_attention(block, x_norm)
         attn_out = block.dropout(attn_out)
         tokens = residual + attn_out
 
