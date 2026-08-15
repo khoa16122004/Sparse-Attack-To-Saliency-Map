@@ -27,8 +27,13 @@ class Population:
         elif len(outputs) == 4:
             margin_losses, del_losses, ins_losses, logits = outputs
             saliency_losses = del_losses + ins_losses
+        elif len(outputs) == 5:
+            margin_losses, saliency_losses, del_losses, ins_losses, logits = outputs
         else:
-            raise ValueError("fitness.benchmark must return (margin, saliency, logits) or (margin, del, ins, logits)")
+            raise ValueError(
+                "fitness.benchmark must return (margin, saliency, logits), "
+                "(margin, del, ins, logits), or (margin, saliency, del, ins, logits)"
+            )
 
         for idx, pi in enumerate(self.population):
             pi.margin_loss = margin_losses[idx]

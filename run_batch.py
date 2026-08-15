@@ -21,6 +21,7 @@ if CORE_DIR not in sys.path:
 from LossFunctions import (
     CEMarrginLossSaliency_Fitness,
     MarginLossCausalFaithFull,
+    MarginLossCausalFaithFullSaliency_Fitness,
     MarginSalinecy_Fitness,
     NegativeCrossEntropySaliency_Fitness,
     ReverseMarginSalinecy_Fitness,
@@ -134,6 +135,7 @@ def parse_args():
     parser.add_argument("--zero-probability", type=float, default=0.3)
     parser.add_argument("--w-margin", type=float, default=0.5)
     parser.add_argument("--w-saliency", type=float, default=0.5)
+    parser.add_argument("--w-causal", type=float, default=None, help="Weight for averaged causal loss (del+ins)/2 in mixed causal+saliency fitness")
     parser.add_argument("--w-del", type=float, default=None, help="Weight for deletion loss when fitness has 3 objectives")
     parser.add_argument("--w-ins", type=float, default=None, help="Weight for insertion loss when fitness has 3 objectives")
     parser.add_argument(
@@ -152,6 +154,7 @@ def parse_args():
             "CEMarrginLoss",
             "margin_loss_causal_faithfull",
             "ce_loss_causal_faithfull",
+            "margin_loss_causal_faithfull_saliency",
         ],
         help="Fitness function to optimize",
     )
@@ -406,6 +409,9 @@ def _is_saliency_optimized_fitness(fitness_function):
 
 
 def _build_wd_wi_mode_tag(args):
+    if args.w_causal is not None:
+        return f"mixed_wc={_fmt_num(args.w_causal)}"
+
     if _is_saliency_optimized_fitness(args.fitness_function):
         return "saliency_optimized"
 
@@ -512,6 +518,15 @@ def create_fitness(fitness_function, model, x_tensor, normalize, y_true, explain
             y_true=y_true,
             explain_method=explain_fn,
         )
+
+    if fitness_function == "margin_loss_causal_faithfull_saliency":
+        return MarginLossCausalFaithFullSaliency_Fitness(
+            model=model,
+            x_tensor=x_tensor,
+            normalize=normalize,
+            y_true=y_true,
+            explain_method=explain_fn,
+        )
         
     raise ValueError(f"Unsupported fitness function: {fitness_function}")
 
@@ -574,8 +589,10 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "all_pixels": torch.arange(x_tensor.shape[-2] * x_tensor.shape[-1], device=device),
         "w_margin": args.w_margin,
         "w_saliency": args.w_saliency,
+        "w_causal": args.w_causal,
         "w_del": args.w_del,
         "w_ins": args.w_ins,
+        "combine_margin_saliency_del_ins": args.fitness_function == "margin_loss_causal_faithfull_saliency",
         "operator_strategy": args.operator_strategy,
         "saliency_temperature": args.saliency_temperature,
         "device": args.device,
@@ -649,13 +666,33 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
     weighted_fitness = best_scores.get("weighted_fitness")
     if weighted_fitness is None:
         if del_loss_value is not None and ins_loss_value is not None:
-            w_del = args.w_del if args.w_del is not None else args.w_saliency * 0.5
-            w_ins = args.w_ins if args.w_ins is not None else args.w_saliency * 0.5
-            weighted_fitness = (
-                args.w_margin * float(best_scores["margin_loss"])
-                + float(w_del) * float(del_loss_value)
-                + float(w_ins) * float(ins_loss_value)
-            )
+            if (
+                args.fitness_function == "margin_loss_causal_faithfull_saliency"
+                and (args.w_del is not None or args.w_ins is not None)
+            ):
+                w_del = 0.0 if args.w_del is None else float(args.w_del)
+                w_ins = 0.0 if args.w_ins is None else float(args.w_ins)
+                weighted_fitness = (
+                    args.w_margin * float(best_scores["margin_loss"])
+                    + args.w_saliency * float(best_scores.get("saliency_loss", 0.0))
+                    + w_del * float(del_loss_value)
+                    + w_ins * float(ins_loss_value)
+                )
+            elif args.w_causal is not None:
+                causal_obj = 0.5 * (float(del_loss_value) + float(ins_loss_value))
+                weighted_fitness = (
+                    args.w_margin * float(best_scores["margin_loss"])
+                    + args.w_saliency * float(best_scores.get("saliency_loss", 0.0))
+                    + float(args.w_causal) * causal_obj
+                )
+            else:
+                w_del = args.w_del if args.w_del is not None else args.w_saliency * 0.5
+                w_ins = args.w_ins if args.w_ins is not None else args.w_saliency * 0.5
+                weighted_fitness = (
+                    args.w_margin * float(best_scores["margin_loss"])
+                    + float(w_del) * float(del_loss_value)
+                    + float(w_ins) * float(ins_loss_value)
+                )
         else:
             weighted_fitness = args.w_margin * float(best_scores["margin_loss"]) + args.w_saliency * float(best_scores["saliency_loss"])
 
@@ -677,6 +714,7 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "fitness_function": args.fitness_function,
         "operator_strategy": args.operator_strategy,
         "saliency_temperature": float(args.saliency_temperature),
+        "w_causal": args.w_causal,
         "history_scores_file": str(output_paths["history_txt"]),
         "non_dominated_front_scores_file": str(output_paths["non_dominated_front_txt"]) if non_nominated_front_fitness is not None else None,
         "clean_map_class_a": str(output_paths["clean_map_class_a"]),

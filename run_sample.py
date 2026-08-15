@@ -18,6 +18,7 @@ if CORE_DIR not in sys.path:
 from LossFunctions import (
     CEMarrginLossSaliency_Fitness,
     MarginLossCausalFaithFull,
+    MarginLossCausalFaithFullSaliency_Fitness,
     MarginSalinecy_Fitness,
     NegativeCrossEntropySaliency_Fitness,
     ReverseMarginSalinecy_Fitness,
@@ -91,6 +92,7 @@ def parse_args():
     parser.add_argument("--zero-probability", type=float, default=0.3, help="Probability of zero channel perturbation")
     parser.add_argument("--w-margin", type=float, default=0.5)
     parser.add_argument("--w-saliency", type=float, default=0.5)
+    parser.add_argument("--w-causal", type=float, default=None, help="Weight for averaged causal loss (del+ins)/2 in mixed causal+saliency fitness")
     parser.add_argument("--w-del", type=float, default=None, help="Weight for deletion loss when fitness has 3 objectives")
     parser.add_argument("--w-ins", type=float, default=None, help="Weight for insertion loss when fitness has 3 objectives")
     parser.add_argument(
@@ -109,6 +111,7 @@ def parse_args():
             "CEMarrginLoss",
             "margin_loss_causal_faithfull",
             "ce_loss_causal_faithfull",
+            "margin_loss_causal_faithfull_saliency",
         ],
         help="Fitness function to optimize",
     )
@@ -288,6 +291,15 @@ def create_fitness(fitness_function, model, x_tensor, normalize, y_true, explain
             y_true=y_true,
             explain_method=explain_fn,
         )
+
+    if fitness_function == "margin_loss_causal_faithfull_saliency":
+        return MarginLossCausalFaithFullSaliency_Fitness(
+            model=model,
+            x_tensor=x_tensor,
+            normalize=normalize,
+            y_true=y_true,
+            explain_method=explain_fn,
+        )
     
     raise ValueError(f"Unsupported fitness function: {fitness_function}")
 
@@ -365,8 +377,10 @@ def run_attack(args):
         "all_pixels": torch.arange(x_tensor.shape[-2] * x_tensor.shape[-1], device=device),
         "w_margin": args.w_margin,
         "w_saliency": args.w_saliency,
+        "w_causal": args.w_causal,
         "w_del": args.w_del,
         "w_ins": args.w_ins,
+        "combine_margin_saliency_del_ins": args.fitness_function == "margin_loss_causal_faithfull_saliency",
         "operator_strategy": args.operator_strategy,
         "saliency_temperature": args.saliency_temperature,
         "device": args.device,
@@ -386,13 +400,33 @@ def run_attack(args):
     weighted_fitness = best_scores.get("weighted_fitness")
     if weighted_fitness is None:
         if "del_loss" in best_scores and "ins_loss" in best_scores:
-            w_del = args.w_del if args.w_del is not None else args.w_saliency * 0.5
-            w_ins = args.w_ins if args.w_ins is not None else args.w_saliency * 0.5
-            weighted_fitness = (
-                args.w_margin * float(best_scores["margin_loss"])
-                + float(w_del) * float(best_scores["del_loss"])
-                + float(w_ins) * float(best_scores["ins_loss"])
-            )
+            if (
+                args.fitness_function == "margin_loss_causal_faithfull_saliency"
+                and (args.w_del is not None or args.w_ins is not None)
+            ):
+                w_del = 0.0 if args.w_del is None else float(args.w_del)
+                w_ins = 0.0 if args.w_ins is None else float(args.w_ins)
+                weighted_fitness = (
+                    args.w_margin * float(best_scores["margin_loss"])
+                    + args.w_saliency * float(best_scores.get("saliency_loss", 0.0))
+                    + w_del * float(best_scores["del_loss"])
+                    + w_ins * float(best_scores["ins_loss"])
+                )
+            elif args.w_causal is not None:
+                causal_obj = 0.5 * (float(best_scores["del_loss"]) + float(best_scores["ins_loss"]))
+                weighted_fitness = (
+                    args.w_margin * float(best_scores["margin_loss"])
+                    + args.w_saliency * float(best_scores.get("saliency_loss", 0.0))
+                    + float(args.w_causal) * causal_obj
+                )
+            else:
+                w_del = args.w_del if args.w_del is not None else args.w_saliency * 0.5
+                w_ins = args.w_ins if args.w_ins is not None else args.w_saliency * 0.5
+                weighted_fitness = (
+                    args.w_margin * float(best_scores["margin_loss"])
+                    + float(w_del) * float(best_scores["del_loss"])
+                    + float(w_ins) * float(best_scores["ins_loss"])
+                )
         else:
             weighted_fitness = args.w_margin * float(best_scores["margin_loss"]) + args.w_saliency * float(best_scores["saliency_loss"])
 
@@ -521,6 +555,7 @@ def run_attack(args):
     print(f"first_success_iteration: {best_scores.get('first_success_iteration')}")
     print(f"algorithm: {args.algorithm}")
     print(f"fitness_function: {args.fitness_function}")
+    print(f"w_causal: {args.w_causal}")
     print(f"operator_strategy: {args.operator_strategy}")
     print(f"saliency_temperature: {args.saliency_temperature}")
     print(f"seed: {args.seed}")
@@ -558,6 +593,7 @@ def run_attack(args):
         "fitness_function": args.fitness_function,
         "operator_strategy": args.operator_strategy,
         "saliency_temperature": args.saliency_temperature,
+        "w_causal": args.w_causal,
         "w_del": args.w_del,
         "w_ins": args.w_ins,
         "seed": args.seed,

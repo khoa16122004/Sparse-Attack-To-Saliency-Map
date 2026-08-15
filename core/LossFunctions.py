@@ -227,4 +227,26 @@ class MarginLossCausalFaithFull(MarginSalinecy_Fitness):
 
 # Backward-compatible alias.
 CELossCausalFaithFull = MarginLossCausalFaithFull
+
+
+class MarginLossCausalFaithFullSaliency_Fitness(MarginLossCausalFaithFull):
+    """
+    Combined objective variant that keeps explicit saliency loss together with
+    faithfulness deletion/insertion objectives.
+    """
+
+    def benchmark(self, xadv_tensors):
+        saliency_maps, logits = self.explain_method(self.model, xadv_tensors, self.normalize, self.y_true)
+        margin_loss = self.cal_marginloss(logits, self.y_true)
+        saliency_loss = self.cal_saliency_loss(saliency_maps, self.saliency_true)
+        del_loss, ins_loss = self.cal_faithfulnessloss(xadv_tensors, saliency_maps, self.y_true)
+        return margin_loss, saliency_loss, del_loss, ins_loss, logits
+
+
+# Backward-compatible alias.
+MarginLossCausalFaithFullWithSaliency_Fitness = MarginLossCausalFaithFullSaliency_Fitness
+
+
+
+# =======================, threeobjective
             

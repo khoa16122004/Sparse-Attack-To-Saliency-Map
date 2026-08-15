@@ -78,10 +78,34 @@ class Weighted_Sum_GA:
     def _compute_weighted_fitness(self, margin_losses, saliency_losses, del_losses=None, ins_losses=None):
         if del_losses is not None and ins_losses is not None:
             w_margin = float(self.params.get("w_margin", 0.34))
-            w_del = self.params.get("w_del", None)
-            w_ins = self.params.get("w_ins", None)
+            w_saliency = float(self.params.get("w_saliency", 0.66))
+            w_causal = self.params.get("w_causal", None)
+            combine_all_terms = bool(self.params.get("combine_margin_saliency_del_ins", False))
+            w_del_raw = self.params.get("w_del", None)
+            w_ins_raw = self.params.get("w_ins", None)
+
+            # Full 4-term mode for combined fitness:
+            # w_margin*margin + w_saliency*saliency + w_del*del + w_ins*ins
+            if combine_all_terms and (w_del_raw is not None or w_ins_raw is not None):
+                w_del = 0.0 if w_del_raw is None else float(w_del_raw)
+                w_ins = 0.0 if w_ins_raw is None else float(w_ins_raw)
+                return (
+                    w_margin * margin_losses
+                    + w_saliency * saliency_losses
+                    + w_del * del_losses
+                    + w_ins * ins_losses
+                )
+
+            # New mixed mode: 3 weighted groups (margin, saliency, causal),
+            # where causal is the average of deletion and insertion objectives.
+            if w_causal is not None:
+                causal_losses = 0.5 * (del_losses + ins_losses)
+                return w_margin * margin_losses + w_saliency * saliency_losses + float(w_causal) * causal_losses
+
+            w_del = w_del_raw
+            w_ins = w_ins_raw
             if w_del is None and w_ins is None:
-                base = float(self.params.get("w_saliency", 0.66))
+                base = w_saliency
                 w_del = base * 0.5
                 w_ins = base * 0.5
             else:
@@ -285,7 +309,8 @@ class Weighted_Sum_GA:
             if 'del_loss' in best_scores and 'ins_loss' in best_scores:
                 print(
                     f"Iteration {it}: best weighted fitness = {best_scores['weighted_fitness']:.4f}, "
-                    f"margin loss = {best_scores['margin_loss']:.4f}, del loss = {best_scores['del_loss']:.4f}, "
+                    f"margin loss = {best_scores['margin_loss']:.4f}, saliency loss = {best_scores['saliency_loss']:.4f}, "
+                    f"del loss = {best_scores['del_loss']:.4f}, "
                     f"ins loss = {best_scores['ins_loss']:.4f}, spearman = {best_scores['spearman']:.4f}"
                 )
             else:
