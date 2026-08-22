@@ -300,6 +300,20 @@ def _is_vit_model(model, model_name=None):
     return class_name == "visiontransformer" or hasattr(model, "encoder") or hasattr(model, "blocks")
 
 
+def _is_swin_model(model, model_name=None):
+    if model_name is not None:
+        return str(model_name).lower().startswith("swin")
+
+    class_name = model.__class__.__name__.lower()
+    return class_name == "swintransformer" or (
+        hasattr(model, "features") and hasattr(model, "head") and hasattr(model, "avgpool")
+    )
+
+
+def _supports_attention_saliency(model, model_name=None):
+    return _is_vit_model(model, model_name) or _is_swin_model(model, model_name)
+
+
 def _is_torchvision_vit_model(model):
     class_name = model.__class__.__name__.lower()
     return (
@@ -408,12 +422,54 @@ def _tokens_to_map(tokens, batch_size, out_hw):
     return saliency
 
 
+def _forward_torchvision_swin_with_feature_map(model, x):
+    # Torchvision Swin pipeline: features -> norm -> permute -> avgpool -> head.
+    feat = model.features(x)
+    if hasattr(model, "norm"):
+        feat = model.norm(feat)
+
+    if feat.dim() != 4:
+        raise ValueError("Expected 4D features from Swin model.")
+
+    # Keep both layouts: BHWC for head path and BCHW for saliency map.
+    if feat.shape[-1] > feat.shape[1]:
+        feat_bhwc = feat
+        feat_bchw = feat.permute(0, 3, 1, 2)
+    else:
+        feat_bchw = feat
+        feat_bhwc = feat.permute(0, 2, 3, 1)
+
+    if hasattr(model, "permute"):
+        pooled_input = model.permute(feat_bhwc)
+    else:
+        pooled_input = feat_bchw
+
+    pooled = model.avgpool(pooled_input)
+    logits = model.head(torch.flatten(pooled, 1))
+    return logits, feat_bchw
+
+
 def raw_attention(model, input_tensor, normalize, target_class=None, model_name=None):
-    if not _is_vit_model(model, model_name):
-        raise ValueError("raw_attention only supports ViT models.")
+    if not _supports_attention_saliency(model, model_name):
+        raise ValueError("raw_attention only supports ViT/Swin models.")
 
     model.zero_grad()
     x = input_tensor.clone().detach()
+
+    if _is_swin_model(model, model_name):
+        logits, feat_map = _forward_torchvision_swin_with_feature_map(model, normalize(x))
+        output_logits = logits.detach()
+
+        # Swin has no class token attention matrix; use final feature energy as token saliency.
+        saliency = feat_map.pow(2).mean(dim=1)
+        saliency = F.interpolate(
+            saliency.unsqueeze(1),
+            size=x.shape[-2:],
+            mode="bilinear",
+            align_corners=False,
+        ).squeeze(1)
+        saliency = saliency / (saliency.mean(dim=(1, 2), keepdim=True) + 1e-8)
+        return saliency.detach(), output_logits
 
     logits, attentions = _forward_with_attentions(model, normalize(x))
     output_logits = logits.detach()
@@ -432,11 +488,32 @@ def raw_attention(model, input_tensor, normalize, target_class=None, model_name=
 
 
 def attention_grad(model, input_tensor, normalize, target_class=None, model_name=None):
-    if not _is_vit_model(model, model_name):
-        raise ValueError("attention_grad only supports ViT models.")
+    if not _supports_attention_saliency(model, model_name):
+        raise ValueError("attention_grad only supports ViT/Swin models.")
 
     model.zero_grad()
     x = input_tensor.clone().detach().requires_grad_(True)
+
+    if _is_swin_model(model, model_name):
+        logits, feat_map = _forward_torchvision_swin_with_feature_map(model, normalize(x))
+        output_logits = logits
+        target_class = _prepare_target_class(logits, target_class)
+        score = logits.gather(1, target_class.view(-1, 1)).sum()
+
+        grad = torch.autograd.grad(score, feat_map, retain_graph=True, allow_unused=True)[0]
+        if grad is None:
+            raise ValueError("Could not compute gradients from logits to Swin feature map.")
+
+        # Rollout-style fallback for Swin: gradient-weighted final token map.
+        saliency = (feat_map * grad).sum(dim=1).clamp(min=0)
+        saliency = F.interpolate(
+            saliency.unsqueeze(1),
+            size=x.shape[-2:],
+            mode="bilinear",
+            align_corners=False,
+        ).squeeze(1)
+        saliency = saliency / (saliency.mean(dim=(1, 2), keepdim=True) + 1e-8)
+        return saliency.detach(), output_logits
 
     logits, attentions = _forward_with_attentions(model, normalize(x))
     output_logits = logits

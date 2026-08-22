@@ -1,7 +1,13 @@
 import torch
 import torch.nn.functional as F
 
-from explain_method import _forward_with_attentions, _is_vit_model, _tokens_to_map
+from explain_method import (
+    _forward_torchvision_swin_with_feature_map,
+    _forward_with_attentions,
+    _is_swin_model,
+    _is_vit_model,
+    _tokens_to_map,
+)
 
 
 def _ensure_grad_input(input_tensor):
@@ -150,11 +156,26 @@ def integrated_gradients(
 
 
 def raw_attention(model, input_tensor, normalize, target_class=None, model_name=None, create_graph=False, detach=True):
-    if not _is_vit_model(model, model_name):
-        raise ValueError("raw_attention only supports ViT models.")
+    if not (_is_vit_model(model, model_name) or _is_swin_model(model, model_name)):
+        raise ValueError("raw_attention only supports ViT/Swin models.")
 
     model.zero_grad()
     x = _ensure_grad_input(input_tensor)
+
+    if _is_swin_model(model, model_name):
+        logits, feat_map = _forward_torchvision_swin_with_feature_map(model, normalize(x))
+        output_logits = logits
+
+        saliency = feat_map.pow(2).mean(dim=1)
+        saliency = F.interpolate(
+            saliency.unsqueeze(1),
+            size=x.shape[-2:],
+            mode="bilinear",
+            align_corners=False,
+        ).squeeze(1)
+        saliency = saliency / (saliency.mean(dim=(1, 2), keepdim=True) + 1e-8)
+
+        return _maybe_detach_outputs(saliency, output_logits, detach)
 
     logits, attentions = _forward_with_attentions(model, normalize(x))
     output_logits = logits
@@ -173,11 +194,38 @@ def raw_attention(model, input_tensor, normalize, target_class=None, model_name=
 
 
 def attention_grad(model, input_tensor, normalize, target_class=None, model_name=None, create_graph=False, detach=True):
-    if not _is_vit_model(model, model_name):
-        raise ValueError("attention_grad only supports ViT models.")
+    if not (_is_vit_model(model, model_name) or _is_swin_model(model, model_name)):
+        raise ValueError("attention_grad only supports ViT/Swin models.")
 
     model.zero_grad()
     x = _ensure_grad_input(input_tensor)
+
+    if _is_swin_model(model, model_name):
+        logits, feat_map = _forward_torchvision_swin_with_feature_map(model, normalize(x))
+        output_logits = logits
+        target_class = _prepare_target_class(logits, target_class)
+        score = logits.gather(1, target_class.view(-1, 1)).sum()
+
+        grad = torch.autograd.grad(
+            score,
+            feat_map,
+            retain_graph=True,
+            create_graph=create_graph,
+            allow_unused=True,
+        )[0]
+        if grad is None:
+            raise ValueError("Could not compute gradients from logits to Swin feature map.")
+
+        saliency = (feat_map * grad).sum(dim=1).clamp(min=0)
+        saliency = F.interpolate(
+            saliency.unsqueeze(1),
+            size=x.shape[-2:],
+            mode="bilinear",
+            align_corners=False,
+        ).squeeze(1)
+        saliency = saliency / (saliency.mean(dim=(1, 2), keepdim=True) + 1e-8)
+
+        return _maybe_detach_outputs(saliency, output_logits, detach)
 
     logits, attentions = _forward_with_attentions(model, normalize(x))
     output_logits = logits
