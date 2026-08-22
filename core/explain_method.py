@@ -439,10 +439,9 @@ def _forward_torchvision_swin_with_feature_map(model, x):
         feat_bchw = feat
         feat_bhwc = feat.permute(0, 2, 3, 1)
 
-    if hasattr(model, "permute"):
-        pooled_input = model.permute(feat_bhwc)
-    else:
-        pooled_input = feat_bchw
+    # Use BCHW features directly for pooling so the returned feature map is
+    # guaranteed to be on the logits computation path.
+    pooled_input = feat_bchw
 
     pooled = model.avgpool(pooled_input)
     logits = model.head(torch.flatten(pooled, 1))
