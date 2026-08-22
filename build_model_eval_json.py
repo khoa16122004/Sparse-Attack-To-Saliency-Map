@@ -1,12 +1,18 @@
 import argparse
 import json
-from collections import defaultdict
+import os
 from pathlib import Path
+import sys
 
 import torch
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 from tqdm.auto import tqdm
+
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+CORE_DIR = os.path.join(ROOT_DIR, "core")
+if CORE_DIR not in sys.path:
+    sys.path.insert(0, CORE_DIR)
 
 from util import get_torchvision_model
 

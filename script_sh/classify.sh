@@ -53,7 +53,7 @@ export CUDA_VISIBLE_DEVICES=$BEST_GPU
 # =========================================================
 # CHAY CODE: SO SANH 2 FITNESS LOSS
 # =========================================================
-MODEL_NAMES="densenet121 densenet169 resnet18 resnet50 vgg16 vgg19 vit_b_16 vit_b_32"
+MODEL_NAMES="${MODEL_NAMES:-densenet121 densenet169 resnet18 resnet50 vgg16 vgg19 vit_b_16 vit_b_32 swin_t}"
 IMAGENET_VAL_ROOT="${IMAGENET_VAL_ROOT:-/datastore/elo/quanphm/dataset/ImageNet1K/val}"
 EMIT_ROOT="${EMIT_ROOT:-/datastore/elo/quanphm/dataset/ImageNet1K/val}"
 BATCH_SIZE="${BATCH_SIZE:-128}"
