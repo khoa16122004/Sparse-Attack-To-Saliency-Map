@@ -8,6 +8,17 @@ import torchvision.models as tv_models
 from torchvision.models import get_model_weights
 
 
+MODEL_NAME_ALIASES = {
+    "vitb16": "vit_b_16",
+    "vit_b16": "vit_b_16",
+    "vit-b-16": "vit_b_16",
+    "vit_b_16": "vit_b_16",
+    "swint": "swin_t",
+    "swin_t": "swin_t",
+    "swin-t": "swin_t",
+}
+
+
 def _download_and_save_one(model_name: str, checkpoint_dir: Path, overwrite: bool) -> Dict[str, str]:
     output_path = checkpoint_dir / f"{model_name}.pth"
     if output_path.exists() and not overwrite:
@@ -44,7 +55,10 @@ def parse_args() -> argparse.Namespace:
         "--models",
         nargs="+",
         default=None,
-        help="Torchvision model names, e.g. resnet18 resnet50 vgg16 vit_b_16",
+        help=(
+            "Torchvision model names, e.g. resnet18 resnet50 vgg16 vit_b_16 swin_t. "
+            "Common aliases are accepted (vitb16, swin_T, ...)."
+        ),
     )
     parser.add_argument(
         "--selection-dir",
@@ -66,10 +80,15 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _normalize_model_name(name: str) -> str:
+    key = name.strip().lower()
+    return MODEL_NAME_ALIASES.get(key, key)
+
+
 def _collect_models(args: argparse.Namespace) -> List[str]:
     models: List[str] = []
     if args.models:
-        models.extend(args.models)
+        models.extend(_normalize_model_name(name) for name in args.models)
 
     if args.selection_dir:
         selection_dir = Path(args.selection_dir)
@@ -81,7 +100,7 @@ def _collect_models(args: argparse.Namespace) -> List[str]:
                 elif name.endswith("_selection"):
                     name = name[: -len("_selection")]
                 if name:
-                    models.append(name)
+                    models.append(_normalize_model_name(name))
 
     ordered_unique: List[str] = []
     seen = set()

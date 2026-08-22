@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import matplotlib.pyplot as plt
+from matplotlib.colors import to_hex, to_rgb
 import numpy as np
 
 
@@ -74,6 +75,22 @@ def _extract_curves(payload: Dict[str, object]) -> Optional[Dict[str, List[float
 
 def _extract_spearman(payload: Dict[str, object]) -> List[float]:
     return _as_float_list(payload.get("history_spearman"))
+
+
+def _extract_spearman_scalar(payload: Dict[str, object]) -> Optional[float]:
+    direct = payload.get("spearman_best_adv_vs_clean")
+    if direct is not None:
+        try:
+            direct_value = float(direct)
+        except (TypeError, ValueError):
+            direct_value = None
+        if direct_value is not None and not math.isnan(direct_value) and not math.isinf(direct_value):
+            return direct_value
+
+    history = _as_float_list(payload.get("history_spearman"))
+    if history:
+        return float(history[-1])
+    return None
 
 
 def _extract_objective_histories(payload: Dict[str, object]) -> Dict[str, List[float]]:
@@ -197,38 +214,175 @@ def _fmt_num(value: Optional[float]) -> str:
     return f"{float(value):.4f}"
 
 
-def _warm_palette(count: int) -> List[str]:
-    base = [
-        "#B03A2E",
-        "#C0392B",
-        "#D35400",
-        "#E67E22",
-        "#CD6155",
-        "#AF601A",
-        "#CA6F1E",
-        "#A04000",
-    ]
-    if count <= len(base):
-        return base[:count]
+def _pick_metric_value(metric: object, preferred_keys: Sequence[str]) -> Optional[float]:
+    if not isinstance(metric, dict):
+        return None
+    for key in preferred_keys:
+        value = metric.get(key)
+        if value is None:
+            continue
+        try:
+            num = float(value)
+        except (TypeError, ValueError):
+            continue
+        if math.isnan(num) or math.isinf(num):
+            continue
+        return num
+    return None
 
-    # Repeat deterministically when there are many approaches.
-    out = []
-    for i in range(count):
-        out.append(base[i % len(base)])
-    return out
+
+def _warm_palette(count: int) -> List[str]:
+    if count <= 0:
+        return []
+
+    # Dark high-contrast palette for readability on white backgrounds.
+    dark_base = [
+        "#0B3C5D",
+        "#8B1E3F",
+        "#1F5D27",
+        "#7A3E00",
+        "#3D2C8D",
+        "#005B5B",
+        "#7F1D1D",
+        "#2C3E50",
+        "#5B2C6F",
+        "#145A32",
+    ]
+    if count <= len(dark_base):
+        return dark_base[:count]
+
+    def _darken(hex_color: str, factor: float = 0.82) -> str:
+        r, g, b = to_rgb(hex_color)
+        return to_hex((r * factor, g * factor, b * factor))
+
+    if count <= 20:
+        cmap = plt.get_cmap("tab20", count)
+        return [_darken(to_hex(cmap(i))) for i in range(count)]
+
+    # For many approaches, spread hues uniformly.
+    cmap = plt.get_cmap("hsv", count)
+    return [_darken(to_hex(cmap(i))) for i in range(count)]
 
 
 def _style_for_approach(label: str, default_color: str) -> Tuple[str, str, str, int]:
     lower = label.lower()
     if "both" in lower:
-        return ("#7f1d1d", "-", "o", 5)
+        return (default_color, "-", "o", 5)
     if "delete" in lower:
-        return ("#d7301f", "--", "s", 4)
+        return (default_color, "--", "s", 4)
     if "insert" in lower:
-        return ("#cc6b00", "-.", "^", 4)
+        return (default_color, "-.", "^", 4)
     if "clean" in lower:
         return ("#2e8b57", ":", "D", 3)
     return (default_color, "-", "o", 3)
+
+
+def _apply_reference_axes_style(ax: plt.Axes) -> None:
+    ax.set_facecolor("#ffffff")
+    ax.grid(True, which="major", linestyle="--", linewidth=0.6, color="#cfd8dc", alpha=0.55)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_linewidth(1.0)
+    ax.spines["bottom"].set_linewidth(1.0)
+    ax.tick_params(axis="both", labelsize=10)
+
+
+def _markevery_indices(length: int, count: int = 15) -> Optional[List[int]]:
+    if count <= 0 or length <= 0:
+        return None
+    if count >= length:
+        return list(range(length))
+
+    step = max(1, (length - 1) // max(1, count - 1))
+    idxs = list(range(0, length, step))
+    if idxs[-1] != (length - 1):
+        idxs.append(length - 1)
+    if len(idxs) > count:
+        idxs = idxs[: count - 1] + [length - 1]
+    return idxs
+
+
+def _build_approach_color_map(approaches: Sequence[str]) -> Dict[str, str]:
+    sorted_approaches = sorted(set(approaches))
+    colors = _warm_palette(len(sorted_approaches))
+    return {name: colors[idx] for idx, name in enumerate(sorted_approaches)}
+
+
+def _plot_spearman_bar_comparison(
+    scores_by_approach: Dict[str, float],
+    approach_color_map: Dict[str, str],
+    output_path: Path,
+    title: str,
+    dpi: int,
+) -> Optional[str]:
+    if not scores_by_approach:
+        return None
+
+    ordered = sorted(scores_by_approach.items(), key=lambda item: item[1])
+    labels = [item[0] for item in ordered]
+    values = [float(item[1]) for item in ordered]
+    indices = np.arange(len(labels))
+    colors = [approach_color_map.get(label, "#5B84B1") for label in labels]
+
+    fig_w = max(9.0, len(labels) * 0.95 + 4.0)
+    fig, ax = plt.subplots(1, 1, figsize=(fig_w, 5.2))
+    bars = ax.bar(indices, values, color=colors, alpha=0.95, edgecolor="#2c3e50", linewidth=0.7)
+
+    min_idx = int(np.argmin(values))
+    min_label = labels[min_idx]
+
+    # Highlight the lowest-Spearman approach clearly.
+    bars[min_idx].set_edgecolor("#111111")
+    bars[min_idx].set_linewidth(2.0)
+    bars[min_idx].set_hatch("///")
+
+    y_min_data = float(min(values))
+    y_max_data = float(max(values))
+    span = max(1e-6, y_max_data - y_min_data)
+    pad = max(0.015, span * 0.25)
+    y_min = max(-1.0, y_min_data - pad)
+    y_max = min(1.0, y_max_data + pad)
+    if y_max <= y_min:
+        y_min = max(-1.0, y_min_data - 0.05)
+        y_max = min(1.0, y_max_data + 0.05)
+
+    ax.set_ylim(y_min, y_max)
+    ax.set_xticks(indices)
+    ax.set_xticklabels(labels, rotation=26, ha="right")
+    ax.set_ylabel("Mean Spearman")
+    ax.set_title(title, loc="left", fontsize=12, fontweight="bold")
+    ax.grid(axis="y", alpha=0.25, linestyle="--", linewidth=0.8)
+
+    label_offset = max(0.01, (y_max - y_min) * 0.02)
+    for idx, (rect, value) in enumerate(zip(bars, values)):
+        ax.text(
+            rect.get_x() + rect.get_width() * 0.5,
+            rect.get_height() + label_offset,
+            f"{value:.3f}",
+            ha="center",
+            va="bottom",
+            fontsize=9,
+            fontweight="bold" if idx == min_idx else "normal",
+            color="#111111",
+        )
+
+    ax.text(
+        0.01,
+        0.98,
+        f"Lowest: {min_label} ({values[min_idx]:.3f})",
+        transform=ax.transAxes,
+        ha="left",
+        va="top",
+        fontsize=10,
+        color="#111111",
+        bbox={"facecolor": "#f8f9fa", "edgecolor": "#111111", "boxstyle": "round,pad=0.25"},
+    )
+
+    fig.tight_layout()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=dpi)
+    plt.close(fig)
+    return min_label
 
 
 def _plot_one_curve(
@@ -274,22 +428,45 @@ def _plot_overlay_curves(
     dpi: int,
 ) -> None:
     fig, ax = plt.subplots(1, 1, figsize=(8.0, 4.2))
+    _apply_reference_axes_style(ax)
 
     if clean_curve:
         x_clean = np.linspace(0.0, 1.0, num=len(clean_curve), endpoint=True)
         y_clean = np.asarray(clean_curve, dtype=float)
-        ax.plot(x_clean, y_clean, linewidth=1.8, color="#1f77b4")
-        ax.fill_between(x_clean, y_clean, 0.0, color="#1f77b4", alpha=0.22)
+        clean_markevery = _markevery_indices(len(clean_curve), 15)
+        ax.plot(
+            x_clean,
+            y_clean,
+            linewidth=2.2,
+            color="#1f77b4",
+            marker="o",
+            markersize=5.2,
+            markerfacecolor="white",
+            markeredgecolor="#1f77b4",
+            markeredgewidth=1.6,
+            markevery=clean_markevery,
+        )
 
     if adv_curve:
         x_adv = np.linspace(0.0, 1.0, num=len(adv_curve), endpoint=True)
         y_adv = np.asarray(adv_curve, dtype=float)
-        ax.plot(x_adv, y_adv, linewidth=1.8, color="#d62728")
-        ax.fill_between(x_adv, y_adv, 0.0, color="#d62728", alpha=0.22)
+        adv_markevery = _markevery_indices(len(adv_curve), 15)
+        ax.plot(
+            x_adv,
+            y_adv,
+            linewidth=2.2,
+            color="#d62728",
+            marker="s",
+            markersize=5.2,
+            markerfacecolor="white",
+            markeredgecolor="#d62728",
+            markeredgewidth=1.6,
+            markevery=adv_markevery,
+        )
 
     ax.set_xlim(0.0, 1.0)
     ax.set_ylim(-0.05, 1.05)
-    ax.grid(True, alpha=0.3)
+    ax.set_xticks(np.linspace(0.0, 1.0, 6))
 
     fig.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -308,30 +485,19 @@ def _plot_multi_curves(
     points_only: bool,
 ) -> None:
     fig, ax = plt.subplots(1, 1, figsize=(9.2, 5.0))
+    _apply_reference_axes_style(ax)
 
     max_len = max((len(curve) for _, curve, _ in named_curves if curve), default=0)
     if max_len <= 0:
         plt.close(fig)
         return
 
-    def _markevery_indices(length: int, count: int) -> Optional[List[int]]:
-        if count <= 0 or length <= 0:
-            return None
-        if count >= length:
-            return list(range(length))
-        step = max(1, (length - 1) // max(1, count - 1))
-        idxs = list(range(0, length, step))
-        if idxs[-1] != (length - 1):
-            idxs.append(length - 1)
-        # Clip in case integer rounding produced one extra marker.
-        if len(idxs) > count:
-            idxs = idxs[: count - 1] + [length - 1]
-        return idxs
+    fixed_marker_count = 15
 
     for label, curve, color in named_curves:
         if not curve:
             continue
-        markevery = _markevery_indices(len(curve), marker_count)
+        markevery = _markevery_indices(len(curve), fixed_marker_count)
         if markevery is None:
             selected_idx = list(range(len(curve)))
         else:
@@ -349,20 +515,23 @@ def _plot_multi_curves(
             ax.plot(
                 x,
                 y,
-                linewidth=2.0,
+                linewidth=2.35,
                 color=curve_color,
                 label=label,
                 linestyle=curve_style,
                 marker=curve_marker,
-                markersize=3.6,
+                markersize=5.2,
+                markerfacecolor="white",
+                markeredgecolor=curve_color,
+                markeredgewidth=1.5,
                 zorder=z_order,
             )
 
     ax.set_xlim(0.0, 1.0)
     ax.set_ylim(y_min, y_max)
+    ax.set_xticks(np.linspace(0.0, 1.0, 6))
     ax.set_ylabel(y_label)
-    ax.grid(True, alpha=0.25)
-    ax.legend(loc="best", frameon=False)
+    ax.legend(loc="best", frameon=True, fancybox=True, framealpha=0.9)
 
     fig.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -377,6 +546,7 @@ def _plot_iteration_curves(
     y_label: str,
 ) -> None:
     fig, ax = plt.subplots(1, 1, figsize=(9.2, 5.0))
+    _apply_reference_axes_style(ax)
 
     max_len = max((len(curve) for _, curve, _ in named_curves if curve), default=0)
     if max_len <= 0:
@@ -391,15 +561,20 @@ def _plot_iteration_curves(
         y = np.asarray(curve, dtype=float)
         y_all.extend(float(v) for v in y)
         curve_color, curve_style, curve_marker, z_order = _style_for_approach(label, color)
+        markevery = _markevery_indices(len(curve), 15)
         ax.plot(
             x,
             y,
-            linewidth=2.0,
+            linewidth=2.25,
             color=curve_color,
             label=label,
             linestyle=curve_style,
             marker=curve_marker,
-            markersize=3.2,
+            markersize=4.8,
+            markerfacecolor="white",
+            markeredgecolor=curve_color,
+            markeredgewidth=1.3,
+            markevery=markevery,
             zorder=z_order,
         )
 
@@ -423,8 +598,7 @@ def _plot_iteration_curves(
     ax.set_ylim(y_min, y_max)
     ax.set_xlabel("Iteration")
     ax.set_ylabel(y_label)
-    ax.grid(True, alpha=0.25)
-    ax.legend(loc="best", frameon=False)
+    ax.legend(loc="best", frameon=True, fancybox=True, framealpha=0.9)
 
     fig.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -579,6 +753,11 @@ def _aggregate_and_plot(
     clean_reference: Dict[Tuple[str, str], Dict[str, List[List[float]]]] = {}
     method_txt_rows: List[str] = []
     detailed_txt_rows: List[str] = []
+    approach_metric_pool: Dict[str, Dict[str, List[float]]] = {}
+    full_spearman_pool: Dict[str, List[float]] = {}
+    model_spearman_pool: Dict[str, Dict[str, List[float]]] = {}
+    full_adv_del_curves: List[List[float]] = []
+    full_adv_ins_curves: List[List[float]] = []
 
     for summary_path in summary_paths:
         payload = _read_json(summary_path)
@@ -635,10 +814,20 @@ def _aggregate_and_plot(
                 clean_holder["clean_del"].append(curves["clean_del"])
             if curves["clean_ins"]:
                 clean_holder["clean_ins"].append(curves["clean_ins"])
+            if curves["adv_del"]:
+                full_adv_del_curves.append(curves["adv_del"])
+            if curves["adv_ins"]:
+                full_adv_ins_curves.append(curves["adv_ins"])
 
         sp = _extract_spearman(payload)
         if sp:
             per_run_spearman.setdefault(run_key, []).append(sp)
+
+        spearman_scalar = _extract_spearman_scalar(payload)
+        if spearman_scalar is not None:
+            full_spearman_pool.setdefault(approach, []).append(float(spearman_scalar))
+            model_bucket = model_spearman_pool.setdefault(model_name, {})
+            model_bucket.setdefault(approach, []).append(float(spearman_scalar))
 
         objective_histories = _extract_objective_histories(payload)
         obj_holder = per_run_objectives.setdefault(
@@ -1117,6 +1306,37 @@ def _aggregate_and_plot(
             f"{explain_method} & {_fmt_num(del_auc)} & {_fmt_num(ins_auc)} & {_fmt_num(imd_auc)}"
         )
 
+        for approach_name, approach_block in method_metrics.get("approaches", {}).items():
+            if not isinstance(approach_block, dict):
+                continue
+
+            faithfulness_block = approach_block.get("faithfulness", {})
+            spearman_metric = approach_block.get("spearman", {})
+            if not isinstance(faithfulness_block, dict):
+                continue
+
+            del_metric = faithfulness_block.get("deletion", {})
+            ins_metric = faithfulness_block.get("insertion", {})
+            imd_metric = faithfulness_block.get("imd_ins_minus_del", {})
+
+            del_value = _pick_metric_value(del_metric, ("auc_mean_over_samples", "auc", "mean"))
+            ins_value = _pick_metric_value(ins_metric, ("auc_mean_over_samples", "auc", "mean"))
+            imd_value = _pick_metric_value(imd_metric, ("auc_mean_over_samples", "auc", "mean"))
+            spearman_value = _pick_metric_value(spearman_metric, ("mean", "auc_mean_over_samples", "auc"))
+
+            pool = approach_metric_pool.setdefault(
+                approach_name,
+                {"del": [], "ins": [], "imd": [], "spearman": []},
+            )
+            if del_value is not None:
+                pool["del"].append(float(del_value))
+            if ins_value is not None:
+                pool["ins"].append(float(ins_value))
+            if imd_value is not None:
+                pool["imd"].append(float(imd_value))
+            if spearman_value is not None:
+                pool["spearman"].append(float(spearman_value))
+
     txt_root = output_root if output_root is not None else run_dir
     txt_path = txt_root / "_method_aggregates" / "summary_ins_del_imd.txt"
     txt_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1130,6 +1350,175 @@ def _aggregate_and_plot(
         f.write("explain_method & model_name & approach & del & ins & imd\n")
         for row in sorted(detailed_txt_rows):
             f.write(row + "\n")
+
+    approach_summary_rows: List[str] = []
+    approach_summary_payload: Dict[str, Dict[str, Optional[float]]] = {}
+    for approach_name in sorted(approach_metric_pool.keys()):
+        pool = approach_metric_pool[approach_name]
+        del_mean = _mean_scalar(pool.get("del", []))
+        ins_mean = _mean_scalar(pool.get("ins", []))
+        imd_mean = _mean_scalar(pool.get("imd", []))
+        spearman_mean = _mean_scalar(pool.get("spearman", []))
+
+        approach_summary_rows.append(
+            f"{approach_name} & {_fmt_num(del_mean)} & {_fmt_num(ins_mean)} & {_fmt_num(imd_mean)} & {_fmt_num(spearman_mean)}"
+        )
+        approach_summary_payload[approach_name] = {
+            "del": del_mean,
+            "ins": ins_mean,
+            "imd": imd_mean,
+            "spearman": spearman_mean,
+            "num_entries": len(pool.get("spearman", [])),
+        }
+
+    approach_txt_path = txt_root / "_method_aggregates" / "summary_ins_del_imd_spearman_by_approach.txt"
+    with open(approach_txt_path, "w", encoding="utf-8") as f:
+        f.write("approach & del & ins & imd & spearman\n")
+        for row in approach_summary_rows:
+            f.write(row + "\n")
+
+    _write_json(
+        txt_root / "_method_aggregates" / "summary_ins_del_imd_spearman_by_approach.json",
+        {"approaches": approach_summary_payload},
+    )
+
+    # Full average curves across all filtered samples/runs:
+    # insertion/deletion stay grouped by approach, and include clean references.
+    full_adv_del_by_approach: Dict[str, List[List[float]]] = {}
+    full_adv_ins_by_approach: Dict[str, List[List[float]]] = {}
+    for (model_name, explain_method, approach), mean_block in per_run_mean.items():
+        del_curve = list(mean_block.get("adv_del", []))
+        ins_curve = list(mean_block.get("adv_ins", []))
+        if del_curve:
+            full_adv_del_by_approach.setdefault(approach, []).append(del_curve)
+        if ins_curve:
+            full_adv_ins_by_approach.setdefault(approach, []).append(ins_curve)
+
+    full_clean_del_sources: List[List[float]] = []
+    full_clean_ins_sources: List[List[float]] = []
+    for clean_block in clean_reference.values():
+        cdel = _mean_curve_with_last_padding(clean_block.get("clean_del", []))
+        cins = _mean_curve_with_last_padding(clean_block.get("clean_ins", []))
+        if cdel:
+            full_clean_del_sources.append(cdel)
+        if cins:
+            full_clean_ins_sources.append(cins)
+
+    full_mean_clean_del = _mean_curve_with_last_padding(full_clean_del_sources)
+    full_mean_clean_ins = _mean_curve_with_last_padding(full_clean_ins_sources)
+
+    full_approaches = sorted(set(full_adv_del_by_approach.keys()) | set(full_adv_ins_by_approach.keys()))
+    full_color_map = _build_approach_color_map(full_approaches)
+
+    full_del_curves: List[Tuple[str, List[float], str]] = []
+    full_ins_curves: List[Tuple[str, List[float], str]] = []
+
+    if full_mean_clean_del:
+        full_del_curves.append(("clean", full_mean_clean_del, "#2E8B57"))
+    if full_mean_clean_ins:
+        full_ins_curves.append(("clean", full_mean_clean_ins, "#2E8B57"))
+
+    full_curve_payload: Dict[str, Any] = {
+        "clean": {
+            "deletion": full_mean_clean_del,
+            "insertion": full_mean_clean_ins,
+        },
+        "approaches": {},
+    }
+    for approach in full_approaches:
+        mean_del = _mean_curve_with_last_padding(full_adv_del_by_approach.get(approach, []))
+        mean_ins = _mean_curve_with_last_padding(full_adv_ins_by_approach.get(approach, []))
+        if mean_del:
+            full_del_curves.append((approach, mean_del, full_color_map[approach]))
+        if mean_ins:
+            full_ins_curves.append((approach, mean_ins, full_color_map[approach]))
+
+        full_curve_payload["approaches"][approach] = {
+            "deletion": mean_del,
+            "insertion": mean_ins,
+            "num_del_curves": len(full_adv_del_by_approach.get(approach, [])),
+            "num_ins_curves": len(full_adv_ins_by_approach.get(approach, [])),
+            "color": full_color_map.get(approach),
+        }
+
+    _plot_multi_curves(
+        full_del_curves,
+        txt_root / "_method_aggregates" / "full_avg_compare_approaches_deletion.png",
+        dpi=dpi,
+        y_label="Deletion score",
+        y_min=aggregate_y_min,
+        y_max=aggregate_y_max,
+        marker_count=aggregate_marker_count,
+        points_only=aggregate_points_only,
+    )
+    _plot_multi_curves(
+        full_ins_curves,
+        txt_root / "_method_aggregates" / "full_avg_compare_approaches_insertion.png",
+        dpi=dpi,
+        y_label="Insertion score",
+        y_min=aggregate_y_min,
+        y_max=aggregate_y_max,
+        marker_count=aggregate_marker_count,
+        points_only=aggregate_points_only,
+    )
+
+    _write_json(
+        txt_root / "_method_aggregates" / "full_avg_compare_approaches_curves.json",
+        full_curve_payload,
+    )
+
+    # Spearman comparison bars across approaches: full + per-model.
+    full_spearman_mean = {
+        approach: mean_value
+        for approach, mean_value in ((k, _mean_scalar(v)) for k, v in full_spearman_pool.items())
+        if mean_value is not None
+    }
+    per_model_spearman_mean: Dict[str, Dict[str, float]] = {}
+    for model_name, bucket in model_spearman_pool.items():
+        mean_block = {
+            approach: mean_value
+            for approach, mean_value in ((k, _mean_scalar(v)) for k, v in bucket.items())
+            if mean_value is not None
+        }
+        if mean_block:
+            per_model_spearman_mean[model_name] = mean_block
+
+    all_approaches = set(full_spearman_mean.keys())
+    for bucket in per_model_spearman_mean.values():
+        all_approaches.update(bucket.keys())
+    approach_color_map = _build_approach_color_map(sorted(all_approaches))
+
+    spearman_chart_dir = txt_root / "_method_aggregates" / "spearman_comparison"
+    spearman_chart_dir.mkdir(parents=True, exist_ok=True)
+
+    lowest_tracker: Dict[str, Optional[str]] = {}
+    lowest_tracker["full"] = _plot_spearman_bar_comparison(
+        full_spearman_mean,
+        approach_color_map,
+        spearman_chart_dir / "spearman_compare_approaches_full.png",
+        title="Spearman by Approach (All Models)",
+        dpi=dpi,
+    )
+
+    for model_name in sorted(per_model_spearman_mean.keys()):
+        model_token = _safe_filename_token(model_name)
+        lowest_tracker[model_name] = _plot_spearman_bar_comparison(
+            per_model_spearman_mean[model_name],
+            approach_color_map,
+            spearman_chart_dir / f"spearman_compare_approaches_{model_token}.png",
+            title=f"Spearman by Approach ({model_name})",
+            dpi=dpi,
+        )
+
+    _write_json(
+        spearman_chart_dir / "spearman_compare_approaches_summary.json",
+        {
+            "full": full_spearman_mean,
+            "per_model": per_model_spearman_mean,
+            "lowest_spearman_approach": lowest_tracker,
+            "approach_colors": approach_color_map,
+        },
+    )
 
 
 def _iter_targets(summary_paths: Iterable[Path]) -> Iterable[Path]:
@@ -1389,3 +1778,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+    
+    

@@ -422,7 +422,7 @@ def _build_wd_wi_mode_tag(args):
     if _is_close(w_ins, 1.0) and not _is_close(w_del, 1.0):
         return "insert_oriented"
 
-    return f"both_wd={_fmt_num(w_del)}_wi={_fmt_num(w_ins)}"
+    return f"both_ws={_fmt_num(args.w_saliency)}_wd={_fmt_num(w_del)}_wi={_fmt_num(w_ins)}"
 
 
 def build_approach_tag(args):
