@@ -30,7 +30,7 @@ from weightedSUM_GA import Weighted_Sum_GA
 from NSGAII import NSGAII
 
 
-DEFAULT_IMAGENET_VAL_ROOT = r"E:\ImageNet1K\imagenet\ImageNet1K\val"
+DEFAULT_IMAGENET_VAL_ROOT = "/datastore/elo/quanphm/dataset/ImageNet1K/val"
 DEFAULT_REMOTE_VAL_ROOT = "/datastore/quanphm/datasets/ImageNet/val"
 # DEFAULT_REMOTE_VAL_ROOT = DEFAULT_IMAGENET_VAL_ROOT
 
