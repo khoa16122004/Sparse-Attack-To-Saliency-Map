@@ -16,7 +16,7 @@ nvidia-smi -L
 
 ============================ Conda env ========================================
 source /home/khoatn/miniconda3/etc/profile.d/conda.sh
-conda activate KBS_SSL
+conda activate Sparse_Attack
 cd /datastore/khoatn/Sparse-Attack-To-Saliency-Map
 export CUDA_MPS_PIPE_DIRECTORY=/tmp/nvidia-mps-job$SLURM_JOB_ID
 export CUDA_MPS_LOG_DIRECTORY=/tmp/nvidia-mps-log-job$SLURM_JOB_ID
