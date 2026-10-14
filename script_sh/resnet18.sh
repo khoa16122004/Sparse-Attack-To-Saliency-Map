@@ -14,7 +14,6 @@
 nvidia-smi -L
 
 
-============================ Conda env ========================================
 source /datastore/khoatn/miniconda3/etc/profile.d/conda.sh
 conda activate Sparse_Attack
 cd /datastore/khoatn/Sparse-Attack-To-Saliency-Map
