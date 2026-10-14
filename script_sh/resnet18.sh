@@ -36,8 +36,8 @@ EPSILONS="100 50 20"
 # Example:
 #   W_MARGIN=0.7 W_SALIENCY=0.3 sbatch resnet18.sh
 #   sbatch resnet18.sh 0.7 0.3
-W_MARGIN="${W_MARGIN:-0.0}"
-W_SALIENCY="${W_SALIENCY:-1.0}"
+W_MARGIN="${W_MARGIN:-0.5}"
+W_SALIENCY="${W_SALIENCY:-0.5}"
 EXPLAIN_METHOD="${EXPLAIN_METHOD:-grad_cam}"
 SEED="${SEED:-22520692}"
 OUTPUT_ROOT="offical/server_run_seed/GA/$SEED/"
