@@ -28,7 +28,7 @@ mkdir -p $CUDA_MPS_PIPE_DIRECTORY $CUDA_MPS_LOG_DIRECTORY
 # =========================================================
 # CHAY CODE: SO SANH 2 FITNESS LOSS
 # =========================================================
-MODEL_NAMES="resnet18"
+MODEL_NAMES="vit_b_32"
 NUM_SAMPLE=100
 EPSILONS="100 50 20"
 
@@ -36,11 +36,11 @@ EPSILONS="100 50 20"
 # Example:
 #   W_MARGIN=0.7 W_SALIENCY=0.3 sbatch resnet18_NSGAII.sh
 #   sbatch resnet18_NSGAII.sh 0.7 0.3
-W_MARGIN="${W_MARGIN:-0.0}"
-W_SALIENCY="${W_SALIENCY:-1.0}"
-EXPLAIN_METHOD="${EXPLAIN_METHOD:-grad_cam}"
+W_MARGIN="${W_MARGIN:-0.5}"
+W_SALIENCY="${W_SALIENCY:-0.5}"
+EXPLAIN_METHOD="${EXPLAIN_METHOD:-raw_attention}"
 SEED="${SEED:-22520692}"
-OUTPUT_ROOT="server_run_NSGAII_seed$SEED"
+OUTPUT_ROOT="offical/server_run_seed/GA/$SEED/"
 
 # At wm=0, ws=1, both fitness formulations are equivalent (attack objective is off).
 FITNESSES="margin_saliency cross_entropy_saliency"
