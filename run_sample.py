@@ -24,6 +24,7 @@ from LossFunctions import (
 from util import get_explainable_method, get_torchvision_model, save_attack_two_score_charts
 from weightedSUM_GA import Weighted_Sum_GA
 from NSGAII import NSGAII
+from perturbation_archive import save_perturbation_density
 
 
 def parse_args():
@@ -100,8 +101,12 @@ def parse_args():
     )
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
     parser.add_argument("--seed", type=int, default=None, help="Global random seed for reproducibility")
+    parser.add_argument("--density-sigma", type=float, default=3.0, help="Gaussian sigma for Pareto perturbation density (0 disables smoothing)")
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    if not np.isfinite(args.density_sigma) or args.density_sigma < 0:
+        parser.error("--density-sigma must be finite and non-negative")
+    return args
 
 
 
@@ -329,6 +334,10 @@ def run_attack(args):
     output_root, _ = os.path.splitext(args.output)
     non_dominated_front_txt = f"{output_root}_non_dominated_front_scores.txt"
     save_non_dominated_front_txt(non_nominated_front_fitness, non_dominated_front_txt)
+    density_result = save_perturbation_density(
+        attacker.pareto_archive, x_tensor[0], f"{output_root}_perturbation_density",
+        _save_saliency_map, sigma=args.density_sigma,
+    )
 
     clean_saliency_map = fitness.saliency_true[0]
     adv_saliency_map, _ = explain_fn(model, adv_chw.unsqueeze(0).to(device), normalize, y_true)
@@ -397,6 +406,8 @@ def run_attack(args):
     print(f"saved_adv: {args.output}")
     print(f"saved_clean_map: {clean_map_path}")
     print(f"saved_adv_map: {adv_map_path}")
+    print(f"pareto_archive_size: {density_result['archive_size']}")
+    print(f"saved_perturbation_density: {density_result['paths']['map']}")
     print(f"saved_clean_map_class_a: {four_map_paths['clean_a']}")
     print(f"saved_clean_map_class_b: {four_map_paths['clean_b']}")
     print(f"saved_adv_map_class_a: {four_map_paths['adv_a']}")
@@ -429,6 +440,7 @@ def run_attack(args):
         "saved_adv": args.output,
         "saved_clean_map": clean_map_path,
         "saved_adv_map": adv_map_path,
+        "perturbation_density": density_result,
         "saved_clean_map_class_a": four_map_paths["clean_a"],
         "saved_clean_map_class_b": four_map_paths["clean_b"],
         "saved_adv_map_class_a": four_map_paths["adv_a"],

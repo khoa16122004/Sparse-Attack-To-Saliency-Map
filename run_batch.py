@@ -28,6 +28,7 @@ import numpy as np
 from util import get_explainable_method, get_torchvision_model
 from weightedSUM_GA import Weighted_Sum_GA
 from NSGAII import NSGAII
+from perturbation_archive import save_perturbation_density
 
 
 DEFAULT_IMAGENET_VAL_ROOT = "/datastore/quanphm/datasets/ImageNet/val"
@@ -85,7 +86,7 @@ def parse_args():
     parser.add_argument(
         "--explain-method",
         type=str,
-        default="simple_gradient",
+        default="input_gradient",
         choices=[
             "simple_gradient",
             "integrated_gradients",
@@ -137,8 +138,12 @@ def parse_args():
     parser.add_argument("--saliency-temperature", type=float, default=1.0)
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
     parser.add_argument("--seed", type=int, default=None, help="Global random seed for reproducibility")
+    parser.add_argument("--density-sigma", type=float, default=3.0, help="Gaussian sigma for Pareto perturbation density (0 disables smoothing)")
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    if not np.isfinite(args.density_sigma) or args.density_sigma < 0:
+        parser.error("--density-sigma must be finite and non-negative")
+    return args
 
 
 def _save_saliency_map(saliency_map, output_path):
@@ -227,6 +232,7 @@ def prepare_output_paths(output_dir):
         "history_txt": output_dir / "history_scores.txt",
         "non_dominated_front_txt": output_dir / "non_dominated_front_scores.txt",
         "summary": output_dir / "summary.json",
+        "density_prefix": output_dir / "perturbation_density",
     }
 
 
@@ -416,6 +422,10 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
     non_nominated_front_fitness = _sorted_front_by_score1(non_nominated_front_fitness)
 
     adv_chw_cpu = adv_chw.detach().cpu()
+    density_result = save_perturbation_density(
+        attacker.pareto_archive, x_tensor[0], output_paths["density_prefix"],
+        _save_saliency_map, sigma=args.density_sigma,
+    )
 
     save_image(x_tensor[0].detach().cpu(), str(output_paths["clean"]))
     save_image(adv_chw_cpu, str(output_paths["adv"]))
@@ -474,6 +484,7 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
         "adv_map_class_b": str(output_paths["adv_map_class_b"]),
         "history_margin": history_margin,
         "history_saliency": history_saliency,
+        "perturbation_density": density_result,
     }
 
 
