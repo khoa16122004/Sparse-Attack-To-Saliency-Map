@@ -945,7 +945,7 @@ def attention_grad(model, input_tensor, normalize, target_class=None, model_name
             align_corners=False,
         ).squeeze(1)
         saliency = saliency / (saliency.mean(dim=(1, 2), keepdim=True) + 1e-8)
-        return saliency.detach(), output_logits
+        return saliency.detach(), output_logits.detach()
 
     logits, attentions = _forward_with_attentions(model, normalize(x))
     output_logits = logits
@@ -983,7 +983,7 @@ def attention_grad(model, input_tensor, normalize, target_class=None, model_name
         out_hw=x.shape[-2:],
     )
 
-    return saliency.detach(), output_logits
+    return saliency.detach(), output_logits.detach()
 
 
 
