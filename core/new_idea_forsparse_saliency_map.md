@@ -42,9 +42,13 @@ This map characterizes the spatial distribution of perturbation locations across
   empty mask but still counts in the archive denominator.
 - `run_sample.py` and `run_batch.py` save the maps automatically. Pixel
   frequencies are averaged into a 4×4 grid, then bilinearly resized to the
-  image size. Use `--density-sigma 3` (default, in pixels) for Gaussian
+  image size. Use `--density-sigma 1` (default, in pixels) for Gaussian
   smoothing, or `0` to disable smoothing. Smoothing uses reflective boundaries;
-  normalization is min-max, with constant maps displayed as zero.
+  normalization is min-max, with constant maps displayed as zero. Then
+  `--density-gamma 2` (default) squares the normalized map to suppress weak
+  regions visually; use `--density-gamma 1` to disable this contrast adjustment.
+  Raw density and smoothed density remain unchanged by gamma. Existing saved
+  maps must be regenerated to apply the new defaults.
 - The archive is uncapped to preserve the specified frequency distribution.
   Stored entries use sparse CPU snapshots, not full images or autograd graphs.
   Large Pareto fronts can still increase runtime and memory use.
@@ -60,10 +64,11 @@ For batch runs, each image folder contains:
 - `perturbation_density.pt`: exact float tensors `grid_density`, `density`,
   `smoothed_density`, `normalized_density`, and `archive`. `grid_density` is
   the 4×4 per-cell mean changed-pixel frequency; the other maps are resized to
-  image resolution. Each archive entry contains flattened `pixels`, resulting
+  image resolution. `normalized_density` includes the gamma adjustment.
+  Each archive entry contains flattened `pixels`, resulting
   RGB `values`, and the two `objectives`. Pixel indices are row-major,
   `row * width + column`.
-- `perturbation_density.json`: archive size, image shape, sigma, objective/mask
+- `perturbation_density.json`: archive size, image shape, sigma, gamma, objective/mask
   definitions, grid size, and output paths. The same metadata appears in
   `summary.json` under `perturbation_density` and in the batch report.
 
