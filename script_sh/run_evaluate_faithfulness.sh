@@ -43,4 +43,5 @@ python evaluate_script/run_evaluate_faithfulness.py \
     --device "$DEVICE" \
     --step "$STEP" \
     --batch-size "$BATCH_SIZE" \
+    --replace \
     --output-dir "$OUTPUT_DIR"
