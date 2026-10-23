@@ -4,6 +4,7 @@ from Solutions import Solution, Population
 from operators import build_pixel_sampling_probs, generate_offspring, init_population
 from tqdm import tqdm
 from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
+from perturbation_archive import PerturbationArchive
 
 
 class Weighted_Sum_GA:
@@ -13,6 +14,7 @@ class Weighted_Sum_GA:
         self.operator_strategy = params.get("operator_strategy", "uniform")
         self.saliency_temperature = params.get("saliency_temperature", 1.0)
         self.nds = NonDominatedSorting()
+        self.pareto_archive = PerturbationArchive(params["x_tensor"].shape[-2:])
         # Saliency-guided strategy is used for initialization only.
         self.init_pixel_probs = None
         if self.operator_strategy == "saliency_guided":
@@ -25,6 +27,7 @@ class Weighted_Sum_GA:
     
     
     def attack(self):
+        self.pareto_archive = PerturbationArchive(self.params["x_tensor"].shape[-2:])
         init_solutions = init_population(
             pop_size=self.params["pop_size"],
             x_tensor=self.params["x_tensor"],
@@ -37,6 +40,7 @@ class Weighted_Sum_GA:
 
         population = Population(init_solutions, self.params['fitness'])
         pop_margin_losses, pop_saliency_losses, pop_logits = population.evaluate()    # calcuate fitenss    
+        self.pareto_archive.update(population.population, pop_margin_losses, pop_saliency_losses)
         pop_weighted_fitness = self.params['w_margin'] * pop_margin_losses + self.params['w_saliency'] * pop_saliency_losses
         first_success_iteration = 0 if any(pi.is_adversarial for pi in population.population) else None
         best_candidate_id = torch.argmin(pop_weighted_fitness)
@@ -67,6 +71,7 @@ class Weighted_Sum_GA:
             offpsrings = self.generate_offpsrings(parents)
             offpsrings = Population(offpsrings, self.params['fitness'])
             off_margin_losses, off_saliency_losses, off_logits = offpsrings.evaluate()  # calcuate fitenss
+            self.pareto_archive.update(offpsrings.population, off_margin_losses, off_saliency_losses)
             off_weighted_fitness = self.params['w_margin'] * off_margin_losses + self.params['w_saliency'] * off_saliency_losses
             
             pool = population.population + offpsrings.population
@@ -180,4 +185,3 @@ class Weighted_Sum_GA:
     
 
         
-

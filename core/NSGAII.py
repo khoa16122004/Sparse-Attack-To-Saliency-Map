@@ -1,6 +1,7 @@
 import torch
 from Solutions import Solution, Population
 from weightedSUM_GA import Weighted_Sum_GA
+from perturbation_archive import PerturbationArchive
 from operators import build_pixel_sampling_probs, generate_offspring, init_population
 from tqdm import tqdm
 from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
@@ -18,6 +19,7 @@ class NSGAII(Weighted_Sum_GA):
         return min(range(len(population.population)), key=lambda idx: int(population.population[idx].l0.item()))
         
     def attack(self):
+        self.pareto_archive = PerturbationArchive(self.params["x_tensor"].shape[-2:])
         init_solutions = init_population(
             pop_size=self.params["pop_size"],
             x_tensor=self.params["x_tensor"],
@@ -30,6 +32,7 @@ class NSGAII(Weighted_Sum_GA):
 
         population = Population(init_solutions, self.params['fitness'])
         pop_margin_losses, pop_saliency_losses, pop_logits = population.evaluate()    # calcuate fitenss    
+        self.pareto_archive.update(population.population, pop_margin_losses, pop_saliency_losses)
         pop_fitness = np.stack([pop_margin_losses.cpu().numpy(), pop_saliency_losses.cpu().numpy()], axis=1)
         selected_idxs, fronts, non_nominated_front = self.selection(pop_fitness)
         non_nominated_front_fitness = pop_fitness[non_nominated_front].copy()
@@ -63,6 +66,7 @@ class NSGAII(Weighted_Sum_GA):
             offpsrings = self.generate_offpsrings(parents)
             offpsrings = Population(offpsrings, self.params['fitness'])
             off_margin_losses, off_saliency_losses, off_logits = offpsrings.evaluate()
+            self.pareto_archive.update(offpsrings.population, off_margin_losses, off_saliency_losses)
             pool_solutions = population.population + offpsrings.population
             pool_margin_losses = torch.cat([pop_margin_losses, off_margin_losses], dim=0)
             pool_saliency_losses = torch.cat([pop_saliency_losses, off_saliency_losses], dim=0)

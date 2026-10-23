@@ -40,7 +40,8 @@ class MarginSalinecy_Fitness:
         union = torch.maximum(saliency_maps, saliency_true).sum(dim=1)
         soft_iou = inter / (union + eps)
         return soft_iou
-    
+
+# likelihood
 class NegativeCrossEntropySaliency_Fitness(MarginSalinecy_Fitness):
     def benchmark(self, xadv_tensors):
         saliency_maps, logits = self.explain_method(self.model, xadv_tensors, self.normalize, self.y_true)
