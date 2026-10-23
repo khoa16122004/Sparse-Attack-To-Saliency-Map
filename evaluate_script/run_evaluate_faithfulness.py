@@ -1,6 +1,8 @@
-"""Evaluate clean, adversarial and archived perturbation maps on the clean image."""
+"""Evaluate Clean and approach density maps; report and plot after each block."""
 
 import argparse
+import hashlib
+import itertools
 import json
 import math
 import sys
@@ -17,12 +19,14 @@ for directory in (ROOT, ROOT / "core"):
 
 if __package__:
     from .run_score import _normalize_algorithm, _parse_approach, _resolve_run_context
+    from .run_aggregate_faithfulness import aggregate_records, block_key, validate_record
 else:
     from run_score import _normalize_algorithm, _parse_approach, _resolve_run_context
+    from run_aggregate_faithfulness import aggregate_records, block_key, validate_record
 
 
 RESULT_NAME = "faithfulness.json"
-MAP_NAMES = ("clean", "adversarial", "perturbation")
+MAP_NAMES = ("clean", "perturbation")
 
 
 def write_json(path, payload):
@@ -159,22 +163,16 @@ def load_image(path, device):
 
 def evaluate_sample(path, summary, context, model, normalize, explain_fn, blur_fn, args):
     clean = load_image(path.parent / "clean.png", args.device)
-    adv = load_image(path.parent / "adv.png", args.device)
-    if clean.shape != adv.shape:
-        raise ValueError(f"{path.parent}: clean and adv image sizes differ")
     target_class = summary["true_label"]
     if isinstance(target_class, bool) or not isinstance(target_class, int) or target_class < 0:
         raise ValueError(f"{path}: true_label must be a non-negative integer")
     target = torch.tensor([target_class], device=args.device)
-    # Explain on each source image, but evaluate every map on the clean image.
     with torch.enable_grad():
         clean_map, _ = explain_fn(model, clean.clone(), normalize, target)
-        adv_map, _ = explain_fn(model, adv.clone(), normalize, target)
     density_path = path.parent / "perturbation_density.pt"
     density = torch.load(density_path, map_location="cpu", weights_only=True)
     maps = {
         "clean": clean_map,
-        "adversarial": adv_map,
         "perturbation": density["normalized_density"],
     }
     scores = {
@@ -188,6 +186,9 @@ def evaluate_sample(path, summary, context, model, normalize, explain_fn, blur_f
         "schema_version": 1,
         "status": "ok",
         "sample_dir": str(path.parent.resolve()),
+        "clean_image_sha256": hashlib.sha256(
+            clean.detach().cpu().numpy().tobytes()
+        ).hexdigest(),
         "context": context,
         "target_class": target_class,
         "protocol": {
@@ -206,7 +207,7 @@ def evaluate_sample(path, summary, context, model, normalize, explain_fn, blur_f
         },
         "perturbation_metadata": {
             key: summary.get("perturbation_density", {}).get(key)
-            for key in ("grid_size", "grid_value", "sigma")
+            for key in ("grid_size", "grid_value", "sigma", "gamma")
         },
         "maps": scores,
     }
@@ -223,6 +224,8 @@ def parse_args():
     parser.add_argument("--model", help="Only evaluate this model")
     parser.add_argument("--explain-method", help="Only evaluate this explanation method")
     parser.add_argument("--replace", action="store_true", help="Overwrite existing evaluations")
+    parser.add_argument("--output-dir", type=Path, default=Path("faithfulness_aggregates"),
+                        help="Comparison tables and per-block Ins/Del curves")
     args = parser.parse_args()
     if args.step <= 0 or args.batch_size <= 0:
         parser.error("--step and --batch-size must be positive")
@@ -255,30 +258,45 @@ def main():
             continue
         if args.explain_method and context["explain_method"] != args.explain_method:
             continue
-        if (path.parent / RESULT_NAME).exists() and not args.replace:
-            print(f"[SKIP] {path.parent}: {RESULT_NAME} exists (use --replace)")
-            continue
-        tasks.append((context["model"], str(path), path, summary, context))
+        tasks.append((block_key(context), str(path), path, summary, context))
     current_model = None
     evaluated = 0
-    for model_name, _, path, summary, context in sorted(tasks):
-        if model_name != current_model:
-            if current_model is not None:
-                del model
-            model, _, normalize = get_torchvision_model(model_name, pretrained=True)
-            model = model.to(args.device).eval()
-            current_model = model_name
-        explain_fn = get_explainable_method(context["explain_method"])
-        result = evaluate_sample(
-            path, summary, context, model, normalize, explain_fn, blur_fn, args
-        )
-        write_json(path.parent / RESULT_NAME, result)
-        evaluated += 1
-        metrics = ", ".join(
-            f"{name}: IMD={result['maps'][name]['imd']:.4f}" for name in MAP_NAMES
-        )
-        print(f"[OK] {path.parent} | {metrics}")
-    print(f"Evaluated {evaluated} samples. Existing/filtered/non-ok samples were skipped.")
+    records = []
+    for block, block_tasks in itertools.groupby(sorted(tasks), key=lambda task: task[0]):
+        for _, _, path, summary, context in block_tasks:
+            result_path = path.parent / RESULT_NAME
+            if result_path.exists() and not args.replace:
+                with result_path.open(encoding="utf-8") as handle:
+                    result = json.load(handle)
+                validate_record(result, result_path)
+                if result["context"] != context or any(
+                    result["protocol"][key] != getattr(args, key)
+                    for key in ("step", "kernel_size", "kernel_sigma")
+                ):
+                    raise ValueError(f"{result_path}: stale context/protocol; use --replace")
+                print(f"[CACHE] {result_path}")
+            else:
+                model_name = context["model"]
+                if model_name != current_model:
+                    if current_model is not None:
+                        del model
+                    model, _, normalize = get_torchvision_model(model_name, pretrained=True)
+                    model = model.to(args.device).eval()
+                    current_model = model_name
+                explain_fn = get_explainable_method(context["explain_method"])
+                result = evaluate_sample(
+                    path, summary, context, model, normalize, explain_fn, blur_fn, args
+                )
+                write_json(result_path, result)
+                evaluated += 1
+                metrics = ", ".join(
+                    f"{name}: IMD={result['maps'][name]['imd']:.4f}" for name in MAP_NAMES
+                )
+                print(f"[OK] {path.parent} | {metrics}")
+            records.append(result)
+        aggregate_records(records, args.output_dir, plot_blocks={block})
+        print(f"[BLOCK DONE] {block}: comparison tables and curves saved")
+    print(f"Evaluated {evaluated} samples; reused {len(records) - evaluated} cached evaluations.")
 
 
 if __name__ == "__main__":
