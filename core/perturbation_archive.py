@@ -8,6 +8,9 @@ from PIL import Image
 from scipy.ndimage import gaussian_filter
 
 
+DENSITY_GRID_SIZE = (4, 4)
+
+
 class PerturbationArchive:
     """Unique realized perturbations, minimizing the two original objectives."""
 
@@ -59,15 +62,45 @@ class PerturbationArchive:
                 "objectives": torch.from_numpy(scores.copy()),
             }
 
+    def grid_density_map(self, grid_size=DENSITY_GRID_SIZE):
+        if not self.entries:
+            raise ValueError("Cannot generate a density map from an empty archive.")
+        height, width = self.image_shape
+        grid_height = min(grid_size[0], height)
+        grid_width = min(grid_size[1], width)
+        cell_count = grid_height * grid_width
+        pixel_indices = torch.arange(height * width)
+        rows = pixel_indices // width
+        columns = pixel_indices % width
+        cell_indices = (
+            (rows * grid_height // height) * grid_width
+            + columns * grid_width // width
+        )
+        cell_areas = torch.bincount(cell_indices, minlength=cell_count).float()
+        counts = torch.zeros(cell_count, dtype=torch.float32)
+        for entry in self.entries.values():
+            pixels = entry["pixels"]
+            pixel_rows = pixels // width
+            pixel_columns = pixels % width
+            cells = (
+                (pixel_rows * grid_height // height) * grid_width
+                + pixel_columns * grid_width // width
+            )
+            counts += torch.bincount(cells, minlength=cell_count).float()
+        return (counts / len(self.entries) / cell_areas).reshape(
+            grid_height, grid_width
+        )
+
     def density_maps(self, sigma=3.0):
         if not math.isfinite(sigma) or sigma < 0:
             raise ValueError("Density sigma must be finite and non-negative.")
-        if not self.entries:
-            raise ValueError("Cannot generate a density map from an empty archive.")
-        density = torch.zeros(self.image_shape, dtype=torch.float32)
-        for entry in self.entries.values():
-            density.view(-1)[entry["pixels"]] += 1
-        density /= len(self.entries)
+        grid_density = self.grid_density_map()
+        density = torch.nn.functional.interpolate(
+            grid_density.unsqueeze(0).unsqueeze(0),
+            size=self.image_shape,
+            mode="bilinear",
+            align_corners=False,
+        )[0, 0]
         smoothed = torch.from_numpy(gaussian_filter(density.numpy(), sigma=sigma))
         low, high = smoothed.min(), smoothed.max()
         normalized = (
@@ -88,6 +121,7 @@ def save_perturbation_density(archive, clean_chw, output_prefix, save_map, sigma
         "metadata": f"{prefix}.json",
     }
     density, smoothed, normalized = archive.density_maps(sigma)
+    grid_density = archive.grid_density_map()
     save_map(density, paths["raw_map"])
     save_map(normalized, paths["map"])
 
@@ -104,6 +138,7 @@ def save_perturbation_density(archive, clean_chw, output_prefix, save_map, sigma
     ).save(paths["overlay"])
     torch.save({
         "density": density,
+        "grid_density": grid_density,
         "smoothed_density": smoothed,
         "normalized_density": normalized,
         "archive": list(archive.entries.values()),
@@ -112,6 +147,8 @@ def save_perturbation_density(archive, clean_chw, output_prefix, save_map, sigma
         "archive_size": len(archive.entries),
         "image_shape": list(archive.image_shape),
         "sigma": sigma,
+        "grid_size": list(DENSITY_GRID_SIZE),
+        "grid_value": "mean changed-pixel frequency within each cell",
         "objectives": ["margin_loss", "saliency_loss"],
         "objective_directions": ["min", "min"],
         "mask_definition": "any RGB channel differs from clean after clamping",

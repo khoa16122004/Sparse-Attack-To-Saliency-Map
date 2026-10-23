@@ -40,10 +40,11 @@ This map characterizes the spatial distribution of perturbation locations across
 - Each mask includes a pixel only if at least one channel actually differs from
   the clean image after clamping. A zero-perturbation solution contributes an
   empty mask but still counts in the archive denominator.
-- `run_sample.py` and `run_batch.py` save the maps automatically. Use
-  `--density-sigma 3` (default, in pixels) for Gaussian smoothing, or `0` to
-  disable smoothing. Smoothing uses reflective boundaries; normalization is
-  min-max, with constant maps displayed as zero.
+- `run_sample.py` and `run_batch.py` save the maps automatically. Pixel
+  frequencies are averaged into a 4×4 grid, then bilinearly resized to the
+  image size. Use `--density-sigma 3` (default, in pixels) for Gaussian
+  smoothing, or `0` to disable smoothing. Smoothing uses reflective boundaries;
+  normalization is min-max, with constant maps displayed as zero.
 - The archive is uncapped to preserve the specified frequency distribution.
   Stored entries use sparse CPU snapshots, not full images or autograd graphs.
   Large Pareto fronts can still increase runtime and memory use.
@@ -56,13 +57,15 @@ For batch runs, each image folder contains:
 - `perturbation_density.png`: smoothed, normalized heatmap, using the same hot
   colormap as the existing saliency maps.
 - `perturbation_density_overlay.png`: density overlay on the clean image.
-- `perturbation_density.pt`: exact float tensors `density`, `smoothed_density`,
-  `normalized_density`, and `archive`. Each archive entry contains flattened
-  `pixels`, resulting RGB `values`, and the two `objectives`. Pixel indices are
-  row-major, `row * width + column`.
+- `perturbation_density.pt`: exact float tensors `grid_density`, `density`,
+  `smoothed_density`, `normalized_density`, and `archive`. `grid_density` is
+  the 4×4 per-cell mean changed-pixel frequency; the other maps are resized to
+  image resolution. Each archive entry contains flattened `pixels`, resulting
+  RGB `values`, and the two `objectives`. Pixel indices are row-major,
+  `row * width + column`.
 - `perturbation_density.json`: archive size, image shape, sigma, objective/mask
-  definitions, and output paths. The same metadata appears in `summary.json`
-  under `perturbation_density` and in the batch report.
+  definitions, grid size, and output paths. The same metadata appears in
+  `summary.json` under `perturbation_density` and in the batch report.
 
 For single-image runs, these names are prefixed with the adversarial output stem:
 `--output results/adv.png` produces `results/adv_perturbation_density.*` and
