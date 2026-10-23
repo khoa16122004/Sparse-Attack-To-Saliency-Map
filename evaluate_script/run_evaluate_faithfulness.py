@@ -19,10 +19,10 @@ for directory in (ROOT, ROOT / "core"):
 
 if __package__:
     from .run_score import _normalize_algorithm, _parse_approach, _resolve_run_context
-    from .run_aggregate_faithfulness import aggregate_records, block_key, validate_record
+    from .run_aggregate_faithfulness import aggregate_records, block_key, sample_key, validate_record
 else:
     from run_score import _normalize_algorithm, _parse_approach, _resolve_run_context
-    from run_aggregate_faithfulness import aggregate_records, block_key, validate_record
+    from run_aggregate_faithfulness import aggregate_records, block_key, sample_key, validate_record
 
 
 RESULT_NAME = "faithfulness.json"
@@ -161,34 +161,50 @@ def load_image(path, device):
     return torch.from_numpy(array).permute(2, 0, 1).unsqueeze(0).to(device)
 
 
-def evaluate_sample(path, summary, context, model, normalize, explain_fn, blur_fn, args):
+def evaluate_sample(path, summary, context, model, normalize, explain_fn, blur_fn, args,
+                    clean_cache=None):
     clean = load_image(path.parent / "clean.png", args.device)
     target_class = summary["true_label"]
     if isinstance(target_class, bool) or not isinstance(target_class, int) or target_class < 0:
         raise ValueError(f"{path}: true_label must be a non-negative integer")
-    target = torch.tensor([target_class], device=args.device)
-    with torch.enable_grad():
-        clean_map, _ = explain_fn(model, clean.clone(), normalize, target)
-    density_path = path.parent / "perturbation_density.pt"
-    density = torch.load(density_path, map_location="cpu", weights_only=True)
-    maps = {
-        "clean": clean_map,
-        "perturbation": density["normalized_density"],
-    }
-    scores = {
-        name: evaluate_map(
-            model, normalize, clean, saliency, target_class, blur_fn,
+    image_hash = hashlib.sha256(clean.detach().cpu().numpy().tobytes()).hexdigest()
+    identity = (
+        *block_key(context),
+        *sample_key({"context": context, "sample_dir": str(path.parent)}),
+    )
+    cached = clean_cache.get(identity) if clean_cache is not None else None
+    if cached is not None:
+        if cached["image_hash"] != image_hash or cached["target_class"] != target_class:
+            raise ValueError(
+                f"{path}: clean image or true_label differs across approaches for {identity}"
+            )
+        clean_score = cached["score"]
+    else:
+        target = torch.tensor([target_class], device=args.device)
+        with torch.enable_grad():
+            clean_map, _ = explain_fn(model, clean.clone(), normalize, target)
+        clean_score = evaluate_map(
+            model, normalize, clean, clean_map, target_class, blur_fn,
             step=args.step, batch_size=args.batch_size,
         )
-        for name, saliency in maps.items()
+        if clean_cache is not None:
+            clean_cache[identity] = {
+                "image_hash": image_hash, "target_class": target_class, "score": clean_score,
+            }
+    density_path = path.parent / "perturbation_density.pt"
+    density = torch.load(density_path, map_location="cpu", weights_only=True)
+    scores = {
+        "clean": clean_score,
+        "perturbation": evaluate_map(
+            model, normalize, clean, density["normalized_density"], target_class, blur_fn,
+            step=args.step, batch_size=args.batch_size,
+        ),
     }
     return {
         "schema_version": 1,
         "status": "ok",
         "sample_dir": str(path.parent.resolve()),
-        "clean_image_sha256": hashlib.sha256(
-            clean.detach().cpu().numpy().tobytes()
-        ).hexdigest(),
+        "clean_image_sha256": image_hash,
         "context": context,
         "target_class": target_class,
         "protocol": {
@@ -263,6 +279,7 @@ def main():
     evaluated = 0
     records = []
     for block, block_tasks in itertools.groupby(sorted(tasks), key=lambda task: task[0]):
+        clean_cache = {}
         for _, _, path, summary, context in block_tasks:
             result_path = path.parent / RESULT_NAME
             if result_path.exists() and not args.replace:
@@ -285,7 +302,8 @@ def main():
                     current_model = model_name
                 explain_fn = get_explainable_method(context["explain_method"])
                 result = evaluate_sample(
-                    path, summary, context, model, normalize, explain_fn, blur_fn, args
+                    path, summary, context, model, normalize, explain_fn, blur_fn, args,
+                    clean_cache=clean_cache,
                 )
                 write_json(result_path, result)
                 evaluated += 1
