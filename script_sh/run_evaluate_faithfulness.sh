@@ -10,6 +10,7 @@
 #SBATCH --time=72:00:00        # Tối đa 3 ngày (72:00:00)
 #SBATCH --gres=gpu:2g.35gb:1
 
+set -euo pipefail
 
 nvidia-smi -L
 
@@ -28,15 +29,18 @@ mkdir -p $CUDA_MPS_PIPE_DIRECTORY $CUDA_MPS_LOG_DIRECTORY
 
 STEP="${STEP:-224}"
 BATCH_SIZE="${BATCH_SIZE:-16}"
+DEVICE="${DEVICE:-cuda}"
 OUTPUT_DIR="${OUTPUT_DIR:-faithfulness_aggregates}"
 INPUT_DIR="${INPUT_DIR:-offical/server_run_seed}"
+if (( $# > 0 )); then
+    INPUT_DIRS=("$@")
+else
+    INPUT_DIRS=("$INPUT_DIR")
+fi
 
 python evaluate_script/run_evaluate_faithfulness.py \
-    --input-dirs "$INPUT_DIR" \
+    --input-dirs "${INPUT_DIRS[@]}" \
     --device "$DEVICE" \
     --step "$STEP" \
-    --batch-size "$BATCH_SIZE"
-
-python evaluate_script/run_aggregate_faithfulness.py \
-    --input-dirs "$INPUT_DIR" \
+    --batch-size "$BATCH_SIZE" \
     --output-dir "$OUTPUT_DIR"
