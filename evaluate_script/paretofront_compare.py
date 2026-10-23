@@ -1,8 +1,58 @@
 import argparse
+import math
 import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+
+
+FRONT_COLORS = {
+    "ga_1.0_0.0": "#DC5364",
+    "ga_0.5_0.5": "#4275CF",
+    "ga_0.0_1.0": "#269D86",
+    "nsgaii": "#E49324",
+}
+
+
+@dataclass(frozen=True)
+class FrontComparison:
+    nsgaii_count: int
+    ga_count: int
+    ga_dominated: int
+    nsgaii_dominated: int
+
+    @property
+    def coverage(self) -> float:
+        return self.ga_dominated / self.ga_count
+
+    @property
+    def reverse_coverage(self) -> float:
+        return self.nsgaii_dominated / self.nsgaii_count
+
+    @property
+    def advantage(self) -> float:
+        return self.coverage - self.reverse_coverage
+
+
+def _compare_fronts(
+    nsgaii: List[Tuple[float, float]], ga: List[Tuple[float, float]]
+) -> FrontComparison:
+    """Strict Pareto coverage for two minimized objectives, counting unique points."""
+    ns_points, ga_points = set(nsgaii), set(ga)
+    if not ns_points or not ga_points:
+        raise ValueError("Both fronts must contain at least one point")
+    if any(not math.isfinite(v) for point in ns_points | ga_points for v in point):
+        raise ValueError("Front scores must be finite")
+
+    def dominates(a: Tuple[float, float], b: Tuple[float, float]) -> bool:
+        return a[0] <= b[0] and a[1] <= b[1] and (a[0] < b[0] or a[1] < b[1])
+
+    return FrontComparison(
+        nsgaii_count=len(ns_points),
+        ga_count=len(ga_points),
+        ga_dominated=sum(any(dominates(a, b) for a in ns_points) for b in ga_points),
+        nsgaii_dominated=sum(any(dominates(b, a) for b in ga_points) for a in ns_points),
+    )
 
 
 def _safe_float(raw: str) -> Optional[float]:
@@ -100,23 +150,29 @@ def _parse_weight_pairs(raw: str) -> List[Tuple[float, float]]:
     return pairs
 
 
-def _read_front(path: Path) -> Optional[List[Tuple[float, float]]]:
+def _read_front(path: Path, *, strict: bool = False) -> Optional[List[Tuple[float, float]]]:
     if not path.exists():
         return None
 
     points: List[Tuple[float, float]] = []
     with open(path, "r", encoding="utf-8") as f:
-        for raw_line in f:
+        for line_number, raw_line in enumerate(f, start=1):
             line = raw_line.strip()
             if not line:
                 continue
             parts = re.split(r"[\s,]+", line)
             if len(parts) < 2:
+                if strict:
+                    raise ValueError(f"{path}:{line_number}: expected two objective scores")
                 continue
             x = _safe_float(parts[0])
             y = _safe_float(parts[1])
             if x is None or y is None:
+                if strict:
+                    raise ValueError(f"{path}:{line_number}: objective scores must be numeric")
                 continue
+            if strict and (not math.isfinite(x) or not math.isfinite(y)):
+                raise ValueError(f"{path}:{line_number}: objective scores must be finite")
             points.append((x, y))
 
     if not points:
@@ -265,32 +321,28 @@ def _plot_one_sample(
         print("[WARN] matplotlib not installed, skip plotting")
         return
 
-    color_map = {
-        "ga_1.0_0.0": "tab:red",
-        "ga_0.5_0.5": "tab:blue",
-        "ga_0.0_1.0": "tab:green",
-        "nsgaii": "tab:orange",
-    }
-
-    fig, ax = plt.subplots(1, 1, figsize=(7.0, 5.0))
+    fig, ax = plt.subplots(1, 1, figsize=(6.0, 4.0))
     for key, points in key_to_points.items():
         xs = [p[0] for p in points]
         ys = [p[1] for p in points]
-        ax.plot(
+        ax.scatter(
             xs,
             ys,
-            marker="o",
-            markersize=3,
-            linewidth=1.6,
-            color=color_map.get(key),
+            s=30,
+            facecolors="none",
+            linewidths=1.3,
+            edgecolors=FRONT_COLORS.get(key, "#8172B3"),
             label=_make_label(key),
         )
 
     ax.set_title(f"sample={sample_id} | eps={eps}")
     ax.set_xlabel("margin loss")
     ax.set_ylabel("saliency loss")
-    ax.grid(alpha=0.3)
-    ax.legend()
+    ax.grid(alpha=0.18, linestyle="--")
+    ax.set_axisbelow(True)
+    ax.margins(0.08)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.legend(frameon=False, fontsize=8)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fig.tight_layout()

@@ -1,0 +1,7160 @@
+{
+  "grad_cam": {
+    "resnet18": {
+      "ga_0.5": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.92,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.92
+              ]
+            },
+            "sro": {
+              "mean": 0.787794785642443,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.787794785642443
+              ]
+            },
+            "h_score": {
+              "mean": 0.3448646848349492,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.3448646848349492
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.92,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.92
+              ]
+            },
+            "sro": {
+              "mean": 0.8513682678067083,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.8513682678067083
+              ]
+            },
+            "h_score": {
+              "mean": 0.25591827286875846,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.25591827286875846
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.69,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.69
+              ]
+            },
+            "sro": {
+              "mean": 0.8733281421083567,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.8733281421083567
+              ]
+            },
+            "h_score": {
+              "mean": 0.21404822781791175,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.21404822781791175
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.72,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.72
+              ]
+            },
+            "sro": {
+              "mean": 0.9322792032820787,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.9322792032820787
+              ]
+            },
+            "h_score": {
+              "mean": 0.12379760402431948,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.12379760402431948
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.81,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.81
+              ]
+            },
+            "sro": {
+              "mean": 0.8348260919195437,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.8348260919195437
+              ]
+            },
+            "h_score": {
+              "mean": 0.2743938582370915,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.2743938582370915
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.87,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.87
+              ]
+            },
+            "sro": {
+              "mean": 0.909913331301038,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.909913331301038
+              ]
+            },
+            "h_score": {
+              "mean": 0.16326734725794168,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.16326734725794168
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "ga_0.0": {
+        "100": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.39,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.39
+              ]
+            },
+            "sro": {
+              "mean": 0.5348954885625545,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.5348954885625545
+              ]
+            },
+            "h_score": {
+              "mean": 0.42425401113995465,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.42425401113995465
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.39,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.39
+              ]
+            },
+            "sro": {
+              "mean": 0.5348954885625545,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.5348954885625545
+              ]
+            },
+            "h_score": {
+              "mean": 0.42425401113995465,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.42425401113995465
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.19,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.19
+              ]
+            },
+            "sro": {
+              "mean": 0.7537594496151369,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.7537594496151369
+              ]
+            },
+            "h_score": {
+              "mean": 0.2144949823295812,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.2144949823295812
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.19,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.19
+              ]
+            },
+            "sro": {
+              "mean": 0.7537594496151369,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.7537594496151369
+              ]
+            },
+            "h_score": {
+              "mean": 0.2144949823295812,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.2144949823295812
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.23,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.23
+              ]
+            },
+            "sro": {
+              "mean": 0.6331928965881761,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.6331928965881761
+              ]
+            },
+            "h_score": {
+              "mean": 0.2827232896606574,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.2827232896606574
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.23,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.23
+              ]
+            },
+            "sro": {
+              "mean": 0.6331928965881761,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.6331928965881761
+              ]
+            },
+            "h_score": {
+              "mean": 0.2827232896606574,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.2827232896606574
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "ga_1.0": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.94,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.94
+              ]
+            },
+            "sro": {
+              "mean": 0.8233914396305339,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.8233914396305339
+              ]
+            },
+            "h_score": {
+              "mean": 0.29735048187767377,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.29735048187767377
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.92,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.92
+              ]
+            },
+            "sro": {
+              "mean": 0.8778039141283319,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.8778039141283319
+              ]
+            },
+            "h_score": {
+              "mean": 0.2157375191212868,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.2157375191212868
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.72,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.72
+              ]
+            },
+            "sro": {
+              "mean": 0.9399191504470847,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.9399191504470847
+              ]
+            },
+            "h_score": {
+              "mean": 0.11090699560921512,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.11090699560921512
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.71,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.71
+              ]
+            },
+            "sro": {
+              "mean": 0.9405892864425079,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.9405892864425079
+              ]
+            },
+            "h_score": {
+              "mean": 0.10964652787530352,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.10964652787530352
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.88,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.88
+              ]
+            },
+            "sro": {
+              "mean": 0.8880280449193212,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.8880280449193212
+              ]
+            },
+            "h_score": {
+              "mean": 0.1986655367953085,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.1986655367953085
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.87,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.87
+              ]
+            },
+            "sro": {
+              "mean": 0.9088396129715981,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.9088396129715981
+              ]
+            },
+            "h_score": {
+              "mean": 0.16502872524721743,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.16502872524721743
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "nsgaii": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.88,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.88
+              ]
+            },
+            "sro": {
+              "mean": 0.6017065530770074,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.6017065530770074
+              ]
+            },
+            "h_score": {
+              "mean": 0.5483846203482077,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.5483846203482077
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.9,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.9
+              ]
+            },
+            "sro": {
+              "mean": 0.6278598283996716,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.6278598283996716
+              ]
+            },
+            "h_score": {
+              "mean": 0.5265554251289224,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.5265554251289224
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.59,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.59
+              ]
+            },
+            "sro": {
+              "mean": 0.8246203530765784,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.8246203530765784
+              ]
+            },
+            "h_score": {
+              "mean": 0.27038605507933394,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.27038605507933394
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.55,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.55
+              ]
+            },
+            "sro": {
+              "mean": 0.8339201335726817,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.8339201335726817
+              ]
+            },
+            "h_score": {
+              "mean": 0.25512217510250706,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.25512217510250706
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.75,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.75
+              ]
+            },
+            "sro": {
+              "mean": 0.7170131158663148,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.7170131158663148
+              ]
+            },
+            "h_score": {
+              "mean": 0.4109251847437719,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.4109251847437719
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.75,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.75
+              ]
+            },
+            "sro": {
+              "mean": 0.7307734911656142,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.7307734911656142
+              ]
+            },
+            "h_score": {
+              "mean": 0.39622180128872475,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.39622180128872475
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        }
+      }
+    },
+    "vgg16": {
+      "ga_0.5": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.83,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.83
+              ]
+            },
+            "sro": {
+              "mean": 0.5287566260924583,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.5287566260924583
+              ]
+            },
+            "h_score": {
+              "mean": 0.6011665583644324,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.6011665583644324
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.92,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.92
+              ]
+            },
+            "sro": {
+              "mean": 0.562841498542804,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.562841498542804
+              ]
+            },
+            "h_score": {
+              "mean": 0.5926880624610744,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.5926880624610744
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.65,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.65
+              ]
+            },
+            "sro": {
+              "mean": 0.6241324022862104,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.6241324022862104
+              ]
+            },
+            "h_score": {
+              "mean": 0.4763069601933665,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.4763069601933665
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.73,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.73
+              ]
+            },
+            "sro": {
+              "mean": 0.725298503743128,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.725298503743128
+              ]
+            },
+            "h_score": {
+              "mean": 0.39918740643787504,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.39918740643787504
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.78,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.78
+              ]
+            },
+            "sro": {
+              "mean": 0.5520644032036279,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.5520644032036279
+              ]
+            },
+            "h_score": {
+              "mean": 0.569068551172736,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.569068551172736
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.87,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.87
+              ]
+            },
+            "sro": {
+              "mean": 0.6347271135890773,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.6347271135890773
+              ]
+            },
+            "h_score": {
+              "mean": 0.5145217946146815,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.5145217946146815
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "ga_0.0": {
+        "100": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.39,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.39
+              ]
+            },
+            "sro": {
+              "mean": 0.20572774389221762,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.20572774389221762
+              ]
+            },
+            "h_score": {
+              "mean": 0.5231333897833756,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.5231333897833756
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.39,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.39
+              ]
+            },
+            "sro": {
+              "mean": 0.20572774389221762,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.20572774389221762
+              ]
+            },
+            "h_score": {
+              "mean": 0.5231333897833756,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.5231333897833756
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.22,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.22
+              ]
+            },
+            "sro": {
+              "mean": 0.43512619298641353,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.43512619298641353
+              ]
+            },
+            "h_score": {
+              "mean": 0.3166680718161304,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.3166680718161304
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.22,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.22
+              ]
+            },
+            "sro": {
+              "mean": 0.43512619298641353,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.43512619298641353
+              ]
+            },
+            "h_score": {
+              "mean": 0.3166680718161304,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.3166680718161304
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.26,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.26
+              ]
+            },
+            "sro": {
+              "mean": 0.30319145474345893,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.30319145474345893
+              ]
+            },
+            "h_score": {
+              "mean": 0.3786969141629583,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.3786969141629583
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.26,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.26
+              ]
+            },
+            "sro": {
+              "mean": 0.30319145474345893,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.30319145474345893
+              ]
+            },
+            "h_score": {
+              "mean": 0.3786969141629583,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.3786969141629583
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "ga_1.0": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.94,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.94
+              ]
+            },
+            "sro": {
+              "mean": 0.5858872074128963,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.5858872074128963
+              ]
+            },
+            "h_score": {
+              "mean": 0.5749388487618734,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.5749388487618734
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.93,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.93
+              ]
+            },
+            "sro": {
+              "mean": 0.6057445944015182,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.6057445944015182
+              ]
+            },
+            "h_score": {
+              "mean": 0.5537565120089225,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.5537565120089225
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.77,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.77
+              ]
+            },
+            "sro": {
+              "mean": 0.7220958730618955,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.7220958730618955
+              ]
+            },
+            "h_score": {
+              "mean": 0.4084079301559613,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.4084079301559613
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.72,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.72
+              ]
+            },
+            "sro": {
+              "mean": 0.7570863565925091,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.7570863565925091
+              ]
+            },
+            "h_score": {
+              "mean": 0.3632679305165463,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.3632679305165463
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.89,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.89
+              ]
+            },
+            "sro": {
+              "mean": 0.6341555571805744,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.6341555571805744
+              ]
+            },
+            "h_score": {
+              "mean": 0.5185380338639698,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.5185380338639698
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.86,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.86
+              ]
+            },
+            "sro": {
+              "mean": 0.6696603210919015,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.6696603210919015
+              ]
+            },
+            "h_score": {
+              "mean": 0.4773295033255769,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.4773295033255769
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "nsgaii": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.88,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.88
+              ]
+            },
+            "sro": {
+              "mean": 0.19398027582155578,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.19398027582155578
+              ]
+            },
+            "h_score": {
+              "mean": 0.8413867846328477,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.8413867846328477
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.85,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.85
+              ]
+            },
+            "sro": {
+              "mean": 0.19262756390981545,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.19262756390981545
+              ]
+            },
+            "h_score": {
+              "mean": 0.8281380282823941,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.8281380282823941
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.62,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.62
+              ]
+            },
+            "sro": {
+              "mean": 0.4481356185336549,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.4481356185336549
+              ]
+            },
+            "h_score": {
+              "mean": 0.5839513887793003,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.5839513887793003
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.64,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.64
+              ]
+            },
+            "sro": {
+              "mean": 0.47573129100598394,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.47573129100598394
+              ]
+            },
+            "h_score": {
+              "mean": 0.5763823611579941,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.5763823611579941
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.8,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.8
+              ]
+            },
+            "sro": {
+              "mean": 0.32934022051948936,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.32934022051948936
+              ]
+            },
+            "h_score": {
+              "mean": 0.7296423429407027,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.7296423429407027
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.78,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.78
+              ]
+            },
+            "sro": {
+              "mean": 0.31407865879956537,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.31407865879956537
+              ]
+            },
+            "h_score": {
+              "mean": 0.7299418203410768,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.7299418203410768
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        }
+      }
+    }
+  },
+  "input_gradient": {
+    "resnet18": {
+      "ga_1.0": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.9400000000000001,
+              "std": 0.01870828693386968,
+              "count": 5,
+              "values": [
+                0.94,
+                0.96,
+                0.91,
+                0.94,
+                0.95
+              ]
+            },
+            "sro": {
+              "mean": 0.5933958121949127,
+              "std": 0.0012578214443668722,
+              "count": 5,
+              "values": [
+                0.591396947416331,
+                0.5934155058351087,
+                0.5942426790399955,
+                0.5946599510683367,
+                0.5932639776147914
+              ]
+            },
+            "h_score": {
+              "mean": 0.5676260315809912,
+              "std": 0.003963966403675407,
+              "count": 5,
+              "values": [
+                0.5696069999141866,
+                0.5712359770872678,
+                0.5612572412733366,
+                0.5664287572474064,
+                0.569601182382759
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.908,
+              "std": 0.013038404810405309,
+              "count": 5,
+              "values": [
+                0.92,
+                0.92,
+                0.89,
+                0.91,
+                0.9
+              ]
+            },
+            "sro": {
+              "mean": 0.5979062841480075,
+              "std": 0.0014003377772611205,
+              "count": 5,
+              "values": [
+                0.5974857790572314,
+                0.5982191058751,
+                0.6000445206043077,
+                0.5975749204336339,
+                0.5962070947697644
+              ]
+            },
+            "h_score": {
+              "mean": 0.5573491334157842,
+              "std": 0.0032087163176178894,
+              "count": 5,
+              "values": [
+                0.5600137637890433,
+                0.5593036247352196,
+                0.5518956000387293,
+                0.5580612990516614,
+                0.5574713794642672
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.736,
+              "std": 0.01140175425099139,
+              "count": 5,
+              "values": [
+                0.72,
+                0.75,
+                0.73,
+                0.74,
+                0.74
+              ]
+            },
+            "sro": {
+              "mean": 0.7146478225489824,
+              "std": 0.0017580465340141758,
+              "count": 5,
+              "values": [
+                0.7147660824391366,
+                0.7161479401812482,
+                0.7118693084853848,
+                0.7143044533955717,
+                0.7161513282435706
+              ]
+            },
+            "h_score": {
+              "mean": 0.4112323705961355,
+              "std": 0.0017995476133873982,
+              "count": 5,
+              "values": [
+                0.40859827161848083,
+                0.41183657340951896,
+                0.4131795781399441,
+                0.41223676009351257,
+                0.4103106697192211
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.706,
+              "std": 0.005477225575051666,
+              "count": 5,
+              "values": [
+                0.71,
+                0.71,
+                0.7,
+                0.7,
+                0.71
+              ]
+            },
+            "sro": {
+              "mean": 0.7209584526966104,
+              "std": 0.0009954596380096832,
+              "count": 5,
+              "values": [
+                0.7195697373664409,
+                0.7206756666672418,
+                0.7223365386584873,
+                0.7210242464261368,
+                0.721186074364745
+              ]
+            },
+            "h_score": {
+              "mean": 0.3999875341267352,
+              "std": 0.0017354098662678038,
+              "count": 5,
+              "values": [
+                0.4020585678398082,
+                0.40092064853630466,
+                0.3976100787736495,
+                0.398953757105426,
+                0.40039461837848755
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.8859999999999999,
+              "std": 0.008944271909999166,
+              "count": 5,
+              "values": [
+                0.88,
+                0.89,
+                0.88,
+                0.9,
+                0.88
+              ]
+            },
+            "sro": {
+              "mean": 0.6416062587209808,
+              "std": 0.0014818707275932085,
+              "count": 5,
+              "values": [
+                0.641579446356188,
+                0.6438240093257143,
+                0.6396511729178583,
+                0.6414033234385211,
+                0.641573341566622
+              ]
+            },
+            "h_score": {
+              "mean": 0.5103355679866289,
+              "std": 0.0017062942836483823,
+              "count": 5,
+              "values": [
+                0.509374761713251,
+                0.5087509855306914,
+                0.5113190110853942,
+                0.5128521549684327,
+                0.509380926635375
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.876,
+              "std": 0.005477225575051666,
+              "count": 5,
+              "values": [
+                0.87,
+                0.88,
+                0.87,
+                0.88,
+                0.88
+              ]
+            },
+            "sro": {
+              "mean": 0.64877063266339,
+              "std": 0.000894852435230181,
+              "count": 5,
+              "values": [
+                0.648598202433636,
+                0.6489704911751955,
+                0.6488295261216638,
+                0.6474772370645421,
+                0.6499777065219127
+              ]
+            },
+            "h_score": {
+              "mean": 0.5014132579735088,
+              "std": 0.001244058300165829,
+              "count": 5,
+              "values": [
+                0.5006044112459653,
+                0.501866065031574,
+                0.5003696352137498,
+                0.5033903481739557,
+                0.5008358302022989
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "ga_0.5": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.914,
+              "std": 0.005477225575051666,
+              "count": 5,
+              "values": [
+                0.92,
+                0.92,
+                0.91,
+                0.91,
+                0.91
+              ]
+            },
+            "sro": {
+              "mean": 0.58548276307304,
+              "std": 0.0016313530054692309,
+              "count": 5,
+              "values": [
+                0.5867584778755994,
+                0.5831517154221865,
+                0.5854165301315146,
+                0.5872581811791975,
+                0.5848289107567024
+              ]
+            },
+            "h_score": {
+              "mean": 0.5703596595767306,
+              "std": 0.0021204088489058088,
+              "count": 5,
+              "values": [
+                0.5703125713466565,
+                0.573738136534619,
+                0.5696446711927938,
+                0.567903803724548,
+                0.5701991150850361
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.9179999999999999,
+              "std": 0.016431676725154998,
+              "count": 5,
+              "values": [
+                0.93,
+                0.92,
+                0.92,
+                0.93,
+                0.89
+              ]
+            },
+            "sro": {
+              "mean": 0.5959342978895059,
+              "std": 0.0024189580636336324,
+              "count": 5,
+              "values": [
+                0.5968356631094888,
+                0.5973146452385919,
+                0.5948506646724105,
+                0.5922696704742314,
+                0.5984008459528072
+              ]
+            },
+            "h_score": {
+              "mean": 0.5611193455548853,
+              "std": 0.0049267885292111424,
+              "count": 5,
+              "values": [
+                0.5624855435042565,
+                0.5601793730411759,
+                0.5625590694791213,
+                0.5669142697742214,
+                0.5534584719756513
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.722,
+              "std": 0.016431676725154998,
+              "count": 5,
+              "values": [
+                0.72,
+                0.71,
+                0.71,
+                0.75,
+                0.72
+              ]
+            },
+            "sro": {
+              "mean": 0.693217401159035,
+              "std": 0.0017516983428250178,
+              "count": 5,
+              "values": [
+                0.6909479189053065,
+                0.6946016926060712,
+                0.6943904654606677,
+                0.694449956401441,
+                0.6916969724216883
+              ]
+            },
+            "h_score": {
+              "mean": 0.43055949561021906,
+              "std": 0.0032025320386859066,
+              "count": 5,
+              "values": [
+                0.4324708194583657,
+                0.42708914653640073,
+                0.427295652795041,
+                0.4342049608897048,
+                0.43173689837158313
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.71,
+              "std": 0.020000000000000018,
+              "count": 5,
+              "values": [
+                0.73,
+                0.69,
+                0.69,
+                0.71,
+                0.73
+              ]
+            },
+            "sro": {
+              "mean": 0.7147767173903434,
+              "std": 0.0016183742868420444,
+              "count": 5,
+              "values": [
+                0.7163524499164575,
+                0.7127042329316023,
+                0.7164548075711211,
+                0.7144898984107263,
+                0.71388219812181
+              ]
+            },
+            "h_score": {
+              "mean": 0.4069024920992426,
+              "std": 0.003419619547506108,
+              "count": 5,
+              "values": [
+                0.40854972035185283,
+                0.4056787841654913,
+                0.40192521990235003,
+                0.4072528682627453,
+                0.4111058678137737
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.8720000000000001,
+              "std": 0.02280350850198278,
+              "count": 5,
+              "values": [
+                0.84,
+                0.9,
+                0.86,
+                0.88,
+                0.88
+              ]
+            },
+            "sro": {
+              "mean": 0.6305130180540237,
+              "std": 0.0008786524357095867,
+              "count": 5,
+              "values": [
+                0.6315038548306763,
+                0.6311170730680493,
+                0.629373327464841,
+                0.6306971101342793,
+                0.6298737247722724
+              ]
+            },
+            "h_score": {
+              "mean": 0.5189837407892255,
+              "std": 0.0042021538015921045,
+              "count": 5,
+              "values": [
+                0.5122676860485349,
+                0.5232864706304938,
+                0.5180107753127386,
+                0.5202686165510508,
+                0.5210851554033092
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.8640000000000001,
+              "std": 0.023021728866442697,
+              "count": 5,
+              "values": [
+                0.86,
+                0.89,
+                0.88,
+                0.83,
+                0.86
+              ]
+            },
+            "sro": {
+              "mean": 0.6462063707455324,
+              "std": 0.001777532435990883,
+              "count": 5,
+              "values": [
+                0.6463479380702823,
+                0.6459436334356761,
+                0.6441572729168792,
+                0.6490229175060465,
+                0.6455600917987782
+              ]
+            },
+            "h_score": {
+              "mean": 0.5019758592982256,
+              "std": 0.005463306653303773,
+              "count": 5,
+              "values": [
+                0.5011992856930851,
+                0.5065850305681556,
+                0.50676610052516,
+                0.4933389187448063,
+                0.5019899609599212
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "ga_0.0": {
+        "100": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.184,
+              "std": 0.011401754250991382,
+              "count": 5,
+              "values": [
+                0.19,
+                0.17,
+                0.18,
+                0.18,
+                0.2
+              ]
+            },
+            "sro": {
+              "mean": 0.5302562857384494,
+              "std": 0.0029290234969643965,
+              "count": 5,
+              "values": [
+                0.5262349990174598,
+                0.5309474781396122,
+                0.5320427836587346,
+                0.5336054179303256,
+                0.5284507499461147
+              ]
+            },
+            "h_score": {
+              "mean": 0.26427953421085026,
+              "std": 0.012034459767042316,
+              "count": 5,
+              "values": [
+                0.2712265637791602,
+                0.24955360002064522,
+                0.25999339714758074,
+                0.25975163499588977,
+                0.2808724751109754
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.184,
+              "std": 0.011401754250991382,
+              "count": 5,
+              "values": [
+                0.19,
+                0.17,
+                0.18,
+                0.18,
+                0.2
+              ]
+            },
+            "sro": {
+              "mean": 0.5302562857384494,
+              "std": 0.0029290234969643965,
+              "count": 5,
+              "values": [
+                0.5262349990174598,
+                0.5309474781396122,
+                0.5320427836587346,
+                0.5336054179303256,
+                0.5284507499461147
+              ]
+            },
+            "h_score": {
+              "mean": 0.26427953421085026,
+              "std": 0.012034459767042316,
+              "count": 5,
+              "values": [
+                0.2712265637791602,
+                0.24955360002064522,
+                0.25999339714758074,
+                0.25975163499588977,
+                0.2808724751109754
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.1,
+              "std": 0.015811388300841896,
+              "count": 5,
+              "values": [
+                0.08,
+                0.11,
+                0.12,
+                0.09,
+                0.1
+              ]
+            },
+            "sro": {
+              "mean": 0.6354803426116291,
+              "std": 0.00108139187857477,
+              "count": 5,
+              "values": [
+                0.6344049838509414,
+                0.635738707270921,
+                0.637145167865506,
+                0.6346542872205692,
+                0.6354585668502081
+              ]
+            },
+            "h_score": {
+              "mean": 0.15639436219468394,
+              "std": 0.019409859985582676,
+              "count": 5,
+              "values": [
+                0.13127436453257324,
+                0.16897327618548832,
+                0.18035474415221742,
+                0.14442263637201022,
+                0.15694678973113046
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.1,
+              "std": 0.015811388300841896,
+              "count": 5,
+              "values": [
+                0.08,
+                0.11,
+                0.12,
+                0.09,
+                0.1
+              ]
+            },
+            "sro": {
+              "mean": 0.6354803426116291,
+              "std": 0.00108139187857477,
+              "count": 5,
+              "values": [
+                0.6344049838509414,
+                0.635738707270921,
+                0.637145167865506,
+                0.6346542872205692,
+                0.6354585668502081
+              ]
+            },
+            "h_score": {
+              "mean": 0.15639436219468394,
+              "std": 0.019409859985582676,
+              "count": 5,
+              "values": [
+                0.13127436453257324,
+                0.16897327618548832,
+                0.18035474415221742,
+                0.14442263637201022,
+                0.15694678973113046
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.168,
+              "std": 0.044944410108488465,
+              "count": 5,
+              "values": [
+                0.13,
+                0.15,
+                0.13,
+                0.2,
+                0.23
+              ]
+            },
+            "sro": {
+              "mean": 0.571998800570333,
+              "std": 0.002320005721307178,
+              "count": 5,
+              "values": [
+                0.5747618926809868,
+                0.5715095714986927,
+                0.5740610756521232,
+                0.5698595210634296,
+                0.5698019419564327
+              ]
+            },
+            "h_score": {
+              "mean": 0.2386655488540371,
+              "std": 0.04556355892213234,
+              "count": 5,
+              "values": [
+                0.19912521573275205,
+                0.2222113317992463,
+                0.1992019545318799,
+                0.27304418193383073,
+                0.29974506027247644
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.168,
+              "std": 0.044944410108488465,
+              "count": 5,
+              "values": [
+                0.13,
+                0.15,
+                0.13,
+                0.2,
+                0.23
+              ]
+            },
+            "sro": {
+              "mean": 0.571998800570333,
+              "std": 0.002320005721307178,
+              "count": 5,
+              "values": [
+                0.5747618926809868,
+                0.5715095714986927,
+                0.5740610756521232,
+                0.5698595210634296,
+                0.5698019419564327
+              ]
+            },
+            "h_score": {
+              "mean": 0.2386655488540371,
+              "std": 0.04556355892213234,
+              "count": 5,
+              "values": [
+                0.19912521573275205,
+                0.2222113317992463,
+                0.1992019545318799,
+                0.27304418193383073,
+                0.29974506027247644
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "nsgaii": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.892,
+              "std": 0.017888543819998333,
+              "count": 5,
+              "values": [
+                0.91,
+                0.88,
+                0.87,
+                0.91,
+                0.89
+              ]
+            },
+            "sro": {
+              "mean": 0.5371178368445282,
+              "std": 0.001101218539500837,
+              "count": 5,
+              "values": [
+                0.5383683694128395,
+                0.5368163149194709,
+                0.536156062233133,
+                0.5360586462011588,
+                0.5381897914560385
+              ]
+            },
+            "h_score": {
+              "mean": 0.6094378003184102,
+              "std": 0.003967321340673945,
+              "count": 5,
+              "values": [
+                0.6125329490316412,
+                0.6069186923550643,
+                0.6050846196186811,
+                0.6145628134558032,
+                0.6080899271308609
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.8880000000000001,
+              "std": 0.010954451150103331,
+              "count": 5,
+              "values": [
+                0.87,
+                0.9,
+                0.89,
+                0.89,
+                0.89
+              ]
+            },
+            "sro": {
+              "mean": 0.5409124653220607,
+              "std": 0.001762430518388813,
+              "count": 5,
+              "values": [
+                0.5412389498462022,
+                0.5394506744060706,
+                0.5433364796398764,
+                0.54158625229043,
+                0.5389499704277239
+              ]
+            },
+            "h_score": {
+              "mean": 0.6052454852388329,
+              "std": 0.003324255636353946,
+              "count": 5,
+              "values": [
+                0.6007432466320527,
+                0.6093044702419658,
+                0.603611112910852,
+                0.6051380537383728,
+                0.607430542670921
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.588,
+              "std": 0.008366600265340763,
+              "count": 5,
+              "values": [
+                0.59,
+                0.59,
+                0.58,
+                0.58,
+                0.6
+              ]
+            },
+            "sro": {
+              "mean": 0.6637987841520541,
+              "std": 0.0026196444652142395,
+              "count": 5,
+              "values": [
+                0.6674149658530711,
+                0.6608711515143458,
+                0.6624870880334177,
+                0.6655045676184355,
+                0.6627161477410003
+              ]
+            },
+            "h_score": {
+              "mean": 0.4277814271183081,
+              "std": 0.0033126150361368497,
+              "count": 5,
+              "values": [
+                0.42538121231963893,
+                0.4306959598394717,
+                0.42671331680997115,
+                0.42429375568572486,
+                0.4318228909367337
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.598,
+              "std": 0.017888543819998333,
+              "count": 5,
+              "values": [
+                0.6,
+                0.6,
+                0.62,
+                0.6,
+                0.57
+              ]
+            },
+            "sro": {
+              "mean": 0.6663616617706805,
+              "std": 0.0018414813030578102,
+              "count": 5,
+              "values": [
+                0.6677444879798571,
+                0.6654021692958768,
+                0.6667609714326703,
+                0.6682123701495657,
+                0.6636883099954326
+              ]
+            },
+            "h_score": {
+              "mean": 0.4282202425735477,
+              "std": 0.003801102497428523,
+              "count": 5,
+              "values": [
+                0.42767954630828375,
+                0.4296151602903313,
+                0.4334866523924564,
+                0.42729173801591397,
+                0.42302811586075284
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.774,
+              "std": 0.01140175425099139,
+              "count": 5,
+              "values": [
+                0.76,
+                0.78,
+                0.77,
+                0.77,
+                0.79
+              ]
+            },
+            "sro": {
+              "mean": 0.5896400850806568,
+              "std": 0.0014435467677861137,
+              "count": 5,
+              "values": [
+                0.5920499272811304,
+                0.5883016259492674,
+                0.5890035707605403,
+                0.589078564298833,
+                0.5897667371135128
+              ]
+            },
+            "h_score": {
+              "mean": 0.5363379665411333,
+              "std": 0.0035425314078076555,
+              "count": 5,
+              "values": [
+                0.5309166247913224,
+                0.5389362589596025,
+                0.5359326119524055,
+                0.535868849398998,
+                0.5400354876033383
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.762,
+              "std": 0.013038404810405309,
+              "count": 5,
+              "values": [
+                0.75,
+                0.75,
+                0.76,
+                0.77,
+                0.78
+              ]
+            },
+            "sro": {
+              "mean": 0.5938530191177978,
+              "std": 0.0012764999202418794,
+              "count": 5,
+              "values": [
+                0.5960284185189075,
+                0.593022915899003,
+                0.5931299499513665,
+                0.5939777737253543,
+                0.5931060374943573
+              ]
+            },
+            "h_score": {
+              "mean": 0.5298468881948333,
+              "std": 0.0037189576204207757,
+              "count": 5,
+              "values": [
+                0.5251059748316403,
+                0.5276384766305411,
+                0.5300011565539343,
+                0.5316857236990086,
+                0.5348031092590421
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        }
+      }
+    },
+    "vgg16": {
+      "ga_0.5": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.866,
+              "std": 0.01140175425099139,
+              "count": 5,
+              "values": [
+                0.87,
+                0.85,
+                0.87,
+                0.88,
+                0.86
+              ]
+            },
+            "sro": {
+              "mean": 0.5501508276601725,
+              "std": 0.0025586881101091487,
+              "count": 5,
+              "values": [
+                0.5473705206007056,
+                0.5480481229624712,
+                0.5520769593655578,
+                0.5533547403491034,
+                0.5499037950230247
+              ]
+            },
+            "h_score": {
+              "mean": 0.5920861638445531,
+              "std": 0.0020796174410271998,
+              "count": 5,
+              "values": [
+                0.595461772493132,
+                0.590127949054489,
+                0.5913745087336333,
+                0.5925439760682046,
+                0.5909226128733068
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.9280000000000002,
+              "std": 0.008366600265340723,
+              "count": 5,
+              "values": [
+                0.92,
+                0.93,
+                0.93,
+                0.92,
+                0.94
+              ]
+            },
+            "sro": {
+              "mean": 0.56139396208014,
+              "std": 0.003152058830358577,
+              "count": 5,
+              "values": [
+                0.5623888213813097,
+                0.5659103237345033,
+                0.5573395623441697,
+                0.5600115978763941,
+                0.5613195050643232
+              ]
+            },
+            "h_score": {
+              "mean": 0.59566062638888,
+              "std": 0.003336409557775639,
+              "count": 5,
+              "values": [
+                0.5931039618262794,
+                0.5919015530300633,
+                0.599819439282393,
+                0.5952835028911183,
+                0.5981946749145459
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.6900000000000001,
+              "std": 0.009999999999999953,
+              "count": 5,
+              "values": [
+                0.68,
+                0.69,
+                0.68,
+                0.7,
+                0.7
+              ]
+            },
+            "sro": {
+              "mean": 0.6809604699787198,
+              "std": 0.0026942885083265466,
+              "count": 5,
+              "values": [
+                0.67812426730423,
+                0.6819758618005908,
+                0.6845729611841446,
+                0.6784357430430377,
+                0.6816935165615959
+              ]
+            },
+            "h_score": {
+              "mean": 0.4363134796829128,
+              "std": 0.003564844547753052,
+              "count": 5,
+              "values": [
+                0.4369314298973792,
+                0.4353797633250386,
+                0.4309514972587768,
+                0.4406868747353926,
+                0.4376178331979767
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.738,
+              "std": 0.008366600265340763,
+              "count": 5,
+              "values": [
+                0.75,
+                0.74,
+                0.73,
+                0.73,
+                0.74
+              ]
+            },
+            "sro": {
+              "mean": 0.7058356300829313,
+              "std": 0.002243678326417397,
+              "count": 5,
+              "values": [
+                0.7044596413704884,
+                0.7064800601865185,
+                0.7091605570642439,
+                0.7032332247461751,
+                0.7058446670472304
+              ]
+            },
+            "h_score": {
+              "mean": 0.4206469666597957,
+              "std": 0.002968406264466415,
+              "count": 5,
+              "values": [
+                0.42400136377839714,
+                0.42032039652989195,
+                0.4159572689168973,
+                0.4219843320928204,
+                0.4209714719809715
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.804,
+              "std": 0.011401754250991351,
+              "count": 5,
+              "values": [
+                0.79,
+                0.81,
+                0.82,
+                0.8,
+                0.8
+              ]
+            },
+            "sro": {
+              "mean": 0.6021876349693353,
+              "std": 0.002308419774052427,
+              "count": 5,
+              "values": [
+                0.5993044516302942,
+                0.6054632056326738,
+                0.6025952278860509,
+                0.6027328913503124,
+                0.6008423983473448
+              ]
+            },
+            "h_score": {
+              "mean": 0.5322322760686575,
+              "std": 0.0019063239479052147,
+              "count": 5,
+              "values": [
+                0.5317051594683216,
+                0.5306185828974839,
+                0.5353550776174165,
+                0.5308985515825112,
+                0.5325840087775541
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.8640000000000001,
+              "std": 0.01140175425099139,
+              "count": 5,
+              "values": [
+                0.87,
+                0.85,
+                0.86,
+                0.86,
+                0.88
+              ]
+            },
+            "sro": {
+              "mean": 0.620021483819806,
+              "std": 0.002452491907138612,
+              "count": 5,
+              "values": [
+                0.6217725027096571,
+                0.6200907253381753,
+                0.6174799456978785,
+                0.6177111239980299,
+                0.6230531213552893
+              ]
+            },
+            "h_score": {
+              "mean": 0.5277951325559166,
+              "std": 0.0017813770805507588,
+              "count": 5,
+              "values": [
+                0.527240304122315,
+                0.5251165921182954,
+                0.5295161966373146,
+                0.5292946587749577,
+                0.5278079111267003
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "ga_0.0": {
+        "100": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.296,
+              "std": 0.005477225575051666,
+              "count": 5,
+              "values": [
+                0.3,
+                0.3,
+                0.29,
+                0.29,
+                0.3
+              ]
+            },
+            "sro": {
+              "mean": 0.4750926931123157,
+              "std": 0.00306554533390471,
+              "count": 5,
+              "values": [
+                0.4719482133136609,
+                0.479217186424801,
+                0.4755624683212092,
+                0.4765379879213784,
+                0.47219760958052925
+              ]
+            },
+            "h_score": {
+              "mean": 0.3785165581393903,
+              "std": 0.004777170777545712,
+              "count": 5,
+              "values": [
+                0.3826222913903537,
+                0.38069716248571445,
+                0.37347710111874227,
+                0.3732294348076534,
+                0.38255680089448774
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.296,
+              "std": 0.005477225575051666,
+              "count": 5,
+              "values": [
+                0.3,
+                0.3,
+                0.29,
+                0.29,
+                0.3
+              ]
+            },
+            "sro": {
+              "mean": 0.4750926931123157,
+              "std": 0.00306554533390471,
+              "count": 5,
+              "values": [
+                0.4719482133136609,
+                0.479217186424801,
+                0.4755624683212092,
+                0.4765379879213784,
+                0.47219760958052925
+              ]
+            },
+            "h_score": {
+              "mean": 0.3785165581393903,
+              "std": 0.004777170777545712,
+              "count": 5,
+              "values": [
+                0.3826222913903537,
+                0.38069716248571445,
+                0.37347710111874227,
+                0.3732294348076534,
+                0.38255680089448774
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.17,
+              "std": 0.025495097567963927,
+              "count": 5,
+              "values": [
+                0.18,
+                0.2,
+                0.17,
+                0.17,
+                0.13
+              ]
+            },
+            "sro": {
+              "mean": 0.600299186226391,
+              "std": 0.002286006931350943,
+              "count": 5,
+              "values": [
+                0.5991971710710247,
+                0.5990407253792216,
+                0.6043670408244443,
+                0.5992217361310113,
+                0.5996692577262531
+              ]
+            },
+            "h_score": {
+              "mean": 0.23762486611738157,
+              "std": 0.025905590990642123,
+              "count": 5,
+              "values": [
+                0.24843029549374976,
+                0.266879498530941,
+                0.23781359260915946,
+                0.23873475628135185,
+                0.1962661876717057
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.17,
+              "std": 0.025495097567963927,
+              "count": 5,
+              "values": [
+                0.18,
+                0.2,
+                0.17,
+                0.17,
+                0.13
+              ]
+            },
+            "sro": {
+              "mean": 0.600299186226391,
+              "std": 0.002286006931350943,
+              "count": 5,
+              "values": [
+                0.5991971710710247,
+                0.5990407253792216,
+                0.6043670408244443,
+                0.5992217361310113,
+                0.5996692577262531
+              ]
+            },
+            "h_score": {
+              "mean": 0.23762486611738157,
+              "std": 0.025905590990642123,
+              "count": 5,
+              "values": [
+                0.24843029549374976,
+                0.266879498530941,
+                0.23781359260915946,
+                0.23873475628135185,
+                0.1962661876717057
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.22200000000000003,
+              "std": 0.008366600265340763,
+              "count": 5,
+              "values": [
+                0.22,
+                0.22,
+                0.23,
+                0.21,
+                0.23
+              ]
+            },
+            "sro": {
+              "mean": 0.5260558136583213,
+              "std": 0.003620759972645182,
+              "count": 5,
+              "values": [
+                0.5237705766592017,
+                0.5255226364158281,
+                0.5274203618898696,
+                0.5220915757039797,
+                0.5314739176227277
+              ]
+            },
+            "h_score": {
+              "mean": 0.3022631103776482,
+              "std": 0.0071531813181760365,
+              "count": 5,
+              "values": [
+                0.3009653703867996,
+                0.30061460736399126,
+                0.3094120890201266,
+                0.2917852596582742,
+                0.3085382254590493
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.22200000000000003,
+              "std": 0.008366600265340763,
+              "count": 5,
+              "values": [
+                0.22,
+                0.22,
+                0.23,
+                0.21,
+                0.23
+              ]
+            },
+            "sro": {
+              "mean": 0.5260558136583213,
+              "std": 0.003620759972645182,
+              "count": 5,
+              "values": [
+                0.5237705766592017,
+                0.5255226364158281,
+                0.5274203618898696,
+                0.5220915757039797,
+                0.5314739176227277
+              ]
+            },
+            "h_score": {
+              "mean": 0.3022631103776482,
+              "std": 0.0071531813181760365,
+              "count": 5,
+              "values": [
+                0.3009653703867996,
+                0.30061460736399126,
+                0.3094120890201266,
+                0.2917852596582742,
+                0.3085382254590493
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "ga_1.0": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.938,
+              "std": 0.004472135954999534,
+              "count": 5,
+              "values": [
+                0.94,
+                0.94,
+                0.94,
+                0.93,
+                0.94
+              ]
+            },
+            "sro": {
+              "mean": 0.5603378342074651,
+              "std": 0.002158340117103495,
+              "count": 5,
+              "values": [
+                0.5609276364986258,
+                0.562005792993062,
+                0.5619813674449288,
+                0.5599984792065985,
+                0.5567758948941101
+              ]
+            },
+            "h_score": {
+              "mean": 0.5986946060327749,
+              "std": 0.002125540106751381,
+              "count": 5,
+              "values": [
+                0.5985589046877894,
+                0.5975562923167627,
+                0.5975790237877096,
+                0.5973736643750364,
+                0.6024051449965763
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.932,
+              "std": 0.00836660026534071,
+              "count": 5,
+              "values": [
+                0.93,
+                0.94,
+                0.92,
+                0.93,
+                0.94
+              ]
+            },
+            "sro": {
+              "mean": 0.5623609554432202,
+              "std": 0.0018488203882700543,
+              "count": 5,
+              "values": [
+                0.5607968039100748,
+                0.5650399619084108,
+                0.5606512541692377,
+                0.5619695745340458,
+                0.5633471826943315
+              ]
+            },
+            "h_score": {
+              "mean": 0.5955845374099951,
+              "std": 0.0008879805105500689,
+              "count": 5,
+              "values": [
+                0.5966374801491539,
+                0.5947262821886589,
+                0.5946977880459589,
+                0.595554438117978,
+                0.5963066985482256
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.74,
+              "std": 0.017320508075688787,
+              "count": 5,
+              "values": [
+                0.77,
+                0.73,
+                0.74,
+                0.73,
+                0.73
+              ]
+            },
+            "sro": {
+              "mean": 0.7110693789688243,
+              "std": 0.004037922730538126,
+              "count": 5,
+              "values": [
+                0.7069002757006279,
+                0.7103105423090145,
+                0.7166114444939714,
+                0.7136222951356025,
+                0.7079023372049054
+              ]
+            },
+            "h_score": {
+              "mean": 0.4155617357932998,
+              "std": 0.005813850115189006,
+              "count": 5,
+              "values": [
+                0.42458253454868256,
+                0.4147798185406088,
+                0.4098297366062852,
+                0.41137408573695916,
+                0.4172425035339636
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.734,
+              "std": 0.021908902300206663,
+              "count": 5,
+              "values": [
+                0.72,
+                0.77,
+                0.72,
+                0.72,
+                0.74
+              ]
+            },
+            "sro": {
+              "mean": 0.7135585226889807,
+              "std": 0.0016429399487573658,
+              "count": 5,
+              "values": [
+                0.7117764731147643,
+                0.7118987391393236,
+                0.7139347717966821,
+                0.7152052412371319,
+                0.7149773881570018
+              ]
+            },
+            "h_score": {
+              "mean": 0.4120207373463267,
+              "std": 0.004334671827631854,
+              "count": 5,
+              "values": [
+                0.41165660951887595,
+                0.4193133097342202,
+                0.40945051778444835,
+                0.4081474838935887,
+                0.4115357658005004
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.8779999999999999,
+              "std": 0.013038404810405309,
+              "count": 5,
+              "values": [
+                0.89,
+                0.87,
+                0.89,
+                0.86,
+                0.88
+              ]
+            },
+            "sro": {
+              "mean": 0.6197110392254919,
+              "std": 0.002231394605591573,
+              "count": 5,
+              "values": [
+                0.622924816760628,
+                0.616777813450938,
+                0.6199498697970653,
+                0.6188219082258304,
+                0.6200807878929975
+              ]
+            },
+            "h_score": {
+              "mean": 0.5306768581933881,
+              "std": 0.0017850772228544367,
+              "count": 5,
+              "values": [
+                0.529719021447587,
+                0.5320737310209304,
+                0.5326476614376875,
+                0.5282290448056521,
+                0.5307148322550831
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.8539999999999999,
+              "std": 0.01140175425099139,
+              "count": 5,
+              "values": [
+                0.86,
+                0.85,
+                0.85,
+                0.84,
+                0.87
+              ]
+            },
+            "sro": {
+              "mean": 0.6230328425741177,
+              "std": 0.0006496214266593827,
+              "count": 5,
+              "values": [
+                0.6224027775970761,
+                0.6231019841955222,
+                0.6223490568297908,
+                0.6235067783973779,
+                0.6238036158508217
+              ]
+            },
+            "h_score": {
+              "mean": 0.5230353994126802,
+              "std": 0.002134084861905336,
+              "count": 5,
+              "values": [
+                0.52478076936212,
+                0.5222329962343997,
+                0.5229553294126732,
+                0.5199442142876316,
+                0.5252636877665763
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "nsgaii": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.8880000000000001,
+              "std": 0.014832396974191338,
+              "count": 5,
+              "values": [
+                0.89,
+                0.89,
+                0.91,
+                0.87,
+                0.88
+              ]
+            },
+            "sro": {
+              "mean": 0.49487295643089596,
+              "std": 0.00266411793326588,
+              "count": 5,
+              "values": [
+                0.4979528873545316,
+                0.4906264214670095,
+                0.495153990618195,
+                0.495762936258315,
+                0.49486854645642886
+              ]
+            },
+            "h_score": {
+              "mean": 0.6439162781514074,
+              "std": 0.00459192607839438,
+              "count": 5,
+              "values": [
+                0.6419638045228505,
+                0.6479220300409207,
+                0.6494132442557118,
+                0.6384433327112267,
+                0.6418389792263277
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.86,
+              "std": 0.007071067811865481,
+              "count": 5,
+              "values": [
+                0.86,
+                0.86,
+                0.86,
+                0.85,
+                0.87
+              ]
+            },
+            "sro": {
+              "mean": 0.49416230080659557,
+              "std": 0.0034296570640408976,
+              "count": 5,
+              "values": [
+                0.49459501117683446,
+                0.4928773773018675,
+                0.4964474625288942,
+                0.4978596280887405,
+                0.4890320249366413
+              ]
+            },
+            "h_score": {
+              "mean": 0.6370001862635242,
+              "std": 0.004557140348733165,
+              "count": 5,
+              "values": [
+                0.6366584184851165,
+                0.6380195138014224,
+                0.6351866471215124,
+                0.6313239734440568,
+                0.643812378465513
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.64,
+              "std": 0.014142135623730963,
+              "count": 5,
+              "values": [
+                0.66,
+                0.64,
+                0.64,
+                0.64,
+                0.62
+              ]
+            },
+            "sro": {
+              "mean": 0.6431738398384935,
+              "std": 0.0028804434029372937,
+              "count": 5,
+              "values": [
+                0.6458080912599228,
+                0.6428274110409152,
+                0.6462590907147124,
+                0.6415300856494984,
+                0.6394445205274184
+              ]
+            },
+            "h_score": {
+              "mean": 0.45812153981187886,
+              "std": 0.002304219279059362,
+              "count": 5,
+              "values": [
+                0.46099097765206487,
+                0.45847721741415337,
+                0.4556402575907032,
+                0.4595446330169252,
+                0.4559546133855476
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.642,
+              "std": 0.008366600265340763,
+              "count": 5,
+              "values": [
+                0.64,
+                0.63,
+                0.65,
+                0.65,
+                0.64
+              ]
+            },
+            "sro": {
+              "mean": 0.6460948876341279,
+              "std": 0.0030171283614338815,
+              "count": 5,
+              "values": [
+                0.6461840936796515,
+                0.6475002442720585,
+                0.649572299004022,
+                0.6458423526855261,
+                0.6413754485293818
+              ]
+            },
+            "h_score": {
+              "mean": 0.456258986776079,
+              "std": 0.0029749993526149397,
+              "count": 5,
+              "values": [
+                0.45570246683500204,
+                0.45206086783007127,
+                0.4553612528334048,
+                0.4584986657624191,
+                0.45967168061949787
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.79,
+              "std": 0.010000000000000009,
+              "count": 5,
+              "values": [
+                0.8,
+                0.79,
+                0.78,
+                0.8,
+                0.78
+              ]
+            },
+            "sro": {
+              "mean": 0.5530845487156103,
+              "std": 0.003024245233297971,
+              "count": 5,
+              "values": [
+                0.5513386047113383,
+                0.5489041689512608,
+                0.5538742330808918,
+                0.5567121625000362,
+                0.5545935743345245
+              ]
+            },
+            "h_score": {
+              "mean": 0.5708558090453508,
+              "std": 0.0036560929124600946,
+              "count": 5,
+              "values": [
+                0.5749022394465126,
+                0.5742758900855724,
+                0.5676058811997248,
+                0.5704717110610058,
+                0.5670233234339388
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.778,
+              "std": 0.016431676725154998,
+              "count": 5,
+              "values": [
+                0.79,
+                0.75,
+                0.79,
+                0.78,
+                0.78
+              ]
+            },
+            "sro": {
+              "mean": 0.5557678205689617,
+              "std": 0.0016425225009924387,
+              "count": 5,
+              "values": [
+                0.5539370880501192,
+                0.5573572854603025,
+                0.5558803168032111,
+                0.5573962705273962,
+                0.5542681420037792
+              ]
+            },
+            "h_score": {
+              "mean": 0.5655044593001279,
+              "std": 0.005300247932705738,
+              "count": 5,
+              "values": [
+                0.5701808492652101,
+                0.5567166626811655,
+                0.5685908012043546,
+                0.5647470241851031,
+                0.5672869591648065
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        }
+      }
+    }
+  },
+  "raw_attention": {
+    "vit_b_32": {
+      "ga_0.5": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.3,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.3
+              ]
+            },
+            "sro": {
+              "mean": 0.6821429471197178,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.6821429471197178
+              ]
+            },
+            "h_score": {
+              "mean": 0.30867047780568535,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.30867047780568535
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.35,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.35
+              ]
+            },
+            "sro": {
+              "mean": 0.7666764407822545,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.7666764407822545
+              ]
+            },
+            "h_score": {
+              "mean": 0.27999296251885936,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.27999296251885936
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.18,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.18
+              ]
+            },
+            "sro": {
+              "mean": 0.7414165858298415,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.7414165858298415
+              ]
+            },
+            "h_score": {
+              "mean": 0.21225159477905073,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.21225159477905073
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.2,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.2
+              ]
+            },
+            "sro": {
+              "mean": 0.8318852145121365,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.8318852145121365
+              ]
+            },
+            "h_score": {
+              "mean": 0.18267648257057703,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.18267648257057703
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.25,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.25
+              ]
+            },
+            "sro": {
+              "mean": 0.7120736690018415,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.7120736690018415
+              ]
+            },
+            "h_score": {
+              "mean": 0.26762617333110633,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.26762617333110633
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.32,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.32
+              ]
+            },
+            "sro": {
+              "mean": 0.7957063323416413,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.7957063323416413
+              ]
+            },
+            "h_score": {
+              "mean": 0.24937922268889154,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.24937922268889154
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "ga_0.0": {
+        "100": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.03,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.03
+              ]
+            },
+            "sro": {
+              "mean": 0.599249525896435,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.599249525896435
+              ]
+            },
+            "h_score": {
+              "mean": 0.055821246619064124,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.055821246619064124
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.03,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.03
+              ]
+            },
+            "sro": {
+              "mean": 0.599249525896435,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.599249525896435
+              ]
+            },
+            "h_score": {
+              "mean": 0.055821246619064124,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.055821246619064124
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.02,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.02
+              ]
+            },
+            "sro": {
+              "mean": 0.6982295396953954,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.6982295396953954
+              ]
+            },
+            "h_score": {
+              "mean": 0.037513755615594176,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.037513755615594176
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.02,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.02
+              ]
+            },
+            "sro": {
+              "mean": 0.6982295396953954,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.6982295396953954
+              ]
+            },
+            "h_score": {
+              "mean": 0.037513755615594176,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.037513755615594176
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.05,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.05
+              ]
+            },
+            "sro": {
+              "mean": 0.6439391906105691,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.6439391906105691
+              ]
+            },
+            "h_score": {
+              "mean": 0.08768657332994485,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.08768657332994485
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.05,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.05
+              ]
+            },
+            "sro": {
+              "mean": 0.6439391906105691,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.6439391906105691
+              ]
+            },
+            "h_score": {
+              "mean": 0.08768657332994485,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.08768657332994485
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "ga_1.0": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.31,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.31
+              ]
+            },
+            "sro": {
+              "mean": 0.7758488420863278,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.7758488420863278
+              ]
+            },
+            "h_score": {
+              "mean": 0.260176760543384,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.260176760543384
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.36,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.36
+              ]
+            },
+            "sro": {
+              "mean": 0.8109559125152351,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.8109559125152351
+              ]
+            },
+            "h_score": {
+              "mean": 0.24790676394053254,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.24790676394053254
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.2,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.2
+              ]
+            },
+            "sro": {
+              "mean": 0.8167897683222618,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.8167897683222618
+              ]
+            },
+            "h_score": {
+              "mean": 0.1912373068700414,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.1912373068700414
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.22,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.22
+              ]
+            },
+            "sro": {
+              "mean": 0.849683650587749,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.849683650587749
+              ]
+            },
+            "h_score": {
+              "mean": 0.17860187336142064,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.17860187336142064
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.29,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.29
+              ]
+            },
+            "sro": {
+              "mean": 0.7806468749272274,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.7806468749272274
+              ]
+            },
+            "h_score": {
+              "mean": 0.24977722974416067,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.24977722974416067
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.33,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.33
+              ]
+            },
+            "sro": {
+              "mean": 0.8419738301180104,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.8419738301180104
+              ]
+            },
+            "h_score": {
+              "mean": 0.21371245756622728,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.21371245756622728
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "nsgaii": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.25,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.25
+              ]
+            },
+            "sro": {
+              "mean": 0.6821367224319148,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.6821367224319148
+              ]
+            },
+            "h_score": {
+              "mean": 0.27987659188789005,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.27987659188789005
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.27,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.27
+              ]
+            },
+            "sro": {
+              "mean": 0.714189170931695,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.714189170931695
+              ]
+            },
+            "h_score": {
+              "mean": 0.27768053378088775,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.27768053378088775
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.17,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.17
+              ]
+            },
+            "sro": {
+              "mean": 0.7573619867063044,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.7573619867063044
+              ]
+            },
+            "h_score": {
+              "mean": 0.19992565362886047,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.19992565362886047
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.17,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.17
+              ]
+            },
+            "sro": {
+              "mean": 0.7726417986455932,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.7726417986455932
+              ]
+            },
+            "h_score": {
+              "mean": 0.19453930533461483,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.19453930533461483
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.18,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.18
+              ]
+            },
+            "sro": {
+              "mean": 0.7189627412928341,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.7189627412928341
+              ]
+            },
+            "h_score": {
+              "mean": 0.21944736834998707,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.21944736834998707
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.19,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.19
+              ]
+            },
+            "sro": {
+              "mean": 0.714538354191032,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.714538354191032
+              ]
+            },
+            "h_score": {
+              "mean": 0.2281475832248125,
+              "std": 0.0,
+              "count": 1,
+              "values": [
+                0.2281475832248125
+              ]
+            },
+            "seeds": [
+              "22520691"
+            ],
+            "num_runs": 1,
+            "expected_seeds": 1,
+            "seed_ratio": 1.0
+          }
+        }
+      }
+    }
+  },
+  "simple_gradient": {
+    "resnet18": {
+      "ga_0.5": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.916,
+              "std": 0.005477225575051666,
+              "count": 5,
+              "values": [
+                0.91,
+                0.92,
+                0.92,
+                0.92,
+                0.91
+              ]
+            },
+            "sro": {
+              "mean": 0.47268901018805387,
+              "std": 0.004422370815614158,
+              "count": 5,
+              "values": [
+                0.46995117344977494,
+                0.4710200274248,
+                0.48032276726290185,
+                0.47257009667385164,
+                0.46958098612894117
+              ]
+            },
+            "h_score": {
+              "mean": 0.6692970676004169,
+              "std": 0.0029436984891487517,
+              "count": 5,
+              "values": [
+                0.6699001079237112,
+                0.6717298844431433,
+                0.6641808917255241,
+                0.6704787706057482,
+                0.6701956833039576
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.916,
+              "std": 0.008944271909999166,
+              "count": 5,
+              "values": [
+                0.93,
+                0.91,
+                0.91,
+                0.92,
+                0.91
+              ]
+            },
+            "sro": {
+              "mean": 0.48972655331471965,
+              "std": 0.0025722079308214277,
+              "count": 5,
+              "values": [
+                0.4864040401294727,
+                0.493501139623313,
+                0.4897978498650699,
+                0.49018472186037293,
+                0.4887450150953698
+              ]
+            },
+            "h_score": {
+              "mean": 0.6554224247215796,
+              "std": 0.0040310354561076435,
+              "count": 5,
+              "values": [
+                0.6617422824076471,
+                0.650779151096832,
+                0.6538279872040411,
+                0.6560708408413779,
+                0.654691862058
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.722,
+              "std": 0.013038404810405309,
+              "count": 5,
+              "values": [
+                0.74,
+                0.72,
+                0.71,
+                0.71,
+                0.73
+              ]
+            },
+            "sro": {
+              "mean": 0.6195905199024223,
+              "std": 0.0014215204146647972,
+              "count": 5,
+              "values": [
+                0.6178395573555929,
+                0.6200122647585047,
+                0.618532357171582,
+                0.6214436195420138,
+                0.6201248006844184
+              ]
+            },
+            "h_score": {
+              "mean": 0.4982580393772197,
+              "std": 0.003860614617827498,
+              "count": 5,
+              "values": [
+                0.5040254794411341,
+                0.4974440361624785,
+                0.49628961185934845,
+                0.4938192177277746,
+                0.49971185169536275
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.706,
+              "std": 0.01140175425099139,
+              "count": 5,
+              "values": [
+                0.71,
+                0.71,
+                0.69,
+                0.7,
+                0.72
+              ]
+            },
+            "sro": {
+              "mean": 0.6454261103501688,
+              "std": 0.0035332594168412854,
+              "count": 5,
+              "values": [
+                0.6496583063825334,
+                0.648054061624905,
+                0.6449948057746734,
+                0.6407510308797195,
+                0.6436723470890128
+              ]
+            },
+            "h_score": {
+              "mean": 0.4720268656065726,
+              "std": 0.003547852586180406,
+              "count": 5,
+              "values": [
+                0.4691744255001232,
+                0.4706108045926827,
+                0.46880835687532063,
+                0.4748161871576781,
+                0.4767245539070584
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.8699999999999999,
+              "std": 0.01581138830084191,
+              "count": 5,
+              "values": [
+                0.86,
+                0.85,
+                0.89,
+                0.88,
+                0.87
+              ]
+            },
+            "sro": {
+              "mean": 0.5322810734362088,
+              "std": 0.0018820971728515216,
+              "count": 5,
+              "values": [
+                0.5296897363470683,
+                0.533075470979301,
+                0.5321945200811292,
+                0.5348105540377913,
+                0.531635085735754
+              ]
+            },
+            "h_score": {
+              "mean": 0.6083292448371993,
+              "std": 0.003742570940519773,
+              "count": 5,
+              "values": [
+                0.6080789388648117,
+                0.6027465369829952,
+                0.6132643935899741,
+                0.6086380080895227,
+                0.6089183466586929
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.866,
+              "std": 0.015165750888103114,
+              "count": 5,
+              "values": [
+                0.87,
+                0.87,
+                0.88,
+                0.87,
+                0.84
+              ]
+            },
+            "sro": {
+              "mean": 0.5543307690823736,
+              "std": 0.0010002761034555057,
+              "count": 5,
+              "values": [
+                0.5545550857972149,
+                0.5530670045120523,
+                0.5558110953001734,
+                0.5542923157228228,
+                0.5539283440796045
+              ]
+            },
+            "h_score": {
+              "mean": 0.5884490961060883,
+              "std": 0.0032607876476064145,
+              "count": 5,
+              "values": [
+                0.5892106483094912,
+                0.5905109939635848,
+                0.5903783587802458,
+                0.5894404812785975,
+                0.5827049981985222
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "ga_0.0": {
+        "100": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.22599999999999998,
+              "std": 0.043358966777357594,
+              "count": 5,
+              "values": [
+                0.3,
+                0.22,
+                0.19,
+                0.22,
+                0.2
+              ]
+            },
+            "sro": {
+              "mean": 0.39719954799135077,
+              "std": 0.006462416191877415,
+              "count": 5,
+              "values": [
+                0.38725995158042487,
+                0.3973176467346486,
+                0.40528349488507304,
+                0.3988995962866875,
+                0.3972370504699198
+              ]
+            },
+            "h_score": {
+              "mean": 0.3271147151353662,
+              "std": 0.04478311185643783,
+              "count": 5,
+              "values": [
+                0.40279160500114675,
+                0.32233611719543265,
+                0.2879922500299318,
+                0.32210942344902593,
+                0.300344180001294
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.20800000000000002,
+              "std": 0.013038404810405295,
+              "count": 5,
+              "values": [
+                0.21,
+                0.22,
+                0.19,
+                0.22,
+                0.2
+              ]
+            },
+            "sro": {
+              "mean": 0.3995196506450124,
+              "std": 0.0033203907347466237,
+              "count": 5,
+              "values": [
+                0.39886046484873283,
+                0.3973176467346486,
+                0.40528349488507304,
+                0.3988995962866875,
+                0.3972370504699198
+              ]
+            },
+            "h_score": {
+              "mean": 0.3088092110235279,
+              "std": 0.014755523202039227,
+              "count": 5,
+              "values": [
+                0.311264084441955,
+                0.32233611719543265,
+                0.2879922500299318,
+                0.32210942344902593,
+                0.300344180001294
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.11400000000000002,
+              "std": 0.028809720581775868,
+              "count": 5,
+              "values": [
+                0.1,
+                0.09,
+                0.09,
+                0.14,
+                0.15
+              ]
+            },
+            "sro": {
+              "mean": 0.5409424945350572,
+              "std": 0.0029503157553964015,
+              "count": 5,
+              "values": [
+                0.5422163814342835,
+                0.5439310136275478,
+                0.5393230780680488,
+                0.5426333254125102,
+                0.5366086741328955
+              ]
+            },
+            "h_score": {
+              "mean": 0.1812149832628603,
+              "std": 0.036559949563932374,
+              "count": 5,
+              "values": [
+                0.16414380176415372,
+                0.15033341866269143,
+                0.15058166166984954,
+                0.21437866277513815,
+                0.22663737144246876
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.11400000000000002,
+              "std": 0.028809720581775868,
+              "count": 5,
+              "values": [
+                0.1,
+                0.09,
+                0.09,
+                0.14,
+                0.15
+              ]
+            },
+            "sro": {
+              "mean": 0.5409424945350572,
+              "std": 0.0029503157553964015,
+              "count": 5,
+              "values": [
+                0.5422163814342835,
+                0.5439310136275478,
+                0.5393230780680488,
+                0.5426333254125102,
+                0.5366086741328955
+              ]
+            },
+            "h_score": {
+              "mean": 0.1812149832628603,
+              "std": 0.036559949563932374,
+              "count": 5,
+              "values": [
+                0.16414380176415372,
+                0.15033341866269143,
+                0.15058166166984954,
+                0.21437866277513815,
+                0.22663737144246876
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.156,
+              "std": 0.015165750888103097,
+              "count": 5,
+              "values": [
+                0.15,
+                0.15,
+                0.14,
+                0.16,
+                0.18
+              ]
+            },
+            "sro": {
+              "mean": 0.45929367344853655,
+              "std": 0.004059938505409561,
+              "count": 5,
+              "values": [
+                0.45507806304804815,
+                0.4603834472504376,
+                0.46190561313866246,
+                0.4640238282875485,
+                0.4550774155179861
+              ]
+            },
+            "h_score": {
+              "mean": 0.2418454434889922,
+              "std": 0.01822629762593801,
+              "count": 5,
+              "values": [
+                0.23524452516583685,
+                0.23474634589239335,
+                0.2221909386664545,
+                0.2464342630092892,
+                0.270611144710987
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.156,
+              "std": 0.015165750888103097,
+              "count": 5,
+              "values": [
+                0.15,
+                0.15,
+                0.14,
+                0.16,
+                0.18
+              ]
+            },
+            "sro": {
+              "mean": 0.45929367344853655,
+              "std": 0.004059938505409561,
+              "count": 5,
+              "values": [
+                0.45507806304804815,
+                0.4603834472504376,
+                0.46190561313866246,
+                0.4640238282875485,
+                0.4550774155179861
+              ]
+            },
+            "h_score": {
+              "mean": 0.2418454434889922,
+              "std": 0.01822629762593801,
+              "count": 5,
+              "values": [
+                0.23524452516583685,
+                0.23474634589239335,
+                0.2221909386664545,
+                0.2464342630092892,
+                0.270611144710987
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "ga_1.0": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.9400000000000001,
+              "std": 0.01870828693386968,
+              "count": 5,
+              "values": [
+                0.94,
+                0.96,
+                0.91,
+                0.94,
+                0.95
+              ]
+            },
+            "sro": {
+              "mean": 0.48348429834451867,
+              "std": 0.0022420528201769437,
+              "count": 5,
+              "values": [
+                0.479859029711638,
+                0.4832395880289112,
+                0.4844091329652449,
+                0.4858822058431223,
+                0.48403153517367686
+              ]
+            },
+            "h_score": {
+              "mean": 0.6666458516384033,
+              "std": 0.005372815613358361,
+              "count": 5,
+              "values": [
+                0.6697059010329686,
+                0.6718625329752642,
+                0.6582361038515107,
+                0.6646926795743857,
+                0.6687320407578872
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.908,
+              "std": 0.013038404810405309,
+              "count": 5,
+              "values": [
+                0.92,
+                0.92,
+                0.89,
+                0.91,
+                0.9
+              ]
+            },
+            "sro": {
+              "mean": 0.48993609908491464,
+              "std": 0.001770285851221748,
+              "count": 5,
+              "values": [
+                0.4887494179168831,
+                0.49047086781214416,
+                0.49207546514580064,
+                0.4907983473549312,
+                0.48758639719481395
+              ]
+            },
+            "h_score": {
+              "mean": 0.6531747182403632,
+              "std": 0.0040339517027272,
+              "count": 5,
+              "values": [
+                0.6572581229373473,
+                0.6558338561388987,
+                0.6467485543736962,
+                0.6530058685365675,
+                0.6530271892153063
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.736,
+              "std": 0.01140175425099139,
+              "count": 5,
+              "values": [
+                0.72,
+                0.75,
+                0.73,
+                0.74,
+                0.74
+              ]
+            },
+            "sro": {
+              "mean": 0.6459109083952567,
+              "std": 0.0015002622888548795,
+              "count": 5,
+              "values": [
+                0.6458783444293077,
+                0.647133175914708,
+                0.6433515610213132,
+                0.6466955510510882,
+                0.6464959095598662
+              ]
+            },
+            "h_score": {
+              "mean": 0.4781157538164919,
+              "std": 0.0019955572629520926,
+              "count": 5,
+              "values": [
+                0.4747462090324051,
+                0.47993123427838613,
+                0.47918600186669547,
+                0.478266218478384,
+                0.478449105426589
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.706,
+              "std": 0.005477225575051666,
+              "count": 5,
+              "values": [
+                0.71,
+                0.71,
+                0.7,
+                0.7,
+                0.71
+              ]
+            },
+            "sro": {
+              "mean": 0.6539010296088236,
+              "std": 0.0010006668692594603,
+              "count": 5,
+              "values": [
+                0.6527034012541156,
+                0.6540149430484035,
+                0.6554598473585803,
+                0.6537508642788578,
+                0.653576092104161
+              ]
+            },
+            "h_score": {
+              "mean": 0.46448891696466504,
+              "std": 0.0018957974005898866,
+              "count": 5,
+              "values": [
+                0.46643597530165176,
+                0.46525164123964197,
+                0.4617881011832924,
+                0.46332061213649556,
+                0.4656482549622435
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.8859999999999999,
+              "std": 0.008944271909999166,
+              "count": 5,
+              "values": [
+                0.88,
+                0.89,
+                0.88,
+                0.9,
+                0.88
+              ]
+            },
+            "sro": {
+              "mean": 0.5496716276892156,
+              "std": 0.0020360581668433186,
+              "count": 5,
+              "values": [
+                0.548297755677513,
+                0.5531885041088606,
+                0.5482542980111855,
+                0.5491443791682483,
+                0.549473201480271
+              ]
+            },
+            "h_score": {
+              "mean": 0.5971287381823833,
+              "std": 0.0022020960698220845,
+              "count": 5,
+              "values": [
+                0.5969772547856874,
+                0.5949413699169699,
+                0.597015206666679,
+                0.6007600701231638,
+                0.5959497894194167
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.876,
+              "std": 0.005477225575051666,
+              "count": 5,
+              "values": [
+                0.87,
+                0.88,
+                0.87,
+                0.88,
+                0.88
+              ]
+            },
+            "sro": {
+              "mean": 0.5573200488644849,
+              "std": 0.0009979992600003173,
+              "count": 5,
+              "values": [
+                0.5578583039342196,
+                0.5567233245445402,
+                0.5586945874912713,
+                0.5561221827584248,
+                0.5572018455939687
+              ]
+            },
+            "h_score": {
+              "mean": 0.5881431420645492,
+              "std": 0.0020508372683981095,
+              "count": 5,
+              "values": [
+                0.5863136225768485,
+                0.5895720549393669,
+                0.5855778603827555,
+                0.5901035187468647,
+                0.5891486536769104
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "nsgaii": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.8779999999999999,
+              "std": 0.008366600265340763,
+              "count": 5,
+              "values": [
+                0.87,
+                0.88,
+                0.88,
+                0.89,
+                0.87
+              ]
+            },
+            "sro": {
+              "mean": 0.4089603164325946,
+              "std": 0.0021592914996112875,
+              "count": 5,
+              "values": [
+                0.41085048698573784,
+                0.4073845261819705,
+                0.4107320241245733,
+                0.4098250813593514,
+                0.40600946351133993
+              ]
+            },
+            "h_score": {
+              "mean": 0.7064759637782972,
+              "std": 0.0027291530633706696,
+              "count": 5,
+              "values": [
+                0.7025463418941609,
+                0.7082658388856611,
+                0.7058696266232944,
+                0.7097210890082605,
+                0.7059769224801093
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.892,
+              "std": 0.013038404810405309,
+              "count": 5,
+              "values": [
+                0.88,
+                0.89,
+                0.9,
+                0.88,
+                0.91
+              ]
+            },
+            "sro": {
+              "mean": 0.4127597952081373,
+              "std": 0.002466840737803653,
+              "count": 5,
+              "values": [
+                0.41038928992107204,
+                0.41127924930900744,
+                0.41172697379463513,
+                0.4138718676859935,
+                0.41653159532997863
+              ]
+            },
+            "h_score": {
+              "mean": 0.7081848024335505,
+              "std": 0.003335039876736914,
+              "count": 5,
+              "values": [
+                0.7061154648792544,
+                0.708668581096385,
+                0.7114900482134664,
+                0.7036121128407027,
+                0.711037805137944
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.5809411764705882,
+              "std": 0.017531977704027948,
+              "count": 5,
+              "values": [
+                0.6,
+                0.5647058823529412,
+                0.57,
+                0.6,
+                0.57
+              ]
+            },
+            "sro": {
+              "mean": 0.5841673492878522,
+              "std": 0.002937939245663538,
+              "count": 5,
+              "values": [
+                0.5851241609774059,
+                0.5887124293406859,
+                0.5824779753293317,
+                0.5810713264590328,
+                0.5834508543328047
+              ]
+            },
+            "h_score": {
+              "mean": 0.48463951326977595,
+              "std": 0.007157254803319111,
+              "count": 5,
+              "values": [
+                0.4905536102885087,
+                0.4759386649021901,
+                0.4819893594609156,
+                0.49337546513646946,
+                0.48134046656079615
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.61,
+              "std": 0.018708286933869726,
+              "count": 5,
+              "values": [
+                0.6,
+                0.61,
+                0.61,
+                0.59,
+                0.64
+              ]
+            },
+            "sro": {
+              "mean": 0.5840262102100097,
+              "std": 0.0037484456191637493,
+              "count": 5,
+              "values": [
+                0.5896839671008925,
+                0.5854218867917479,
+                0.5835544021941229,
+                0.5811618669717262,
+                0.5803089279915588
+              ]
+            },
+            "h_score": {
+              "mean": 0.4945642852772837,
+              "std": 0.0075507247941563665,
+              "count": 5,
+              "values": [
+                0.487351703274513,
+                0.49365225705466875,
+                0.49497375253905646,
+                0.48989920264989806,
+                0.5069445108682822
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.774,
+              "std": 0.008944271909999166,
+              "count": 5,
+              "values": [
+                0.78,
+                0.77,
+                0.78,
+                0.76,
+                0.78
+              ]
+            },
+            "sro": {
+              "mean": 0.48113818206593717,
+              "std": 0.002753705281658213,
+              "count": 5,
+              "values": [
+                0.48165011480772035,
+                0.47727213644921945,
+                0.48342777348216515,
+                0.4838284923138359,
+                0.4795123932767448
+              ]
+            },
+            "h_score": {
+              "mean": 0.6212388505103372,
+              "std": 0.0037406901681716564,
+              "count": 5,
+              "values": [
+                0.62281040736581,
+                0.6227149058712776,
+                0.6215254784009038,
+                0.6147925157062145,
+                0.6243509452074802
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.75,
+              "std": 0.007071067811865481,
+              "count": 5,
+              "values": [
+                0.76,
+                0.75,
+                0.74,
+                0.75,
+                0.75
+              ]
+            },
+            "sro": {
+              "mean": 0.48480591438630505,
+              "std": 0.002909487163377845,
+              "count": 5,
+              "values": [
+                0.48741343979122115,
+                0.48017262675316497,
+                0.4843763361021477,
+                0.48712789565145526,
+                0.484939273633536
+              ]
+            },
+            "h_score": {
+              "mean": 0.6107895012162099,
+              "std": 0.0024764110208622256,
+              "count": 5,
+              "values": [
+                0.6122424956220821,
+                0.6140528045765185,
+                0.6077641291020645,
+                0.6091734498480084,
+                0.6107146269323762
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        }
+      }
+    },
+    "vgg16": {
+      "ga_0.5": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.874,
+              "std": 0.01140175425099139,
+              "count": 5,
+              "values": [
+                0.88,
+                0.87,
+                0.86,
+                0.87,
+                0.89
+              ]
+            },
+            "sro": {
+              "mean": 0.47534525768806024,
+              "std": 0.0036625262154133986,
+              "count": 5,
+              "values": [
+                0.4787478515588697,
+                0.47403401121782646,
+                0.4744699427287069,
+                0.4703296436505044,
+                0.4791448392843937
+              ]
+            },
+            "h_score": {
+              "mean": 0.6556562335662314,
+              "std": 0.0023237950738479434,
+              "count": 5,
+              "values": [
+                0.6547028543556459,
+                0.6555896259903699,
+                0.6523941460258296,
+                0.6584596264879339,
+                0.6571349149713774
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.932,
+              "std": 0.010954451150103286,
+              "count": 5,
+              "values": [
+                0.92,
+                0.93,
+                0.93,
+                0.93,
+                0.95
+              ]
+            },
+            "sro": {
+              "mean": 0.4873457744495611,
+              "std": 0.002000783978088639,
+              "count": 5,
+              "values": [
+                0.4861621580050276,
+                0.48751268281578647,
+                0.4862272825959281,
+                0.4907642440861105,
+                0.486062504744953
+              ]
+            },
+            "h_score": {
+              "mean": 0.6614477229900217,
+              "std": 0.003428970146436217,
+              "count": 5,
+              "values": [
+                0.6593922977756534,
+                0.660821345606954,
+                0.6618889821451883,
+                0.6581121279872544,
+                0.6670238614350587
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.688,
+              "std": 0.013038404810405255,
+              "count": 5,
+              "values": [
+                0.69,
+                0.7,
+                0.68,
+                0.67,
+                0.7
+              ]
+            },
+            "sro": {
+              "mean": 0.6315648745255057,
+              "std": 0.002947127655667802,
+              "count": 5,
+              "values": [
+                0.6280858901902632,
+                0.6312404440075388,
+                0.632466049263141,
+                0.6300571059610749,
+                0.6359748832055107
+              ]
+            },
+            "h_score": {
+              "mean": 0.4798367143991692,
+              "std": 0.0031729504909167295,
+              "count": 5,
+              "values": [
+                0.48331731050206533,
+                0.48304913438648805,
+                0.47716465194328567,
+                0.47668336487869184,
+                0.47896911028531525
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.738,
+              "std": 0.013038404810405309,
+              "count": 5,
+              "values": [
+                0.74,
+                0.73,
+                0.75,
+                0.75,
+                0.72
+              ]
+            },
+            "sro": {
+              "mean": 0.6647631692370284,
+              "std": 0.0020320579718736288,
+              "count": 5,
+              "values": [
+                0.6649827055908039,
+                0.664857826624305,
+                0.66172819064391,
+                0.6647917486119316,
+                0.6674553747141918
+              ]
+            },
+            "h_score": {
+              "mean": 0.4610300490150353,
+              "std": 0.004247772038929489,
+              "count": 5,
+              "values": [
+                0.4612256921858213,
+                0.4593824048650518,
+                0.466250903195185,
+                0.463332615135358,
+                0.4549586296937604
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.8220000000000001,
+              "std": 0.016431676725154942,
+              "count": 5,
+              "values": [
+                0.83,
+                0.81,
+                0.84,
+                0.83,
+                0.8
+              ]
+            },
+            "sro": {
+              "mean": 0.5375956580636239,
+              "std": 0.005189124365559537,
+              "count": 5,
+              "values": [
+                0.5388779955930101,
+                0.5376085284273021,
+                0.5445132550288023,
+                0.5369882027580674,
+                0.5299903085109375
+              ]
+            },
+            "h_score": {
+              "mean": 0.5917637907835287,
+              "std": 0.0021746923208978723,
+              "count": 5,
+              "values": [
+                0.5928661464236905,
+                0.5887136158040276,
+                0.5906797074705887,
+                0.5944258088449577,
+                0.5921336753743792
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.86,
+              "std": 0.010000000000000009,
+              "count": 5,
+              "values": [
+                0.87,
+                0.86,
+                0.85,
+                0.85,
+                0.87
+              ]
+            },
+            "sro": {
+              "mean": 0.5609383756050015,
+              "std": 0.0030640346751442163,
+              "count": 5,
+              "values": [
+                0.5609187330236245,
+                0.5626741129287023,
+                0.5558939696797328,
+                0.563935798849631,
+                0.5612692635433167
+              ]
+            },
+            "h_score": {
+              "mean": 0.5813095338905065,
+              "std": 0.0031570609550019496,
+              "count": 5,
+              "values": [
+                0.5836164826523952,
+                0.5798084608183673,
+                0.5833990676618752,
+                0.5764169014988018,
+                0.5833067568210932
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "ga_0.0": {
+        "100": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.314,
+              "std": 0.01140175425099139,
+              "count": 5,
+              "values": [
+                0.31,
+                0.3,
+                0.32,
+                0.31,
+                0.33
+              ]
+            },
+            "sro": {
+              "mean": 0.3865959681696791,
+              "std": 0.0015514967984637893,
+              "count": 5,
+              "values": [
+                0.3849669726906111,
+                0.38727661845104094,
+                0.3852830093031481,
+                0.3887828041738313,
+                0.3866704362297641
+              ]
+            },
+            "h_score": {
+              "mean": 0.4152773126079882,
+              "std": 0.010046176852308462,
+              "count": 5,
+              "values": [
+                0.41222363491274966,
+                0.40278800385881786,
+                0.4208962477002615,
+                0.41136299140874083,
+                0.4291156851593714
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.314,
+              "std": 0.01140175425099139,
+              "count": 5,
+              "values": [
+                0.31,
+                0.3,
+                0.32,
+                0.31,
+                0.33
+              ]
+            },
+            "sro": {
+              "mean": 0.3865959681696791,
+              "std": 0.0015514967984637893,
+              "count": 5,
+              "values": [
+                0.3849669726906111,
+                0.38727661845104094,
+                0.3852830093031481,
+                0.3887828041738313,
+                0.3866704362297641
+              ]
+            },
+            "h_score": {
+              "mean": 0.4152773126079882,
+              "std": 0.010046176852308462,
+              "count": 5,
+              "values": [
+                0.41222363491274966,
+                0.40278800385881786,
+                0.4208962477002615,
+                0.41136299140874083,
+                0.4291156851593714
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.186,
+              "std": 0.016733200530681516,
+              "count": 5,
+              "values": [
+                0.19,
+                0.18,
+                0.2,
+                0.16,
+                0.2
+              ]
+            },
+            "sro": {
+              "mean": 0.5386196899034911,
+              "std": 0.002919240931746088,
+              "count": 5,
+              "values": [
+                0.5375259306422222,
+                0.537869066485905,
+                0.5393574423143579,
+                0.5352251238501308,
+                0.5431208862248396
+              ]
+            },
+            "h_score": {
+              "mean": 0.26471970158202607,
+              "std": 0.016938557141486784,
+              "count": 5,
+              "values": [
+                0.26934426149522606,
+                0.2590860015956891,
+                0.2789057727672656,
+                0.2380504819343627,
+                0.2782119901175869
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.186,
+              "std": 0.016733200530681516,
+              "count": 5,
+              "values": [
+                0.19,
+                0.18,
+                0.2,
+                0.16,
+                0.2
+              ]
+            },
+            "sro": {
+              "mean": 0.5386196899034911,
+              "std": 0.002919240931746088,
+              "count": 5,
+              "values": [
+                0.5375259306422222,
+                0.537869066485905,
+                0.5393574423143579,
+                0.5352251238501308,
+                0.5431208862248396
+              ]
+            },
+            "h_score": {
+              "mean": 0.26471970158202607,
+              "std": 0.016938557141486784,
+              "count": 5,
+              "values": [
+                0.26934426149522606,
+                0.2590860015956891,
+                0.2789057727672656,
+                0.2380504819343627,
+                0.2782119901175869
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "margin_loss": {
+            "asr": {
+              "mean": 0.22800000000000004,
+              "std": 0.023874672772626643,
+              "count": 5,
+              "values": [
+                0.23,
+                0.24,
+                0.26,
+                0.21,
+                0.2
+              ]
+            },
+            "sro": {
+              "mean": 0.44776737187826204,
+              "std": 0.0021858302050326173,
+              "count": 5,
+              "values": [
+                0.44638757900057285,
+                0.44999207848090406,
+                0.4501528088803458,
+                0.4453304987944635,
+                0.44697389423502387
+              ]
+            },
+            "h_score": {
+              "mean": 0.3221271821170039,
+              "std": 0.02355712060416415,
+              "count": 5,
+              "values": [
+                0.3249842739028287,
+                0.3341786773751794,
+                0.3530549250741004,
+                0.3046560509331827,
+                0.29376198329972847
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.22800000000000004,
+              "std": 0.023874672772626643,
+              "count": 5,
+              "values": [
+                0.23,
+                0.24,
+                0.26,
+                0.21,
+                0.2
+              ]
+            },
+            "sro": {
+              "mean": 0.44776737187826204,
+              "std": 0.0021858302050326173,
+              "count": 5,
+              "values": [
+                0.44638757900057285,
+                0.44999207848090406,
+                0.4501528088803458,
+                0.4453304987944635,
+                0.44697389423502387
+              ]
+            },
+            "h_score": {
+              "mean": 0.3221271821170039,
+              "std": 0.02355712060416415,
+              "count": 5,
+              "values": [
+                0.3249842739028287,
+                0.3341786773751794,
+                0.3530549250741004,
+                0.3046560509331827,
+                0.29376198329972847
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "ga_1.0": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.938,
+              "std": 0.004472135954999534,
+              "count": 5,
+              "values": [
+                0.94,
+                0.94,
+                0.94,
+                0.93,
+                0.94
+              ]
+            },
+            "sro": {
+              "mean": 0.4883475729237176,
+              "std": 0.0020131108724146304,
+              "count": 5,
+              "values": [
+                0.4881745428006247,
+                0.48956819667467144,
+                0.48996786419260796,
+                0.4890759654464907,
+                0.48495129550419314
+              ]
+            },
+            "h_score": {
+              "mean": 0.6621273871313478,
+              "std": 0.002202305069040063,
+              "count": 5,
+              "values": [
+                0.6627737892067316,
+                0.661604211967475,
+                0.6612683896029616,
+                0.6595203365901222,
+                0.6654702082894486
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.932,
+              "std": 0.00836660026534071,
+              "count": 5,
+              "values": [
+                0.93,
+                0.94,
+                0.92,
+                0.93,
+                0.94
+              ]
+            },
+            "sro": {
+              "mean": 0.4912318171931952,
+              "std": 0.002362013728475926,
+              "count": 5,
+              "values": [
+                0.4913642601567591,
+                0.49458785856255943,
+                0.48832726083132955,
+                0.48983782167326845,
+                0.49204188474205957
+              ]
+            },
+            "h_score": {
+              "mean": 0.658199730108976,
+              "std": 0.0009489567265496261,
+              "count": 5,
+              "values": [
+                0.6576108530513182,
+                0.6573729379064533,
+                0.6576068778239373,
+                0.6588852741503133,
+                0.6595227076128582
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.74,
+              "std": 0.017320508075688787,
+              "count": 5,
+              "values": [
+                0.77,
+                0.73,
+                0.74,
+                0.73,
+                0.73
+              ]
+            },
+            "sro": {
+              "mean": 0.6695034400525502,
+              "std": 0.004075388322175298,
+              "count": 5,
+              "values": [
+                0.6651940952372682,
+                0.6686014134595025,
+                0.6745727707916661,
+                0.6728411753484086,
+                0.6663077454259058
+              ]
+            },
+            "h_score": {
+              "mean": 0.45688851042759104,
+              "std": 0.006070218130976405,
+              "count": 5,
+              "values": [
+                0.4666892990994083,
+                0.4558531945347238,
+                0.45205555670490166,
+                0.45182603867374765,
+                0.4580184631251736
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.734,
+              "std": 0.021908902300206663,
+              "count": 5,
+              "values": [
+                0.72,
+                0.77,
+                0.72,
+                0.72,
+                0.74
+              ]
+            },
+            "sro": {
+              "mean": 0.6722224869891577,
+              "std": 0.0018111648356981178,
+              "count": 5,
+              "values": [
+                0.6701812443226135,
+                0.6704750033399896,
+                0.6726810959374615,
+                0.6741574887341045,
+                0.673617602611619
+              ]
+            },
+            "h_score": {
+              "mean": 0.4531202692812858,
+              "std": 0.005020391217254372,
+              "count": 5,
+              "values": [
+                0.45240095550492065,
+                0.4615342956257801,
+                0.45004364957200316,
+                0.4486461500354871,
+                0.45297629566823816
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.8779999999999999,
+              "std": 0.013038404810405309,
+              "count": 5,
+              "values": [
+                0.89,
+                0.87,
+                0.89,
+                0.86,
+                0.88
+              ]
+            },
+            "sro": {
+              "mean": 0.5602906647866868,
+              "std": 0.0035925404002309365,
+              "count": 5,
+              "values": [
+                0.5654414518660238,
+                0.556424647357558,
+                0.5622746072360911,
+                0.5579966039648242,
+                0.5593160135089366
+              ]
+            },
+            "h_score": {
+              "mean": 0.5859124464281688,
+              "std": 0.001818390659778597,
+              "count": 5,
+              "values": [
+                0.5839788786748583,
+                0.5875727738383808,
+                0.5868315868372516,
+                0.5839046530105694,
+                0.5872743397797835
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.8539999999999999,
+              "std": 0.01140175425099139,
+              "count": 5,
+              "values": [
+                0.86,
+                0.85,
+                0.85,
+                0.84,
+                0.87
+              ]
+            },
+            "sro": {
+              "mean": 0.5658362237250694,
+              "std": 0.0011267119634452783,
+              "count": 5,
+              "values": [
+                0.566065473465613,
+                0.5652404743007695,
+                0.5645576766933931,
+                0.5675759915196736,
+                0.5657415026458976
+              ]
+            },
+            "h_score": {
+              "mean": 0.5756491060855322,
+              "std": 0.0030579012752252415,
+              "count": 5,
+              "values": [
+                0.576820055677918,
+                0.5752759009795559,
+                0.5758733287364033,
+                0.5709357332188225,
+                0.5793405118149614
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        }
+      },
+      "nsgaii": {
+        "100": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.874,
+              "std": 0.01140175425099139,
+              "count": 5,
+              "values": [
+                0.86,
+                0.87,
+                0.88,
+                0.87,
+                0.89
+              ]
+            },
+            "sro": {
+              "mean": 0.4062864579492227,
+              "std": 0.0020873900714033387,
+              "count": 5,
+              "values": [
+                0.4077643169808155,
+                0.4073490695572206,
+                0.4060217974658884,
+                0.4027552416304739,
+                0.4075418641117151
+              ]
+            },
+            "h_score": {
+              "mean": 0.707068081682346,
+              "std": 0.0038913450447409354,
+              "count": 5,
+              "values": [
+                0.7014325475567733,
+                0.7050298861521686,
+                0.7092381927105488,
+                0.7082702961691215,
+                0.7113694858231179
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.86,
+              "std": 0.01581138830084191,
+              "count": 5,
+              "values": [
+                0.88,
+                0.84,
+                0.87,
+                0.85,
+                0.86
+              ]
+            },
+            "sro": {
+              "mean": 0.40737322300566686,
+              "std": 0.002669539716694114,
+              "count": 5,
+              "values": [
+                0.4087794817744291,
+                0.4112833026690754,
+                0.40519947918370536,
+                0.4049141279050216,
+                0.40668972349610294
+              ]
+            },
+            "h_score": {
+              "mean": 0.701664575686366,
+              "std": 0.006052806401416368,
+              "count": 5,
+              "values": [
+                0.7072686243745451,
+                0.692260441390269,
+                0.7065487016918869,
+                0.7000594235239834,
+                0.7021856874511453
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "20": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.636,
+              "std": 0.025099800796022288,
+              "count": 5,
+              "values": [
+                0.63,
+                0.66,
+                0.66,
+                0.63,
+                0.6
+              ]
+            },
+            "sro": {
+              "mean": 0.5901528153096095,
+              "std": 0.002843312026636297,
+              "count": 5,
+              "values": [
+                0.590854511801307,
+                0.5886939687099045,
+                0.5922495062539921,
+                0.585988493130973,
+                0.5929775966518708
+              ]
+            },
+            "h_score": {
+              "mean": 0.4983307161223255,
+              "std": 0.008491797900771144,
+              "count": 5,
+              "values": [
+                0.49610311644040067,
+                0.5067869921810507,
+                0.5040790473965939,
+                0.49966355277003327,
+                0.4850208718235488
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.644,
+              "std": 0.01140175425099139,
+              "count": 5,
+              "values": [
+                0.65,
+                0.66,
+                0.63,
+                0.64,
+                0.64
+              ]
+            },
+            "sro": {
+              "mean": 0.5934365918670926,
+              "std": 0.002869820681716308,
+              "count": 5,
+              "values": [
+                0.5978100902208496,
+                0.5924516676046219,
+                0.5902213786947366,
+                0.5922333773553234,
+                0.5944664454599319
+              ]
+            },
+            "h_score": {
+              "mean": 0.498405788223857,
+              "std": 0.0031563575691014607,
+              "count": 5,
+              "values": [
+                0.49691303618625127,
+                0.5039245366575669,
+                0.49656826199838544,
+                0.4981465010478666,
+                0.4964766052292149
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        },
+        "50": {
+          "negative_cross_entropy_saliency": {
+            "asr": {
+              "mean": 0.798,
+              "std": 0.013038404810405309,
+              "count": 5,
+              "values": [
+                0.8,
+                0.81,
+                0.79,
+                0.81,
+                0.78
+              ]
+            },
+            "sro": {
+              "mean": 0.48320433900286763,
+              "std": 0.004318586257426733,
+              "count": 5,
+              "values": [
+                0.4811542685517091,
+                0.48498276731689394,
+                0.4889861803974036,
+                0.4773976565808616,
+                0.4835008221674702
+              ]
+            },
+            "h_score": {
+              "mean": 0.6273009416531876,
+              "std": 0.0061919356342425074,
+              "count": 5,
+              "values": [
+                0.6294543406571383,
+                0.6296732573486247,
+                0.6205943571135384,
+                0.6353101512389593,
+                0.6214726019076772
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          },
+          "margin_loss": {
+            "asr": {
+              "mean": 0.78,
+              "std": 0.012247448713915901,
+              "count": 5,
+              "values": [
+                0.78,
+                0.79,
+                0.76,
+                0.79,
+                0.78
+              ]
+            },
+            "sro": {
+              "mean": 0.48263393364062457,
+              "std": 0.0011807651615366246,
+              "count": 5,
+              "values": [
+                0.48136156235727595,
+                0.48210360096965993,
+                0.4819546964760805,
+                0.48413496674808376,
+                0.48361484165202284
+              ]
+            },
+            "h_score": {
+              "mean": 0.6220659880662885,
+              "std": 0.0036707320467618183,
+              "count": 5,
+              "values": [
+                0.6230186472774334,
+                0.6256430639877886,
+                0.6161196783754076,
+                0.6241584940124453,
+                0.6213900566783678
+              ]
+            },
+            "seeds": [
+              "22520691",
+              "22520692",
+              "22520693",
+              "22520694",
+              "22520695"
+            ],
+            "num_runs": 5,
+            "expected_seeds": 5,
+            "seed_ratio": 1.0
+          }
+        }
+      }
+    }
+  }
+}

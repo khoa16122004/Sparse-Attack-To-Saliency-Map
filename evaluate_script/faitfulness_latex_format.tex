@@ -1,0 +1,129 @@
+\begin{table*}[t]
+\centering
+\caption{Comparison of explanation quality between Clean, Adversarial, and Perturbation Saliency Maps under different perturbation budgets and loss functions.}
+\label{tab:saliency_map_comparison}
+
+\resizebox{\textwidth}{!}{
+\begin{tabular}{cc|cccccc|cccccc|cccccc}
+\toprule
+
+\multirow{3}{*}{Model}
+&
+\multirow{3}{*}{Saliency Map}
+&
+\multicolumn{6}{c|}{$\epsilon=20$}
+&
+\multicolumn{6}{c|}{$\epsilon=50$}
+&
+\multicolumn{6}{c}{$\epsilon=100$}
+\\
+
+\cmidrule(lr){3-8}
+\cmidrule(lr){9-14}
+\cmidrule(lr){15-20}
+
+&
+&
+\multicolumn{3}{c|}{Margin Loss}
+&
+\multicolumn{3}{c|}{Log-Likelihood}
+&
+\multicolumn{3}{c|}{Margin Loss}
+&
+\multicolumn{3}{c|}{Log-Likelihood}
+&
+\multicolumn{3}{c|}{Margin Loss}
+&
+\multicolumn{3}{c}{Log-Likelihood}
+\\
+
+\cmidrule(lr){3-5}
+\cmidrule(lr){6-8}
+\cmidrule(lr){9-11}
+\cmidrule(lr){12-14}
+\cmidrule(lr){15-17}
+\cmidrule(lr){18-20}
+
+&
+&
+Ins.$\uparrow$
+&
+Del.$\downarrow$
+&
+IMD
+&
+Ins.$\uparrow$
+&
+Del.$\downarrow$
+&
+IMD
+&
+Ins.$\uparrow$
+&
+Del.$\downarrow$
+&
+IMD
+&
+Ins.$\uparrow$
+&
+Del.$\downarrow$
+&
+IMD
+&
+Ins.$\uparrow$
+&
+Del.$\downarrow$
+&
+IMD
+&
+Ins.$\uparrow$
+&
+Del.$\downarrow$
+&
+IMD
+\\
+
+\midrule
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\multirow{3}{*}{ResNet18}
+
+& Clean
+& {} & {} & {} & {} & {} & {}
+& {} & {} & {} & {} & {} & {}
+& {} & {} & {} & {} & {} & {} \\
+
+& Adversarial
+& {} & {} & {} & {} & {} & {}
+& {} & {} & {} & {} & {} & {}
+& {} & {} & {} & {} & {} & {} \\
+
+& Perturbation
+& {} & {} & {} & {} & {} & {}
+& {} & {} & {} & {} & {} & {}
+& {} & {} & {} & {} & {} & {} \\
+
+\midrule
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\multirow{3}{*}{VGG16}
+
+& Clean
+& {} & {} & {} & {} & {} & {}
+& {} & {} & {} & {} & {} & {}
+& {} & {} & {} & {} & {} & {} \\
+
+& Adversarial
+& {} & {} & {} & {} & {} & {}
+& {} & {} & {} & {} & {} & {}
+& {} & {} & {} & {} & {} & {} \\
+
+& Perturbation
+& {} & {} & {} & {} & {} & {}
+& {} & {} & {} & {} & {} & {}
+& {} & {} & {} & {} & {} & {} \\
+
+\bottomrule
+\end{tabular}
+}
+\end{table*}
