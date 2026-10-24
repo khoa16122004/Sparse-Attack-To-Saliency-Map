@@ -1,2 +1,0 @@
-explain_method & del & ins & imd
-eps_50 & 0.1667 & 0.7774 & 0.6107
