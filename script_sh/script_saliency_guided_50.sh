@@ -53,13 +53,14 @@ export CUDA_VISIBLE_DEVICES=$BEST_GPU
 # =========================================================
 # RUN BATCH WITH SALIENCY-GUIDED INIT
 # =========================================================
-OUTPUT_ROOT="saliency_guided_outputs_50"
 MODEL_NAMES="vgg16 resnet50 densenet121 vit_b_32"
 NUM_SAMPLE=50
 EPSILONS="5 10 20 50"
-FITNESSES="margin_saliency cross_entropy_saliency"
+FITNESSES="margin_saliency"
 EXPLAIN_METHOD="${EXPLAIN_METHOD:-integrated_gradients}"
 
+for SEED in 22520691 22520692 22520693 22520694 22520695; do
+OUTPUT_ROOT="saliency_guided_outputs_50/$SEED"
 for MODEL_NAME in $MODEL_NAMES; do
     for EPS in $EPSILONS; do
         for FITNESS in $FITNESSES; do
@@ -69,6 +70,7 @@ for MODEL_NAME in $MODEL_NAMES; do
                 --num_sample "$NUM_SAMPLE" \
                 --operator-strategy "saliency_guided" \
                 --eps "$EPS" \
+                --seed "$SEED" \
                 --fitness-function "$FITNESS" \
                 --output-root "$OUTPUT_ROOT" \
                 --algorithm "nsgaii" \
@@ -78,3 +80,4 @@ for MODEL_NAME in $MODEL_NAMES; do
 done
 
 echo "DONE. Outputs stored under: $OUTPUT_ROOT"
+done

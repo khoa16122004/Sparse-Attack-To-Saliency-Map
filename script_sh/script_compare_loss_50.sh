@@ -51,24 +51,26 @@ mkdir -p "$CUDA_MPS_PIPE_DIRECTORY" "$CUDA_MPS_LOG_DIRECTORY"
 export CUDA_VISIBLE_DEVICES=$BEST_GPU
 
 # =========================================================
-# CHAY CODE: SO SANH 2 FITNESS LOSS
+# RUN MARGIN LOSS OVER FIVE SEEDS
 # =========================================================
-OUTPUT_ROOT="compare_loss_50"
 MODEL_NAMES="resnet50 densenet121 vit_b_32"
 NUM_SAMPLE=50
 EPSILONS="5 10 20 50"
 EXPLAIN_METHOD="${EXPLAIN_METHOD:-integrated_gradients}"
 
+for SEED in 22520691 22520692 22520693 22520694 22520695; do
+OUTPUT_ROOT="compare_loss_50/$SEED"
 for MODEL_NAME in $MODEL_NAMES; do
     for STRATEGY in uniform saliency_guided; do
         for EPS in $EPSILONS; do
-            for FITNESS in margin_saliency cross_entropy_saliency; do
+            for FITNESS in margin_saliency; do
                 echo "[RUN] model=$MODEL_NAME strategy=$STRATEGY fitness=$FITNESS eps=$EPS explain_method=$EXPLAIN_METHOD num_sample=$NUM_SAMPLE output_root=$OUTPUT_ROOT"
                 python run_batch.py \
                     --model-name "$MODEL_NAME" \
                     --num_sample "$NUM_SAMPLE" \
                     --operator-strategy "$STRATEGY" \
                     --eps "$EPS" \
+                    --seed "$SEED" \
                     --fitness-function "$FITNESS" \
                     --output-root "$OUTPUT_ROOT" \
                     --explain-method "$EXPLAIN_METHOD"
@@ -78,3 +80,4 @@ for MODEL_NAME in $MODEL_NAMES; do
 done
 
 echo "DONE. Outputs stored under: $OUTPUT_ROOT/$MODEL_NAME"
+done

@@ -26,7 +26,7 @@ rm -rf $CUDA_MPS_PIPE_DIRECTORY $CUDA_MPS_LOG_DIRECTORY
 mkdir -p $CUDA_MPS_PIPE_DIRECTORY $CUDA_MPS_LOG_DIRECTORY
 
 # =========================================================
-# CHAY CODE: SO SANH 2 FITNESS LOSS
+# RUN MARGIN LOSS OVER FIVE SEEDS
 # =========================================================
 MODEL_NAMES="densenet121"
 NUM_SAMPLE=100
@@ -39,18 +39,10 @@ EPSILONS="100 50 20"
 W_MARGIN="${W_MARGIN:-1.0}"
 W_SALIENCY="${W_SALIENCY:-0.0}"
 EXPLAIN_METHOD="${EXPLAIN_METHOD:-grad_cam}"
-SEED="${SEED:-22520692}"
+FITNESSES="margin_saliency"
+
+for SEED in 22520691 22520692 22520693 22520694 22520695; do
 OUTPUT_ROOT="offical/server_run_seed/GA/$SEED/"
-
-# At wm=0, ws=1, both fitness formulations are equivalent (attack objective is off).
-FITNESSES="margin_saliency cross_entropy_saliency"
-case "${W_MARGIN}:${W_SALIENCY}" in
-    "0:1"|"0:1.0"|"0.0:1"|"0.0:1.0")
-        FITNESSES="margin_saliency"
-        ;;
-esac
-
-
 for MODEL_NAME in $MODEL_NAMES; do
     for STRATEGY in uniform; do
         for EPS in $EPSILONS; do
@@ -73,3 +65,4 @@ for MODEL_NAME in $MODEL_NAMES; do
 done
 
 echo "DONE. Outputs stored under: $OUTPUT_ROOT/$MODEL_NAME"
+done
