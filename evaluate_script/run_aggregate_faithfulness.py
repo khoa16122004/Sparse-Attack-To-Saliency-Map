@@ -85,7 +85,10 @@ def configuration(payload):
         "strategy": context["strategy"]
     } | {
         "protocol": payload["protocol"],
-        "perturbation_metadata": payload.get("perturbation_metadata"),
+        "perturbation_metadata": {
+            key: value for key, value in (payload.get("perturbation_metadata") or {}).items()
+            if key != "gamma"
+        },
     }
 
 

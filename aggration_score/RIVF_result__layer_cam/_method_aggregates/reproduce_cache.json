@@ -1,0 +1,21 @@
+{
+  "signature": {
+    "run_dir": "D:\\RIVF_result\\layer_cam",
+    "allow_non_ok": false,
+    "run_model": "swin_t",
+    "run_explain": null,
+    "run_approach": null
+  },
+  "data": {
+    "per_run_curves": [],
+    "per_run_spearman": [],
+    "per_run_objectives": [],
+    "clean_reference": [],
+    "per_run_mean": [],
+    "per_run_spearman_mean": [],
+    "per_run_objective_mean": [],
+    "clean_reference_mean": [],
+    "full_spearman_pool": {},
+    "model_spearman_pool": {}
+  }
+}

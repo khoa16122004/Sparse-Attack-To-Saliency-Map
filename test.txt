@@ -1,0 +1,9 @@
+perturbation = 0
+target_class = id của chó
+target_text = "a phôt of dog"
+for epoch for max epoch:
+    for imgs -> dataset:
+        L = -Loss(imgs + perturbation, target_class)
+        grad = L_pertrubation
+        pertturbagtion + alpha * grad
+        

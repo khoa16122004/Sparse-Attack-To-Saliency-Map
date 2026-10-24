@@ -11,6 +11,16 @@ from scipy.ndimage import gaussian_filter
 DENSITY_GRID_SIZE = (4, 4)
 
 
+def normalize_density(smoothed):
+    if smoothed.ndim != 2 or smoothed.numel() == 0 or not torch.isfinite(smoothed).all():
+        raise ValueError("Density must be a non-empty finite 2D tensor.")
+    low, high = smoothed.min(), smoothed.max()
+    return (
+        (smoothed - low) / (high - low)
+        if high > low else torch.zeros_like(smoothed)
+    )
+
+
 class PerturbationArchive:
     """Unique realized perturbations, minimizing the two original objectives."""
 
@@ -91,11 +101,9 @@ class PerturbationArchive:
             grid_height, grid_width
         )
 
-    def density_maps(self, sigma=1.0, gamma=2.0):
+    def density_maps(self, sigma=1.0):
         if not math.isfinite(sigma) or sigma < 0:
             raise ValueError("Density sigma must be finite and non-negative.")
-        if not math.isfinite(gamma) or gamma <= 0:
-            raise ValueError("Density gamma must be finite and positive.")
         grid_density = self.grid_density_map()
         density = torch.nn.functional.interpolate(
             grid_density.unsqueeze(0).unsqueeze(0),
@@ -104,15 +112,10 @@ class PerturbationArchive:
             align_corners=False,
         )[0, 0]
         smoothed = torch.from_numpy(gaussian_filter(density.numpy(), sigma=sigma))
-        low, high = smoothed.min(), smoothed.max()
-        normalized = (
-            (smoothed - low) / (high - low)
-            if high > low else torch.zeros_like(smoothed)
-        )
-        return density, smoothed, normalized.pow(gamma)
+        return density, smoothed, normalize_density(smoothed)
 
 
-def save_perturbation_density(archive, clean_chw, output_prefix, save_map, sigma=1.0, gamma=2.0):
+def save_perturbation_density(archive, clean_chw, output_prefix, save_map, sigma=1.0):
     prefix = Path(output_prefix)
     prefix.parent.mkdir(parents=True, exist_ok=True)
     paths = {
@@ -122,7 +125,7 @@ def save_perturbation_density(archive, clean_chw, output_prefix, save_map, sigma
         "data": f"{prefix}.pt",
         "metadata": f"{prefix}.json",
     }
-    density, smoothed, normalized = archive.density_maps(sigma, gamma)
+    density, smoothed, normalized = archive.density_maps(sigma)
     grid_density = archive.grid_density_map()
     save_map(density, paths["raw_map"])
     save_map(normalized, paths["map"])
@@ -149,7 +152,6 @@ def save_perturbation_density(archive, clean_chw, output_prefix, save_map, sigma
         "archive_size": len(archive.entries),
         "image_shape": list(archive.image_shape),
         "sigma": sigma,
-        "gamma": gamma,
         "grid_size": list(DENSITY_GRID_SIZE),
         "grid_value": "mean changed-pixel frequency within each cell",
         "objectives": ["margin_loss", "saliency_loss"],

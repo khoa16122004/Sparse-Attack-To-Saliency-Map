@@ -101,7 +101,7 @@ def parse_args():
     )
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
     parser.add_argument("--seed", type=int, default=None, help="Global random seed for reproducibility")
-    parser.add_argument("--density-sigma", type=float, default=3.0, help="Gaussian sigma for Pareto perturbation density (0 disables smoothing)")
+    parser.add_argument("--density-sigma", type=float, default=1.0, help="Gaussian sigma for Pareto perturbation density (0 disables smoothing)")
 
     args = parser.parse_args()
     if not np.isfinite(args.density_sigma) or args.density_sigma < 0:

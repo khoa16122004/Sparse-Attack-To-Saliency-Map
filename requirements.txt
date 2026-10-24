@@ -1,4 +1,6 @@
 grad-cam
 icecream
 pymoo
-
+streamlit>=1.35
+plotly>=5.20
+matplotlib>=3.6

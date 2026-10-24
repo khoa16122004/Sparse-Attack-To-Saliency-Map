@@ -1,0 +1,22 @@
+{
+  "full": {
+    "Saliency-Del-Ins Optimized": 0.874888662104294,
+    "Delete-Oriented": 0.9516299763434071,
+    "Insert-Oriented": 0.9476446402387394,
+    "Saliency-Optimized": 0.7057599762029357
+  },
+  "per_model": {
+    "swin_t": {
+      "Saliency-Del-Ins Optimized": 0.874888662104294,
+      "Delete-Oriented": 0.9516299763434071,
+      "Insert-Oriented": 0.9476446402387394,
+      "Saliency-Optimized": 0.7057599762029357
+    }
+  },
+  "approach_colors": {
+    "Saliency-Optimized": "#D55E00",
+    "Delete-Oriented": "#0072B2",
+    "Insert-Oriented": "#E69F00",
+    "Saliency-Del-Ins Optimized": "#CC79A7"
+  }
+}

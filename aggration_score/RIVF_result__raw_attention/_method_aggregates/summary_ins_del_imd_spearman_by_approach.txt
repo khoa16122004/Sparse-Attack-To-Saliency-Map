@@ -1,0 +1,6 @@
+approach & del & ins & imd & spearman
+Saliency-Optimized & 0.4355 & 0.4922 & 0.0567 & 0.5873
+Delete-Oriented & 0.4888 & 0.5417 & 0.0529 & 0.8213
+Insert-Oriented & 0.3894 & 0.5028 & 0.1134 & 0.8155
+Del-Ins Optimized & 0.4667 & 0.5040 & 0.0372 & 0.7992
+Saliency-Del-Ins Optimized & 0.4847 & 0.4790 & -0.0057 & 0.6489

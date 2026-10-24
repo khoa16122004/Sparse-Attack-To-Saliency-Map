@@ -17,6 +17,8 @@ for directory in (ROOT, ROOT / "core"):
     if str(directory) not in sys.path:
         sys.path.insert(0, str(directory))
 
+from core.perturbation_archive import normalize_density
+
 if __package__:
     from .run_score import _normalize_algorithm, _parse_approach, _resolve_run_context
     from .run_aggregate_faithfulness import aggregate_records, block_key, sample_key, validate_record
@@ -193,10 +195,13 @@ def evaluate_sample(path, summary, context, model, normalize, explain_fn, blur_f
             }
     density_path = path.parent / "perturbation_density.pt"
     density = torch.load(density_path, map_location="cpu", weights_only=True)
+    if "smoothed_density" not in density:
+        raise ValueError(f"{density_path}: missing smoothed_density; regenerate the density archive")
+    density_map = normalize_density(validate_map(density["smoothed_density"], clean.shape[-2:]))
     scores = {
         "clean": clean_score,
         "perturbation": evaluate_map(
-            model, normalize, clean, density["normalized_density"], target_class, blur_fn,
+            model, normalize, clean, density_map, target_class, blur_fn,
             step=args.step, batch_size=args.batch_size,
         ),
     }
@@ -219,11 +224,11 @@ def evaluate_sample(path, summary, context, model, normalize, explain_fn, blur_f
             "auc_axis": "fraction_of_pixels",
             "tie_break": "stable_row_major",
             "explanation_source": "recomputed_from_saved_rgb",
-            "perturbation_source": "normalized_density_tensor",
+            "perturbation_source": "minmax_smoothed_density_tensor",
         },
         "perturbation_metadata": {
             key: summary.get("perturbation_density", {}).get(key)
-            for key in ("grid_size", "grid_value", "sigma", "gamma")
+            for key in ("grid_size", "grid_value", "sigma")
         },
         "maps": scores,
     }
@@ -289,7 +294,7 @@ def main():
                 if result["context"] != context or any(
                     result["protocol"][key] != getattr(args, key)
                     for key in ("step", "kernel_size", "kernel_sigma")
-                ):
+                ) or result["protocol"].get("perturbation_source") != "minmax_smoothed_density_tensor":
                     raise ValueError(f"{result_path}: stale context/protocol; use --replace")
                 print(f"[CACHE] {result_path}")
             else:

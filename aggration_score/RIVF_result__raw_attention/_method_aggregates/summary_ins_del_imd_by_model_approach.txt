@@ -1,0 +1,19 @@
+explain_method & model_name & approach & del & ins & imd
+eps_50 & swin_t & Del-Ins Optimized & 0.5872 & 0.6088 & 0.0216
+eps_50 & swin_t & Delete-Oriented & 0.6132 & 0.6332 & 0.0200
+eps_50 & swin_t & Insert-Oriented & 0.4650 & 0.6183 & 0.1534
+eps_50 & swin_t & Saliency-Del-Ins Optimized & 0.6083 & 0.5891 & -0.0191
+eps_50 & swin_t & Saliency-Optimized & 0.5653 & 0.6162 & 0.0509
+eps_50 & swin_t & clean & 0.4312 & 0.6629 & 0.2317
+eps_50 & vit_b_16 & Del-Ins Optimized & 0.4373 & 0.4659 & 0.0286
+eps_50 & vit_b_16 & Delete-Oriented & 0.4648 & 0.5154 & 0.0506
+eps_50 & vit_b_16 & Insert-Oriented & 0.3730 & 0.4584 & 0.0855
+eps_50 & vit_b_16 & Saliency-Del-Ins Optimized & 0.4540 & 0.4286 & -0.0253
+eps_50 & vit_b_16 & Saliency-Optimized & 0.3875 & 0.4688 & 0.0812
+eps_50 & vit_b_16 & clean & 0.3636 & 0.5538 & 0.1902
+eps_50 & vit_b_32 & Del-Ins Optimized & 0.3757 & 0.4371 & 0.0615
+eps_50 & vit_b_32 & Delete-Oriented & 0.3884 & 0.4765 & 0.0881
+eps_50 & vit_b_32 & Insert-Oriented & 0.3303 & 0.4318 & 0.1015
+eps_50 & vit_b_32 & Saliency-Del-Ins Optimized & 0.3918 & 0.4193 & 0.0275
+eps_50 & vit_b_32 & Saliency-Optimized & 0.3535 & 0.3916 & 0.0381
+eps_50 & vit_b_32 & clean & 0.2810 & 0.5120 & 0.2310

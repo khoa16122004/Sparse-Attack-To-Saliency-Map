@@ -1,0 +1,295 @@
+{
+  "explain_method": "eps_50",
+  "clean": {
+    "deletion": {
+      "num_points": 225,
+      "mean": 0.160533558594002,
+      "auc": 0.15901808340915383,
+      "auc_mean_over_samples": 0.1590180834091538
+    },
+    "insertion": {
+      "num_points": 225,
+      "mean": 0.7782031780945842,
+      "auc": 0.7794749184729826,
+      "auc_mean_over_samples": 0.7794749184729826
+    },
+    "imd_ins_minus_del": {
+      "num_points": 225,
+      "mean": 0.6176696195005821,
+      "auc": 0.6204568350638286,
+      "auc_mean_over_samples": 0.6204568350638288
+    }
+  },
+  "approaches": {
+    "Saliency-Optimized": {
+      "faithfulness": {
+        "deletion": {
+          "num_points": 225,
+          "mean": 0.13609594541182568,
+          "auc": 0.13447137373955706,
+          "auc_mean_over_samples": 0.13447137373955706
+        },
+        "insertion": {
+          "num_points": 225,
+          "mean": 0.7235180992123194,
+          "auc": 0.7246647573933267,
+          "auc_mean_over_samples": 0.7246647573933266
+        },
+        "imd_ins_minus_del": {
+          "num_points": 225,
+          "mean": 0.5874221538004937,
+          "auc": 0.5901933836537696,
+          "auc_mean_over_samples": 0.5901933836537695
+        }
+      },
+      "spearman": {
+        "num_points": 200,
+        "mean": 0.773920448981232,
+        "auc": 0.7735984472491987,
+        "auc_mean_over_samples": 0.7735984472491987
+      },
+      "objectives": {
+        "margin": {
+          "num_points": 200,
+          "mean": 0.6910719839204684,
+          "auc": 0.6917555952097248,
+          "auc_mean_over_samples": 0.6917555952097251
+        },
+        "saliency": {
+          "num_points": 200,
+          "mean": 0.6625870210071405,
+          "auc": 0.6621923702029229,
+          "auc_mean_over_samples": 0.6621923702029228
+        },
+        "deletion_obj": {
+          "num_points": 200,
+          "mean": -0.05981557422377435,
+          "auc": -0.05980203489854366,
+          "auc_mean_over_samples": -0.05980203489854365
+        },
+        "insertion_obj": {
+          "num_points": 200,
+          "mean": 0.520944876364252,
+          "auc": 0.5208253866834308,
+          "auc_mean_over_samples": 0.5208253866834309
+        }
+      }
+    },
+    "Delete-Oriented": {
+      "faithfulness": {
+        "deletion": {
+          "num_points": 225,
+          "mean": 0.24864699211764685,
+          "auc": 0.24752488047531493,
+          "auc_mean_over_samples": 0.24752488047531487
+        },
+        "insertion": {
+          "num_points": 225,
+          "mean": 0.7548640971691881,
+          "auc": 0.7560539666505982,
+          "auc_mean_over_samples": 0.7560539666505983
+        },
+        "imd_ins_minus_del": {
+          "num_points": 225,
+          "mean": 0.5062171050515412,
+          "auc": 0.5085290861752833,
+          "auc_mean_over_samples": 0.5085290861752835
+        }
+      },
+      "spearman": {
+        "num_points": 200,
+        "mean": 0.9670546288567801,
+        "auc": 0.9670237769694695,
+        "auc_mean_over_samples": 0.9670237769694694
+      },
+      "objectives": {
+        "margin": {
+          "num_points": 200,
+          "mean": 4.747535801800092,
+          "auc": 4.748422750164715,
+          "auc_mean_over_samples": 4.748422750164716
+        },
+        "saliency": {
+          "num_points": 200,
+          "mean": 0.4208935151939707,
+          "auc": 0.4207292592799691,
+          "auc_mean_over_samples": 0.4207292592799692
+        },
+        "deletion_obj": {
+          "num_points": 200,
+          "mean": -0.2042392402391504,
+          "auc": -0.20443644969972166,
+          "auc_mean_over_samples": -0.20443644969972166
+        },
+        "insertion_obj": {
+          "num_points": 200,
+          "mean": 0.6251327560487009,
+          "auc": 0.6251657095964618,
+          "auc_mean_over_samples": 0.6251657095964619
+        }
+      }
+    },
+    "Insert-Oriented": {
+      "faithfulness": {
+        "deletion": {
+          "num_points": 225,
+          "mean": 0.1402986555009187,
+          "auc": 0.13869284592726208,
+          "auc_mean_over_samples": 0.13869284592726208
+        },
+        "insertion": {
+          "num_points": 225,
+          "mean": 0.6203202392209399,
+          "auc": 0.6209987521936524,
+          "auc_mean_over_samples": 0.6209987521936523
+        },
+        "imd_ins_minus_del": {
+          "num_points": 225,
+          "mean": 0.48002158372002107,
+          "auc": 0.4823059062663902,
+          "auc_mean_over_samples": 0.48230590626639025
+        }
+      },
+      "spearman": {
+        "num_points": 200,
+        "mean": 0.9378000026674136,
+        "auc": 0.9377244744027962,
+        "auc_mean_over_samples": 0.937724474402796
+      },
+      "objectives": {
+        "margin": {
+          "num_points": 200,
+          "mean": -1.4702214505672453,
+          "auc": -1.478559076907846,
+          "auc_mean_over_samples": -1.4785590769078463
+        },
+        "saliency": {
+          "num_points": 200,
+          "mean": 0.12740007145767734,
+          "auc": 0.12679589498499955,
+          "auc_mean_over_samples": 0.12679589498499952
+        },
+        "deletion_obj": {
+          "num_points": 200,
+          "mean": -0.048728275445561256,
+          "auc": -0.04869379628425336,
+          "auc_mean_over_samples": -0.04869379628425336
+        },
+        "insertion_obj": {
+          "num_points": 200,
+          "mean": 0.17612834717386078,
+          "auc": 0.1754896915370714,
+          "auc_mean_over_samples": 0.1754896915370714
+        }
+      }
+    },
+    "Del-Ins Optimized": {
+      "faithfulness": {
+        "deletion": {
+          "num_points": 225,
+          "mean": 0.21082539382331586,
+          "auc": 0.2095344357600271,
+          "auc_mean_over_samples": 0.20953443576002706
+        },
+        "insertion": {
+          "num_points": 225,
+          "mean": 0.612328521254888,
+          "auc": 0.6129713569152521,
+          "auc_mean_over_samples": 0.6129713569152521
+        },
+        "imd_ins_minus_del": {
+          "num_points": 225,
+          "mean": 0.4015031274315722,
+          "auc": 0.40343692115522506,
+          "auc_mean_over_samples": 0.403436921155225
+        }
+      },
+      "spearman": {
+        "num_points": 200,
+        "mean": 0.9499529785930864,
+        "auc": 0.9498927273512018,
+        "auc_mean_over_samples": 0.9498927273512017
+      },
+      "objectives": {
+        "margin": {
+          "num_points": 200,
+          "mean": 0.4500533731540044,
+          "auc": 0.4440064168036283,
+          "auc_mean_over_samples": 0.4440064168036284
+        },
+        "saliency": {
+          "num_points": 200,
+          "mean": 0.09772367156743292,
+          "auc": 0.09708612788461325,
+          "auc_mean_over_samples": 0.09708612788461325
+        },
+        "deletion_obj": {
+          "num_points": 200,
+          "mean": -0.13784516181699957,
+          "auc": -0.13793725148018843,
+          "auc_mean_over_samples": -0.13793725148018843
+        },
+        "insertion_obj": {
+          "num_points": 200,
+          "mean": 0.2355688333753519,
+          "auc": 0.2350233793547037,
+          "auc_mean_over_samples": 0.23502337935470372
+        }
+      }
+    },
+    "Saliency-Del-Ins Optimized": {
+      "faithfulness": {
+        "deletion": {
+          "num_points": 225,
+          "mean": 0.20492394013272017,
+          "auc": 0.20360663629402695,
+          "auc_mean_over_samples": 0.20360663629402695
+        },
+        "insertion": {
+          "num_points": 225,
+          "mean": 0.5965248482596914,
+          "auc": 0.5971343341894222,
+          "auc_mean_over_samples": 0.5971343341894222
+        },
+        "imd_ins_minus_del": {
+          "num_points": 225,
+          "mean": 0.3916009081269713,
+          "auc": 0.3935276978953953,
+          "auc_mean_over_samples": 0.3935276978953952
+        }
+      },
+      "spearman": {
+        "num_points": 200,
+        "mean": 0.8497220152929831,
+        "auc": 0.8495119603660106,
+        "auc_mean_over_samples": 0.8495119603660107
+      },
+      "objectives": {
+        "margin": {
+          "num_points": 200,
+          "mean": 0.7553083545804022,
+          "auc": 0.7497901811831359,
+          "auc_mean_over_samples": 0.749790181183136
+        },
+        "saliency": {
+          "num_points": 200,
+          "mean": 0.751533292895804,
+          "auc": 0.7512582062828782,
+          "auc_mean_over_samples": 0.751258206282878
+        },
+        "deletion_obj": {
+          "num_points": 200,
+          "mean": -0.127557519079541,
+          "auc": -0.12763295291786214,
+          "auc_mean_over_samples": -0.12763295291786214
+        },
+        "insertion_obj": {
+          "num_points": 200,
+          "mean": 0.24270531219935884,
+          "auc": 0.24217264291747836,
+          "auc_mean_over_samples": 0.2421726429174784
+        }
+      }
+    }
+  }
+}
