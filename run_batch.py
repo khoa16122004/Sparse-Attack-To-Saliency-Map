@@ -93,6 +93,7 @@ def parse_args():
             "input_gradient",
             "grad_cam",
             "raw_attention",
+            "xgrad_cam",
             "attention_grad",
         ],
         help="Saliency explanation method",
