@@ -11,6 +11,7 @@ from explain_method import (
     integrated_gradients,
     input_gradient_map,
     grad_cam,
+    xgrad_cam,
     raw_attention,
     attention_grad,
 )
@@ -105,6 +106,8 @@ def get_explainable_method(method_name):
         explain_method = input_gradient_map
     elif method_name == "grad_cam":
         explain_method = grad_cam
+    elif method_name == "xgrad_cam":
+        explain_method = xgrad_cam
     elif method_name == "raw_attention":
         explain_method = raw_attention
     elif method_name == "attention_grad":

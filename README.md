@@ -1,5 +1,12 @@
 # Sparse-Attack-To-Saliency-Map
 
+### Batch explanation methods
+
+`run_batch.py --explain-method` supports `simple_gradient`,
+`integrated_gradients`, `input_gradient`, `grad_cam`, `raw_attention`,
+`xgrad_cam`, and `attention_grad`. The shared method dispatcher resolves
+`xgrad_cam` to the existing XGrad-CAM implementation.
+
 ### Interactive Pareto comparison
 
 ```powershell
@@ -95,6 +102,16 @@ recover runs already filtered out by scoring or distinguish mirrored equivalent
 losses from actual runs; use a root scan for physical completeness. The audit
 never overwrites the scoring cache or LaTeX reports.
 
+
+### Experiment shell scripts
+
+All GA/NSGAII launchers in `script_sh` run only `margin_saliency`, sequentially
+over seeds 22520691, 22520692, 22520693, 22520694, and 22520695.
+Each seed writes to its own output directory. Model-specific scripts preserve
+their existing budgets, explanation method, and objective-weight defaults;
+GA scripts do not automatically sweep all three weight settings.
+The legacy `script_compare_loss_50.sh` name is retained, but it now runs only
+Margin Loss. Evaluation/reporting scripts are unaffected by this seed sweep.
 
 ### Faithfulness comparison
 
