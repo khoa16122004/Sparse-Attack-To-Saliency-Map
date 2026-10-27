@@ -1,21 +1,29 @@
 #!/bin/bash
-#SBATCH --job-name=faithfulness
-#SBATCH --output=ESWA_%j.out
-#SBATCH --error=ESWA_%j.err
+#SBATCH --job-name=ESWA
+#SBATCH --output=ESWA/normal_%j.out
+#SBATCH --error=ESWA/normal_%j.err
 #SBATCH --account=uit
 #SBATCH --partition=normal
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=4G
-#SBATCH --time=72:00:00
+#SBATCH --cpus-per-task=8      # Tối đa 16 CPU
+#SBATCH --mem=4G               # Tối đa 72 GB RAM
+#SBATCH --time=72:00:00        # Tối đa 3 ngày (72:00:00)
 #SBATCH --gres=gpu:2g.35gb:1
 
-set -euo pipefail
 
-# Activate the Python environment before invoking bash or submitting with sbatch.
-# Relative input/output paths are resolved from the repository root.
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-cd -- "$SCRIPT_DIR/.."
+nvidia-smi -L
+
+
+source /datastore/khoatn/miniconda3/etc/profile.d/conda.sh
+conda activate Sparse_Attack
+cd /datastore/khoatn/Sparse-Attack-To-Saliency-Map
+export SSL_CERT_FILE="$(python -c 'import certifi; print(certifi.where())')"
+export REQUESTS_CA_BUNDLE="$SSL_CERT_FILE"
+export CUDA_MPS_PIPE_DIRECTORY=/tmp/nvidia-mps-job$SLURM_JOB_ID
+export CUDA_MPS_LOG_DIRECTORY=/tmp/nvidia-mps-log-job$SLURM_JOB_ID
+
+rm -rf $CUDA_MPS_PIPE_DIRECTORY $CUDA_MPS_LOG_DIRECTORY
+mkdir -p $CUDA_MPS_PIPE_DIRECTORY $CUDA_MPS_LOG_DIRECTORY
 
 PYTHON="${PYTHON:-python}"
 INPUT_DIR="${INPUT_DIR:-offical_faithfulness/server_run_seed}"
