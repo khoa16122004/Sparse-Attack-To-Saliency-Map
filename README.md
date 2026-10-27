@@ -35,3 +35,38 @@ The command above creates these main files:
 - `outputs/sample_vgg16/history_margin.png` and `outputs/sample_vgg16/history_saliency.png`: optimization history charts.
 
 The terminal also prints an `Attack summary`, including clean/adv predictions, `l0_distance`, `margin_loss`, `saliency_loss`, and more.
+
+### Faithfulness scoring
+
+Activate the project's Python environment with CUDA-enabled PyTorch, then run
+[the faithfulness scoring script](script_sh/run_score_faithfulness.sh) with Bash
+on the GPU machine:
+
+```sh
+conda activate Sparse_Attack
+bash script_sh/run_score_faithfulness.sh offical/server_run_seed
+```
+
+Multiple input roots can be passed as separate arguments. The script first
+evaluates each sample on CUDA (insertion/deletion AUC and IMD for clean and
+perturbation maps), then aggregates the saved `faithfulness.json` files into
+scores, comparison tables and curves. Existing compatible sample evaluations
+are reused; stale context/protocol settings cause an error rather than being
+silently reused. Relative paths are resolved from the repository root.
+
+```sh
+# Recompute every sample and customize the output directory/batch size.
+REPLACE=1 BATCH_SIZE=8 OUTPUT_DIR=faithfulness_scores \
+    bash script_sh/run_score_faithfulness.sh path/to/seed_runs path/to/more_runs
+
+# Alternatively submit to the existing UIT Slurm GPU partition.
+sbatch script_sh/run_score_faithfulness.sh offical/server_run_seed
+```
+
+Environment overrides: `PYTHON` (executable, default `python`), `INPUT_DIR`
+(used only when no positional roots are provided, default
+`offical/server_run_seed`), `OUTPUT_DIR` (default `faithfulness_aggregates`),
+`STEP` (224 pixels), `BATCH_SIZE` (16), `KERNEL_SIZE` (11),
+`KERNEL_SIGMA` (5), `REPLACE` (0 or 1), and `EPS` (space-separated table
+budgets, default `"20 50 100"`). `EPS` controls the final LaTeX table columns,
+not which samples are evaluated; aggregate JSON/CSV retain all budgets.

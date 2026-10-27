@@ -18,7 +18,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 cd -- "$SCRIPT_DIR/.."
 
 PYTHON="${PYTHON:-python}"
-INPUT_DIR="${INPUT_DIR:-offical/server_run_seed}"
+INPUT_DIR="${INPUT_DIR:-offical_faithfulness/server_run_seed}"
 OUTPUT_DIR="${OUTPUT_DIR:-faithfulness_aggregates}"
 STEP="${STEP:-224}"
 BATCH_SIZE="${BATCH_SIZE:-16}"
