@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=faithfulness
-#SBATCH --output=faithfulness_%j.out
-#SBATCH --error=faithfulness_%j.err
+#SBATCH --output=ESWA_%j.out
+#SBATCH --error=ESWA_%j.err
 #SBATCH --account=uit
 #SBATCH --partition=normal
 #SBATCH --ntasks=1
