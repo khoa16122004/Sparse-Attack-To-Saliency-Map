@@ -1,0 +1,101 @@
+\begin{table*}[t]
+\centering
+\caption{Attack performance of different explanation methods across CNN and ViT models. We report attack success rate (ASR) $\uparrow$, Spearman's rank-order correlation (SRO) $\downarrow$, and H-Score $\uparrow$. All experiments are conducted using five independent random seeds, and the results are reported as mean $\pm$ standard deviation. For each explanation method and model, the best value for each metric is shown in \textbf{bold}, while statistically significant results ($p < \alpha = 0.05$) are highlighted in \textcolor{blue}{blue}.}
+\label{tab:attack_performance}
+\textit{CNN models}\\[0.1cm]
+\resizebox{0.8\textwidth}{!}{
+\begin{tabular}{ll|ccc|ccc|ccc}
+\toprule
+\multirow{2}{*}{Explain}
+& \multirow{2}{*}{Algorithm}
+& \multicolumn{3}{c|}{ResNet-50}
+& \multicolumn{3}{c|}{VGG-16}
+& \multicolumn{3}{c}{Densenet-121} \\
+\cmidrule(lr){3-5}
+\cmidrule(lr){6-8}
+\cmidrule(lr){9-11}
+& & ASR $\uparrow$ & SRO $\downarrow$ & H-Score $\uparrow$
+  & ASR $\uparrow$ & SRO $\downarrow$ & H-Score $\uparrow$
+  & ASR $\uparrow$ & SRO $\downarrow$ & H-Score $\uparrow$ \\
+\midrule
+
+\multirow{4}{*}{Simple Gradient}
+& GASS ($\lambda=0.0$) & & & & & & & & & \\
+& GASS ($\lambda=0.5$) & & & & & & & & & \\
+& GASS ($\lambda=1.0$) & & & & & & & & & \\
+& \textbf{Ours}     & & & & & & & & & \\
+\midrule
+
+\multirow{4}{*}{Input $\odot$ Gradient}
+& GASS ($\lambda=0.0$) & & & & & & & & & \\
+& GASS ($\lambda=0.5$) & & & & & & & & & \\
+& GASS ($\lambda=1.0$) & & & & & & & & & \\
+& \textbf{Ours}     & & & & & & & & & \\
+\midrule
+
+\multirow{4}{*}{GradCAM}
+& GASS ($\lambda=0.0$) & & & & & & & & & \\
+& GASS ($\lambda=0.5$) & & & & & & & & & \\
+& GASS ($\lambda=1.0$) & & & & & & & & & \\
+& \textbf{Ours}     & & & & & & & & & \\
+
+\midrule
+\multirow{4}{*}{XGradCAM}
+& GASS ($\lambda=0.0$) & & & & & & & & & \\
+& GASS ($\lambda=0.5$) & & & & & & & & & \\
+& GASS ($\lambda=1.0$) & & & & & & & & & \\
+& \textbf{Ours}     & & & & & & & & & \\
+
+\bottomrule
+\end{tabular}
+}
+
+\vspace{0.5cm}
+\textit{ViT models}\\[0.1cm]
+\resizebox{0.8\textwidth}{!}{
+\begin{tabular}{ll|ccc|ccc|ccc}
+\toprule
+\multirow{2}{*}{Explain}
+& \multirow{2}{*}{Algorithm}
+& \multicolumn{3}{c|}{ViT-B-32}
+& \multicolumn{3}{c|}{ViT-B-16}
+& \multicolumn{3}{c}{Swin-V2} \\
+\cmidrule(lr){3-5}
+\cmidrule(lr){6-8}
+\cmidrule(lr){9-11}
+& & ASR $\uparrow$ & SRO $\downarrow$ & H-Score $\uparrow$
+  & ASR $\uparrow$ & SRO $\downarrow$ & H-Score $\uparrow$
+  & ASR $\uparrow$ & SRO $\downarrow$ & H-Score $\uparrow$ \\
+\midrule
+
+\multirow{4}{*}{Raw Attention}
+& GASS ($\lambda=0.0$) & & & & & & & & & \\
+& GASS ($\lambda=0.5$) & & & & & & & & & \\
+& GASS ($\lambda=1.0$) & & & & & & & & & \\
+& \textbf{Ours}     & & & & & & & & & \\
+\midrule
+
+\multirow{4}{*}{Attention Rollout}
+& GASS ($\lambda=0.0$) & & & & & & & & & \\
+& GASS ($\lambda=0.5$) & & & & & & & & & \\
+& GASS ($\lambda=1.0$) & & & & & & & & & \\
+& \textbf{Ours}     & & & & & & & & & \\
+\midrule
+
+\multirow{4}{*}{Attention Flow}
+& GASS ($\lambda=0.0$) & & & & & & & & & \\
+& GASS ($\lambda=0.5$) & & & & & & & & & \\
+& GASS ($\lambda=1.0$) & & & & & & & & & \\
+& \textbf{Ours}     & & & & & & & & & \\
+\midrule
+
+\multirow{4}{*}{Partial LRP}
+& GASS ($\lambda=0.0$) & & & & & & & & & \\
+& GASS ($\lambda=0.5$) & & & & & & & & & \\
+& GASS ($\lambda=1.0$) & & & & & & & & & \\
+& \textbf{Ours}     & & & & & & & & & \\
+
+\bottomrule
+\end{tabular}
+}
+\end{table*}

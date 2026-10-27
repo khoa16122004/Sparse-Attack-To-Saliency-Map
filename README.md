@@ -166,6 +166,62 @@ The SLURM wrapper accepts `DEVICE`, `STEP`, `BATCH_SIZE`, and `OUTPUT_DIR`
 environment overrides. Without positional roots it uses `INPUT_DIR`
 (default `offical/server_run_seed`).
 
+### Paper tables: seed mean/SD and optional paired t-tests
+
+The templates in `evaluate_latex_generate/faithfulness.text` and
+`evaluate_latex_generate/perform_attack.text` can be populated without changing
+the existing evaluation reports or modifying the templates:
+
+```powershell
+# Attack: reuse all_runs.json from run_score, or scan raw result roots.
+python evaluate_latex_generate\generate_tables.py --all-runs-json D:\reports\all_runs.json --output-dir D:\tables
+python evaluate_latex_generate\generate_tables.py --attack-input-dirs D:\results\GA D:\results\NSGAII --output-dir D:\tables
+
+# Faithfulness: consume the evaluator's per-sample faithfulness.json files.
+python evaluate_latex_generate\generate_tables.py --faithfulness-input-dirs D:\results\GA D:\results\NSGAII --output-dir D:\tables
+
+# Optional filters and statistical settings, applicable to either input mode.
+python evaluate_latex_generate\generate_tables.py --all-runs-json D:\reports\all_runs.json --eps 20 --loss-type margin_loss --strategy uniform --no-ttest
+python evaluate_latex_generate\generate_tables.py --all-runs-json D:\reports\all_runs.json --ttest-alpha 0.05 --ttest-correction bonferroni --precision 4
+```
+
+Each epsilon/loss/strategy configuration gets a separate `table.tex` and
+`statistics.json` in a deterministic subdirectory. Faithfulness additionally
+separates evaluation protocol and density settings, using the existing
+aggregator's configuration grouping and Clean consistency/deduplication checks.
+Do not mix attack roots with different unrecorded settings (e.g. population size
+or iteration budget); cached `RunStats` does not retain those settings.
+
+The layout keeps the exact CNN/ViT model columns and explainer rows of each
+template, including their different third CNN models. Missing cells are `--`;
+models/explainers outside the template are excluded, not substituted.
+`statistics.json` lists missing/excluded cells and the actual seed IDs/counts.
+The caption reports actual available seed counts rather than assuming five.
+No missing loss, approach, or seed is synthesized.
+
+Metrics are averaged within each seed first, then seeds are equally weighted.
+SD is the sample standard deviation between seed means (`ddof=1`), not between
+images. With one seed, the SD is undefined and printed as `--`. Attack ASR/SRO
+come from `run_score`; ASR stays in [0, 1], and H-Score is recomputed per seed
+before averaging. Raw attack scanning retains `run_score`'s default incomplete-run
+filter (minimum 50% sample coverage). Duplicate runs and non-finite metrics are
+errors instead of selecting the best repeated run.
+
+Best means are bold: maximize ASR/H-Score/Ins/IMD, minimize SRO/Del.
+Two-sided paired t-tests are **enabled by default** (`--use-ttest`), with
+`--ttest-alpha 0.05` and no multiplicity correction. Blue is applied only to Ours
+(NSGAII), only if it improves over **each of the three GASS baselines** with
+`p < alpha`. Faithfulness Clean participates in best-value bolding but is not a
+GASS comparator. Tests use actual common seed IDs, require at least two pairs,
+and reject differing per-seed image cohorts for faithfulness; attack caches
+contain no image IDs, so ensure their sample cohorts match before interpreting
+paired tests. P-values, matched seeds, and skipped-test reasons are in
+`statistics.json`. `--ttest-correction bonferroni` uses `alpha/3` for the three
+comparisons per metric/model/explainer. `--no-ttest` removes significance coloring
+and significance claims from the caption while retaining bold best values.
+T-tests require SciPy (`python -m pip install scipy` if absent).
+The LaTeX document needs `booktabs`, `multirow`, `graphicx`, and `xcolor`.
+
 ### Quick Start
 
 
