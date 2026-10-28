@@ -25,11 +25,11 @@ METRICS = {
 }
 MODELS = {
     "attack": (
-        ("resnet50", "vgg16", "densenet121"),
+        ("resnet18", "vgg16", "densenet121"),
         ("vit_b_32", "vit_b_16", "swin_v2"),
     ),
     "faithfulness": (
-        ("resnet50", "vgg16", "efficientnet_b0"),
+        ("resnet18", "vgg16", "densenet121"),
         ("vit_b_32", "vit_b_16", "swin_v2"),
     ),
 }

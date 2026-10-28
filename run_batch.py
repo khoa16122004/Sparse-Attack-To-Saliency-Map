@@ -437,6 +437,8 @@ def run_attack_one(image_path, output_paths, model_name, model, spatial, normali
     clean_saliency_map = fitness.saliency_true[0]
     adv_saliency_map, _ = explain_fn(model, adv_chw.unsqueeze(0).to(device), normalize, y_true)
     _save_saliency_map(clean_saliency_map, str(output_paths["clean_map"]))
+    torch.save(clean_saliency_map.detach().float().cpu(),
+               output_paths["clean_map"].with_suffix(".pt"))
     _save_saliency_map(adv_saliency_map[0], str(output_paths["adv_map"]))
     _save_four_class_maps(
         model=model,
