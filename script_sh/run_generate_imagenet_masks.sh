@@ -1,14 +1,30 @@
 #!/bin/bash
-#SBATCH --job-name=imagenet_sam3
-#SBATCH --output=sam3_masks_%j.out
-#SBATCH --error=sam3_masks_%j.err
+#SBATCH --job-name=ESWA
+#SBATCH --output=ESWA/normal_%j.out
+#SBATCH --error=ESWA/normal_%j.err
 #SBATCH --account=uit
 #SBATCH --partition=normal
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=32G
-#SBATCH --time=24:00:00
+#SBATCH --cpus-per-task=8      # Tối đa 16 CPU
+#SBATCH --mem=4G               # Tối đa 72 GB RAM
+#SBATCH --time=72:00:00        # Tối đa 3 ngày (72:00:00)
 #SBATCH --gres=gpu:2g.35gb:1
+
+
+nvidia-smi -L
+
+
+source /datastore/khoatn/miniconda3/etc/profile.d/conda.sh
+conda activate Sparse_Attack
+cd /datastore/khoatn/Sparse-Attack-To-Saliency-Map
+export SSL_CERT_FILE="$(python -c 'import certifi; print(certifi.where())')"
+export REQUESTS_CA_BUNDLE="$SSL_CERT_FILE"
+export CUDA_MPS_PIPE_DIRECTORY=/tmp/nvidia-mps-job$SLURM_JOB_ID
+export CUDA_MPS_LOG_DIRECTORY=/tmp/nvidia-mps-log-job$SLURM_JOB_ID
+
+rm -rf $CUDA_MPS_PIPE_DIRECTORY $CUDA_MPS_LOG_DIRECTORY
+mkdir -p $CUDA_MPS_PIPE_DIRECTORY $CUDA_MPS_LOG_DIRECTORY
+
 
 set -euo pipefail
 REPO_DIR="${SLURM_SUBMIT_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}"
