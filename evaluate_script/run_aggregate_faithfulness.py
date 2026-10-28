@@ -1,4 +1,8 @@
-"""Compare Clean against perturbation density maps from three GAs and NSGAII."""
+"""Aggregate faithfulness metrics and curves for Clean, GASS and NSGA-II maps.
+
+Paper-ready LaTeX tables are rendered by evaluate_latex_generate.generate_tables
+from per-sample faithfulness.json files using the fixed faithfulness template.
+"""
 
 import argparse
 import csv
@@ -10,20 +14,14 @@ from pathlib import Path
 
 import numpy as np
 
-if __package__:
-    from .run_score import _format_explain_latex_name, _format_model_latex_name, _sort_model_keys
-else:
-    from run_score import _format_explain_latex_name, _format_model_latex_name, _sort_model_keys
-
 
 MAP_NAMES = ("clean", "perturbation")
 METRICS = ("ins_auc", "del_auc", "imd")
-LOSSES = ("margin_loss", "negative_cross_entropy_saliency")
 APPROACHES = ("clean", "ga_0", "ga_0.5", "ga_1", "nsgaii")
 LABELS = {
-    "clean": "Clean", "ga_0": r"GA($\lambda=0.0$)",
-    "ga_0.5": r"GA($\lambda=0.5$)", "ga_1": r"GA($\lambda=1.0$)",
-    "nsgaii": "NSGAII",
+    "clean": "Clean", "ga_0": r"GASS ($\lambda=0.0$)",
+    "ga_0.5": r"GASS ($\lambda=0.5$)", "ga_1": r"GASS ($\lambda=1.0$)",
+    "nsgaii": "Ours",
 }
 CURVE_FIELDS = ("fractions", "ins_curve", "del_curve")
 
@@ -174,68 +172,7 @@ def summarize(records):
     return rows
 
 
-def latex_table(rows, budgets, method, family):
-    unknown = {row["loss_type"] for row in rows} - set(LOSSES)
-    if unknown:
-        raise ValueError(f"Unsupported table loss functions: {sorted(unknown)}")
-    columns = 6 * len(budgets)
-    lines = [
-        r"\begin{table*}[t]",
-        r"\centering",
-        (
-            r"\caption{Faithfulness of Clean and perturbation density maps from "
-            r"GA and NSGAII under different perturbation budgets and loss functions "
-            f"({_format_explain_latex_name(method)}, {family}). "
-            r"All maps are evaluated on the clean image for the original class.}"
-        ),
-        r"\label{tab:faithfulness_" + family.lower() + "_" + method + "}",
-        r"\resizebox{\textwidth}{!}{",
-        r"\begin{tabular}{cc|" + "|".join("cccccc" for _ in budgets) + "}",
-        r"\toprule",
-        r"\multirow{3}{*}{Model} & \multirow{3}{*}{Saliency Map} & "
-        + " & ".join(r"\multicolumn{6}{c}{$\epsilon=" + str(eps) + "$}" for eps in budgets)
-        + r" \\",
-        " ".join(
-            rf"\cmidrule(lr){{{3 + 6 * i}-{8 + 6 * i}}}" for i in range(len(budgets))
-        ),
-        "& & " + " & ".join(
-            [r"\multicolumn{3}{c}{Margin Loss}", r"\multicolumn{3}{c}{Log-Likelihood}"]
-            * len(budgets)
-        ) + r" \\",
-        " ".join(
-            rf"\cmidrule(lr){{{3 + 3 * i}-{5 + 3 * i}}}" for i in range(2 * len(budgets))
-        ),
-        "& & " + " & ".join(
-            [r"Ins.$\uparrow$", r"Del.$\downarrow$", "IMD"] * (columns // 3)
-        ) + r" \\",
-        r"\midrule",
-    ]
-    lookup = {
-        (row["model"], row["eps"], row["loss_type"], row["approach"]): row for row in rows
-    }
-    models = _sort_model_keys(sorted({row["model"] for row in rows}))
-    for index, model in enumerate(models):
-        for map_index, name in enumerate(APPROACHES):
-            model_cell = (
-                r"\multirow{5}{*}{" + _format_model_latex_name(model) + "}"
-                if map_index == 0 else ""
-            )
-            cells = []
-            for eps in budgets:
-                for loss in LOSSES:
-                    row = lookup.get((model, eps, loss, name))
-                    cells.extend(
-                        [f"{row[metric]:.4f}" for metric in METRICS]
-                        if row is not None else ["--"] * 3
-                    )
-            lines.append(model_cell + " & " + LABELS[name] + " & " + " & ".join(cells) + r" \\")
-        if index != len(models) - 1:
-            lines.append(r"\midrule")
-    lines.extend([r"\bottomrule", r"\end{tabular}", "}", r"\end{table*}"])
-    return "\n".join(lines) + "\n"
-
-
-def save_group(output_dir, rows, budgets, method, family):
+def save_group(output_dir, rows, method, family):
     output_dir.mkdir(parents=True, exist_ok=True)
     metric_rows = [
         {key: value for key, value in row.items() if key not in (*CURVE_FIELDS, "sample_ids")}
@@ -261,9 +198,9 @@ def save_group(output_dir, rows, budgets, method, family):
         "averaging": "sample_weighted_mean", "std": "sample_standard_deviation",
         "models": models,
     })
-    (output_dir / "table.tex").write_text(
-        latex_table(rows, budgets, method, family), encoding="utf-8"
-    )
+    stale_table = output_dir / "table.tex"
+    if stale_table.exists():
+        stale_table.unlink()
 
 
 def save_curves(output_dir, rows):
@@ -310,7 +247,7 @@ def save_curves(output_dir, rows):
             plt.close(fig)
 
 
-def aggregate_records(records, output_dir, budgets=(20, 50, 100), plot_blocks=None):
+def aggregate_records(records, output_dir, plot_blocks=None):
     groups = defaultdict(list)
     seen_samples = set()
     for payload in records:
@@ -334,7 +271,7 @@ def aggregate_records(records, output_dir, budgets=(20, 50, 100), plot_blocks=No
             if not method or any(char not in "abcdefghijklmnopqrstuvwxyz0123456789_-" for char in method):
                 raise ValueError(f"Invalid explanation method path: {method!r}")
             directory = folder / family / method
-            save_group(directory, method_rows, budgets, method, family)
+            save_group(directory, method_rows, method, family)
             blocks = defaultdict(list)
             for row in method_rows:
                 blocks[block_key(row)].append(row)
@@ -349,7 +286,6 @@ def aggregate_records(records, output_dir, budgets=(20, 50, 100), plot_blocks=No
         "num_samples": len(seen_samples), "num_configurations": len(groups),
         "averaging": "sample_weighted_mean",
         "clean_deduplication": "seed/model/explainer/eps/loss/class/sample",
-        "table_budgets": list(budgets),
         "configurations": manifest,
     })
     print(f"Aggregated {len(seen_samples)} evaluations into {output_dir.resolve()}")
@@ -359,11 +295,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input-dirs", type=Path, nargs="+", required=True)
     parser.add_argument("--output-dir", type=Path, default=Path("faithfulness_aggregates"))
-    parser.add_argument("--eps", type=int, nargs="+", default=[20, 50, 100],
-                        help="Budget columns in LaTeX (JSON/CSV retain all budgets)")
     args = parser.parse_args()
-    if any(eps <= 0 for eps in args.eps) or len(set(args.eps)) != len(args.eps):
-        parser.error("--eps must contain distinct positive budgets")
     paths = set()
     for root in args.input_dirs:
         if not root.is_dir():
@@ -375,7 +307,7 @@ def main():
     for path in sorted(paths):
         with path.open(encoding="utf-8") as handle:
             records.append(json.load(handle))
-    aggregate_records(records, args.output_dir, args.eps)
+    aggregate_records(records, args.output_dir)
 
 
 if __name__ == "__main__":

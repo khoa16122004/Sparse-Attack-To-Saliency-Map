@@ -1,4 +1,5 @@
 import copy
+import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -7,7 +8,7 @@ from unittest.mock import Mock, patch
 import torch
 
 from evaluate_script import run_evaluate_faithfulness as evaluator
-from evaluate_script.run_aggregate_faithfulness import configuration, summarize
+from evaluate_script.run_aggregate_faithfulness import configuration, save_group, summarize
 
 
 class SharedCleanTests(unittest.TestCase):
@@ -58,6 +59,13 @@ class SharedCleanTests(unittest.TestCase):
         rows = summarize(records)
         self.assertEqual(len(rows), 5)
         self.assertTrue(all(row["n"] == 1 for row in rows))
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            (output / "table.tex").write_text("Log-Likelihood", encoding="utf-8")
+            save_group(output, rows, "simple_gradient", "CNN")
+            self.assertTrue((output / "metrics.csv").is_file())
+            self.assertTrue((output / "summary.json").is_file())
+            self.assertFalse((output / "table.tex").exists())
 
     def test_different_clean_image_is_rejected(self):
         with (
