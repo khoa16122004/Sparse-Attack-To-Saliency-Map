@@ -104,6 +104,10 @@ first class names in [synset_words.txt](synset_words.txt). To customize them,
 pass `PROMPTS_JSON` pointing to a JSON object such as
 `{"n01440764": "tench fish", "n02123045": "tabby cat"}`.
 All detected instances matching the prompt are unioned into one mask.
+Both shell runners default to `/datastore/quanphm/datasets/ImageNet/val`;
+`imagenet_mask` is created relative to the repository root, not inside the
+shared ImageNet directory. Mask generation processes every image under the
+input root (the full validation set when using this default).
 
 ```sh
 conda activate Sparse_Attack

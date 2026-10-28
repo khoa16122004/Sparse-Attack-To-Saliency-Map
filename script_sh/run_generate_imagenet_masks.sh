@@ -30,7 +30,7 @@ set -euo pipefail
 REPO_DIR="${SLURM_SUBMIT_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}"
 cd -- "$REPO_DIR"
 PYTHON="${PYTHON:-python}"
-IMAGENET_ROOT="${1:-${IMAGENET_ROOT:-salient_imagenet_dataset/salient_imagenet_dataset}}"
+IMAGENET_ROOT="${1:-${IMAGENET_ROOT:-/datastore/quanphm/datasets/ImageNet/val}}"
 MASK_ROOT="${2:-${MASK_ROOT:-imagenet_mask}}"
 ARGS=(--imagenet-root "$IMAGENET_ROOT" --output-dir "$MASK_ROOT"
       --device cuda --confidence-threshold "${SAM_CONFIDENCE:-0.5}")
