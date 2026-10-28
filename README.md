@@ -70,6 +70,9 @@ EPS="20 50" LOSS_TYPE=margin_loss STRATEGY=uniform \
 
 # Alternatively submit to the existing UIT Slurm GPU partition.
 sbatch script_sh/run_score_faithfulness.sh offical/server_run_seed
+
+# CPU only: re-aggregate existing faithfulness.json files and re-render tables.
+bash script_sh/run_aggregate_faithfulness.sh offical_faithfulness/server_run_seed
 ```
 
 Environment overrides: `PYTHON` (executable, default `python`), `INPUT_DIR`
