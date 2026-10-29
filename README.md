@@ -108,6 +108,9 @@ Both shell runners default to `/datastore/quanphm/datasets/ImageNet/val`;
 `imagenet_mask` is created relative to the repository root, not inside the
 shared ImageNet directory. Mask generation processes every image under the
 input root (the full validation set when using this default).
+CUDA inference wraps both image encoding and text prompting in BF16 autocast
+and requires a BF16-capable GPU; model weights are not manually converted.
+The selected precision is recorded in the mask manifest.
 
 ```sh
 conda activate Sparse_Attack

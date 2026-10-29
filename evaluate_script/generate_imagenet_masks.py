@@ -95,6 +95,8 @@ def main(argv=None):
 
     if args.device == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("CUDA is unavailable; explicitly select --device cpu")
+    if args.device == "cuda" and not torch.cuda.is_bf16_supported():
+        raise RuntimeError("SAM3 CUDA inference requires a GPU with BF16 support")
     kwargs = {"device": args.device}
     if args.checkpoint:
         if not args.checkpoint.is_file():
@@ -112,6 +114,7 @@ def main(argv=None):
             "instance_reduction": "union", "mask_threshold": 0.5,
             "coordinates": "original_image", "foreground_value": 255,
             "ground_truth": "text_prompted_pseudo_gt",
+            "precision": "cuda_bfloat16_autocast" if args.device == "cuda" else "cpu_default",
         },
         "images": {},
     }
@@ -126,8 +129,12 @@ def main(argv=None):
             with Image.open(path) as image:
                 image = image.convert("RGB")
                 width, height = image.size
-                state = processor.set_image(image)
-                result = processor.set_text_prompt(state=state, prompt=prompt)
+                with torch.autocast(
+                    device_type=args.device, dtype=torch.bfloat16,
+                    enabled=args.device == "cuda",
+                ):
+                    state = processor.set_image(image)
+                    result = processor.set_text_prompt(state=state, prompt=prompt)
             mask = union_masks(result["masks"], height, width)
             destination = output / relative.with_suffix(".png")
             destination.parent.mkdir(parents=True, exist_ok=True)
