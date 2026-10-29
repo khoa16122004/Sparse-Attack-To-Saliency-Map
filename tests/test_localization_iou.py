@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from PIL import Image
 
-from evaluate_script.generate_imagenet_masks import load_prompts, union_masks
+from evaluate_script.generate_imagenet_masks import best_mask, load_prompts
 from evaluate_script.run_localization_iou import (
     align_target, binary_iou, load_clean_map, save_reports, top_k_mask,
 )
@@ -27,21 +27,36 @@ class MaskGenerationTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 load_prompts(overrides, synsets)
 
-    def test_instances_are_unioned(self):
+    def test_only_highest_confidence_instance_is_selected(self):
         masks = torch.tensor([[[[True, False], [False, False]]],
                               [[[False, False], [False, True]]]])
-        np.testing.assert_array_equal(
-            union_masks(masks, 2, 2), [[True, False], [False, True]],
-        )
+        mask, score, index, count = best_mask(masks, torch.tensor([0.01, 0.09]), 2, 2)
+        np.testing.assert_array_equal(mask, [[False, False], [False, True]])
+        self.assertAlmostEqual(score, 0.09)
+        self.assertEqual((index, count), (1, 2))
 
-    def test_no_detections_is_explicit_empty_mask(self):
-        result = union_masks(torch.empty(0, 1, 2, 3), 2, 3)
-        self.assertEqual(result.shape, (2, 3))
-        self.assertFalse(result.any())
+    def test_no_detections_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "no candidates"):
+            best_mask(torch.empty(0, 1, 2, 3), torch.empty(0), 2, 3)
+
+    def test_confidence_ties_select_first_candidate(self):
+        masks = torch.tensor([[[1, 0]], [[0, 1]]])
+        mask, _, index, _ = best_mask(masks, torch.tensor([0.2, 0.2]), 1, 2)
+        self.assertEqual(index, 0)
+        np.testing.assert_array_equal(mask, [[True, False]])
+
+    def test_empty_best_mask_does_not_silently_pick_another(self):
+        with self.assertRaisesRegex(ValueError, "Highest-confidence SAM mask is empty"):
+            best_mask(torch.tensor([[[0]], [[1]]]), torch.tensor([0.9, 0.1]), 1, 1)
+
+    def test_invalid_scores_are_rejected(self):
+        for scores in (torch.tensor([float("nan")]), torch.tensor([1.2]), torch.empty(2)):
+            with self.assertRaises(ValueError):
+                best_mask(torch.ones(1, 1, 1), scores, 1, 1)
 
     def test_wrong_resolution_is_rejected(self):
         with self.assertRaises(ValueError):
-            union_masks(torch.ones(1, 1, 3, 3), 2, 2)
+            best_mask(torch.ones(1, 1, 3, 3), torch.ones(1), 2, 2)
 
 
 class LocalizationTests(unittest.TestCase):
@@ -159,6 +174,22 @@ class LocalizationReportingTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             with self.assertRaisesRegex(ValueError, "Inconsistent Clean"):
                 save_reports([left, right], Path(directory), 4)
+
+    def test_inconsistent_clean_reports_paths_and_changed_fields(self):
+        left = self.record("1", "a", 0.2)
+        right = self.record("1", "a", 0.3, weight=0.5)
+        left["sample_dir"] = "first_run/class/a"
+        right["sample_dir"] = "second_run/class/a"
+        right["clean_binary_sha256"] = "different"
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaises(ValueError) as raised:
+                save_reports([left, right], Path(directory), 4)
+        message = str(raised.exception)
+        self.assertIn("first_run/class/a", message)
+        self.assertIn("second_run/class/a", message)
+        self.assertIn("clean_iou: 0.2 != 0.3", message)
+        self.assertIn("clean_binary_sha256:", message)
+        self.assertNotIn("gt_mask_sha256:", message)
 
 
 if __name__ == "__main__":

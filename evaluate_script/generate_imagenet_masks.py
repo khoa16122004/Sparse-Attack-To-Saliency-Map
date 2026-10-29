@@ -36,17 +36,26 @@ def load_prompts(path, synset_path):
     return prompts
 
 
-def union_masks(masks, height, width):
-    array = masks.detach().cpu().numpy()
-    if array.size == 0:
-        return np.zeros((height, width), dtype=bool)
+def best_mask(masks, scores, height, width):
+    array = masks.detach().cpu().float().numpy()
+    confidence = scores.detach().cpu().float().numpy()
     if array.ndim == 4 and array.shape[1] == 1:
         array = array[:, 0]
     if array.ndim != 3 or array.shape[1:] != (height, width):
         raise ValueError(f"SAM masks have shape {array.shape}, expected (N, {height}, {width})")
-    if not np.isfinite(array).all():
-        raise ValueError("SAM masks contain non-finite values")
-    return np.any(array > 0.5, axis=0)
+    if confidence.shape != (len(array),):
+        raise ValueError(f"SAM scores have shape {confidence.shape}, expected ({len(array)},)")
+    if not np.isfinite(array).all() or not np.isfinite(confidence).all():
+        raise ValueError("SAM masks or scores contain non-finite values")
+    if not len(array):
+        raise ValueError("SAM returned no candidates even at the configured confidence threshold")
+    if (confidence < 0).any() or (confidence > 1).any():
+        raise ValueError("SAM confidence scores must be in [0, 1]")
+    index = int(np.argmax(confidence))
+    mask = array[index] > 0.5
+    if not mask.any():
+        raise ValueError(f"Highest-confidence SAM mask is empty (score={confidence[index]:.6g})")
+    return mask, float(confidence[index]), index, len(array)
 
 
 def main(argv=None):
@@ -56,7 +65,7 @@ def main(argv=None):
     parser.add_argument("--output-dir", type=Path, default=Path("imagenet_mask"))
     parser.add_argument("--prompts-json", type=Path)
     parser.add_argument("--synset-words", type=Path, default=ROOT / "synset_words.txt")
-    parser.add_argument("--confidence-threshold", type=float, default=0.5)
+    parser.add_argument("--confidence-threshold", type=float, default=0.0)
     parser.add_argument("--checkpoint", type=Path, help="Local SAM3 checkpoint; otherwise use SAM3's hub default")
     parser.add_argument("--device", choices=("cuda", "cpu"), default="cuda")
     parser.add_argument("--replace", action="store_true")
@@ -111,7 +120,8 @@ def main(argv=None):
             "model": "sam3", "checkpoint": str(args.checkpoint) if args.checkpoint else "sam3_hub_default",
             "checkpoint_sha256": sha256(args.checkpoint) if args.checkpoint else None,
             "confidence_threshold": args.confidence_threshold,
-            "instance_reduction": "union", "mask_threshold": 0.5,
+            "instance_reduction": "highest_confidence_single_mask", "mask_threshold": 0.5,
+            "confidence_tie_break": "first_candidate", "empty_selected_mask": "error",
             "coordinates": "original_image", "foreground_value": 255,
             "ground_truth": "text_prompted_pseudo_gt",
             "precision": "cuda_bfloat16_autocast" if args.device == "cuda" else "cpu_default",
@@ -135,7 +145,12 @@ def main(argv=None):
                 ):
                     state = processor.set_image(image)
                     result = processor.set_text_prompt(state=state, prompt=prompt)
-            mask = union_masks(result["masks"], height, width)
+            try:
+                mask, confidence, selected_index, candidate_count = best_mask(
+                    result["masks"], result["scores"], height, width,
+                )
+            except ValueError as exc:
+                raise ValueError(f"{relative} | prompt={prompt!r}: {exc}") from exc
             destination = output / relative.with_suffix(".png")
             destination.parent.mkdir(parents=True, exist_ok=True)
             Image.fromarray(mask.astype(np.uint8) * 255).save(destination)
@@ -145,9 +160,12 @@ def main(argv=None):
                 "mask": relative.with_suffix(".png").as_posix(), "prompt": prompt,
                 "source_sha256": sha256(path), "mask_sha256": sha256(destination),
                 "shape": [height, width], "foreground_pixels": int(mask.sum()),
+                "selected_confidence": confidence, "selected_index": selected_index,
+                "candidate_count": candidate_count,
                 "empty": empty,
             }
-            print(f"[{'EMPTY' if empty else 'OK'}] {relative} | prompt={prompt!r}", flush=True)
+            print(f"[OK] {relative} | prompt={prompt!r} | confidence={confidence:.6g}"
+                  f" | candidate={selected_index}/{candidate_count}", flush=True)
     manifest.update(status="complete", empty_masks=empty_count)
     manifest_path.write_text(json.dumps(manifest, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     print(f"[DONE] {len(images)} masks; {empty_count} empty (review before using as pseudo-GT)")

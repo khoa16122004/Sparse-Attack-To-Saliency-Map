@@ -111,6 +111,7 @@ def save_reports(records, output_dir, precision):
         groups[json.dumps(config, sort_keys=True, allow_nan=False)].append(record)
     for config, entries in sorted(groups.items()):
         buckets = defaultdict(dict)
+        clean_origins = {}
         for record in entries:
             context = record["context"]
             identity = (str(context["seed"]), *record["identity"])
@@ -124,7 +125,25 @@ def save_reports(records, output_dir, precision):
                     if name != "clean":
                         raise ValueError(f"Duplicate IoU evaluation for {key}, {identity}")
                     if previous != (value, fingerprint):
-                        raise ValueError(f"Inconsistent Clean/GT across approaches for {key}, {identity}")
+                        fields = ("clean_iou", "clean_rgb_sha256", "gt_mask_sha256",
+                                  "clean_binary_sha256")
+                        old_values = (previous[0], *previous[1])
+                        new_values = (value, *fingerprint)
+                        differences = "; ".join(
+                            f"{field}: {old!r} != {new!r}"
+                            for field, old, new in zip(fields, old_values, new_values)
+                            if old != new
+                        )
+                        raise ValueError(
+                            f"Inconsistent Clean/GT across approaches for {key}, {identity}\n"
+                            f"First sample: {clean_origins[(key, identity)]}\n"
+                            f"Current sample: {record.get('sample_dir', '<unspecified>')}\n"
+                            f"Differences: {differences}\n"
+                            "Inspect these samples' clean.png and clean_map.pt/clean_map.png "
+                            "and the GT manifest. Do not mix different clean maps as one Clean baseline."
+                        )
+                if name == "clean" and previous is None:
+                    clean_origins[(key, identity)] = record.get("sample_dir", "<unspecified>")
                 buckets[key][identity] = (value, fingerprint)
         cells = defaultdict(dict)
         sample_rows = []

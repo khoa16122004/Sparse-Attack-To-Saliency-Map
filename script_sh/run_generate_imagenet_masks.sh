@@ -33,7 +33,7 @@ PYTHON="${PYTHON:-python}"
 IMAGENET_ROOT="${1:-${IMAGENET_ROOT:-/datastore/quanphm/datasets/ImageNet/val}}"
 MASK_ROOT="${2:-${MASK_ROOT:-imagenet_mask}}"
 ARGS=(--imagenet-root "$IMAGENET_ROOT" --output-dir "$MASK_ROOT"
-      --device cuda --confidence-threshold "${SAM_CONFIDENCE:-0.5}")
+      --device cuda --confidence-threshold "${SAM_CONFIDENCE:-0}")
 if [[ -n "${PROMPTS_JSON:-}" ]]; then
     ARGS+=(--prompts-json "$PROMPTS_JSON")
 fi

@@ -103,7 +103,11 @@ ImageNet root directly containing class folders. Default text prompts are the
 first class names in [synset_words.txt](synset_words.txt). To customize them,
 pass `PROMPTS_JSON` pointing to a JSON object such as
 `{"n01440764": "tench fish", "n02123045": "tabby cat"}`.
-All detected instances matching the prompt are unioned into one mask.
+The confidence threshold defaults to **0**. Exactly one candidate is selected:
+the mask with the highest returned SAM3 confidence score (first candidate on
+ties), not a union of instances. Confidence, candidate index and candidate
+count are saved per image. No candidates or an empty highest-confidence mask
+cause an explicit error; the generator does not fabricate a pseudo-GT.
 Both shell runners default to `/datastore/quanphm/datasets/ImageNet/val`;
 `imagenet_mask` is created relative to the repository root, not inside the
 shared ImageNet directory. Mask generation processes every image under the
@@ -129,9 +133,12 @@ For example, `imagenet/n01440764/example.JPEG` becomes
 preserved; the extension becomes PNG to avoid lossy binary masks. Masks have
 the **original image resolution**, grayscale background 0 and foreground 255.
 The generator rejects duplicate output stems and writes a completed
-`mask_manifest.json` with prompts, hashes and empty-mask flags. An interrupted
-job leaves an incomplete manifest which the evaluator rejects. Inspect
-`[EMPTY]` outputs and adjust prompts as needed. `SAM_CONFIDENCE` defaults to 0.5.
+`mask_manifest.json` with prompts, hashes and selected confidence scores. An interrupted
+job leaves an incomplete manifest which the evaluator rejects. Review the
+prompt if no valid mask is returned. `SAM_CONFIDENCE` defaults to 0.
+Regenerate old union masks with `REPLACE=1` to apply the new selection protocol.
+Even a nonempty original-resolution mask can become empty after model
+center-crop; lowering confidence cannot guarantee foreground survives cropping.
 
 #### 2. IoU plus existing Ins / Del / IMD reports (CPU, no model inference)
 
