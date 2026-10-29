@@ -89,7 +89,7 @@ and `PRECISION` (4 decimal places).
 ### SAM3 pseudo-GT masks and localization IoU
 
 SAM3 text-prompt masks are **pseudo-ground-truth**, not human annotations.
-The GPU mask-generation job is separate from the CPU-only reporting job.
+The GPU mask-generation job is separate from the CPU-only Bash reporting script.
 Activate an environment with the notebook's SAM3 installation, compatible
 PyTorch/torchvision and the SAM3 checkpoint access before submission. SAM3 is
 an optional dependency; it is not needed in the CPU reporting environment.
@@ -142,10 +142,6 @@ existing insertion/deletion/IMD scores and renders their existing tables:
 ```sh
 IMAGENET_ROOT=/path/to/imagenet MASK_ROOT=imagenet_mask TOP_K_PERCENT=80 \
     bash script_sh/run_aggregate_faithfulness.sh path/to/seed_runs
-
-# Submit the same CPU-only job (no GPU resource request):
-IMAGENET_ROOT=/path/to/imagenet MASK_ROOT=imagenet_mask \
-    sbatch script_sh/run_aggregate_faithfulness.sh path/to/seed_runs
 
 # IoU only, without requiring precomputed faithfulness.json:
 python -m evaluate_script.run_localization_iou \

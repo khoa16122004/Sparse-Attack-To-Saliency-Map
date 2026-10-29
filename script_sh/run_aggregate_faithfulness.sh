@@ -1,22 +1,9 @@
 #!/bin/bash
-#SBATCH --job-name=faith_agg
-#SBATCH --output=ESWA/faith_agg_%j.out
-#SBATCH --error=ESWA/faith_agg_%j.err
-#SBATCH --account=uit
-#SBATCH --partition=normal
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=8G
-#SBATCH --time=04:00:00
 
 # CPU-only: aggregates saved faithfulness scores and evaluates saved maps for IoU.
 set -euo pipefail
 
-if [[ -n "${SLURM_SUBMIT_DIR:-}" ]]; then
-    REPO_DIR="$SLURM_SUBMIT_DIR"
-else
-    REPO_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-fi
+REPO_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd -- "$REPO_DIR"
 export CUDA_VISIBLE_DEVICES=""
 
