@@ -18,6 +18,7 @@ from evaluate_script.run_localization_iou import (
 )
 
 
+
 class MaskGenerationTests(unittest.TestCase):
     def test_inference_resize_bounds_both_orientations_without_upscaling(self):
         for size, expected in (((400, 200), (100, 50)),
