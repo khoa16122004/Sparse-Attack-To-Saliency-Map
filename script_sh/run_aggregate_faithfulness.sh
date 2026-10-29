@@ -85,7 +85,8 @@ fi
 if [[ "$RUN_IOU" == 1 ]]; then
     IOU_ARGS=(--input-dirs "${INPUT_DIRS[@]}" --imagenet-root "$IMAGENET_ROOT"
               --mask-root "$MASK_ROOT" --top-k-percent "$TOP_K_PERCENT"
-              --empty-gt "$EMPTY_GT" --output-dir "$TABLE_DIR" --precision "$PRECISION")
+              --empty-gt "$EMPTY_GT" --output-dir "$TABLE_DIR" --precision "$PRECISION"
+              --records-output "$OUTPUT_DIR/localization_records.json")
     if (( ${#EPS_VALUES[@]} > 0 )); then
         IOU_ARGS+=(--eps "${EPS_VALUES[@]}")
     fi
@@ -97,6 +98,7 @@ if [[ "$RUN_IOU" == 1 ]]; then
     fi
     printf '[IoU] Evaluating saved maps and rendering localization LaTeX (CPU)\n'
     "$PYTHON" -u -m evaluate_script.run_localization_iou "${IOU_ARGS[@]}"
+    TABLE_ARGS+=(--localization-records "$OUTPUT_DIR/localization_records.json")
 fi
 
 printf '[1/2] Aggregating faithfulness metrics and Ins/Del curves (CPU)\n'

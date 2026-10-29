@@ -133,6 +133,11 @@ def comparison_samples(records):
             new_hash = payload.get("clean_image_sha256")
             if old_hash and new_hash and old_hash != new_hash:
                 raise ValueError(f"Different clean images for {clean_key}")
+            if "localization_provenance" in previous or "localization_provenance" in payload:
+                if previous.get("localization_provenance") != payload.get("localization_provenance"):
+                    raise ValueError(f"Inconsistent localization Clean/GT for {clean_key}")
+                if previous["maps"]["clean"].get("iou") != payload["maps"]["clean"].get("iou"):
+                    raise ValueError(f"Inconsistent clean IoU for {clean_key}")
             for field in CURVE_FIELDS:
                 left = np.asarray(previous["maps"]["clean"][field])
                 right = np.asarray(payload["maps"]["clean"][field])

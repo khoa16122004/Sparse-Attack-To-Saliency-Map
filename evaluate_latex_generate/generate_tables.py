@@ -1,6 +1,7 @@
 """Generate the paper tables from attack runs and per-sample faithfulness scores."""
 
 import argparse
+import copy
 import hashlib
 import json
 import math
@@ -98,7 +99,39 @@ def attack_groups(runs):
     return groups
 
 
-def faithfulness_groups(records):
+def attach_localization(records, localization_records):
+    indexed = {}
+    for record in localization_records:
+        key = Path(record["sample_dir"]).resolve()
+        if key in indexed:
+            raise ValueError(f"Duplicate localization sample: {key}")
+        indexed[key] = record
+    result = []
+    for original in records:
+        path = Path(original["sample_dir"]).resolve()
+        if path not in indexed:
+            raise ValueError(f"No localization IoU for faithfulness sample: {path}")
+        localization = indexed.pop(path)
+        if original["context"] != localization["context"]:
+            raise ValueError(f"Faithfulness/localization context mismatch: {path}")
+        record = copy.deepcopy(original)
+        for source in ("clean", "perturbation"):
+            value = localization[f"{source}_iou"]
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 <= value <= 1:
+                raise ValueError(f"Invalid {source} IoU for {path}: {value}")
+            record["maps"][source]["iou"] = value
+        record["localization_protocol"] = localization["protocol"]
+        record["localization_provenance"] = {
+            key: localization[key]
+            for key in ("clean_rgb_sha256", "gt_mask_sha256", "clean_binary_sha256")
+        }
+        result.append(record)
+    if indexed:
+        raise ValueError(f"Localization samples have no faithfulness scores: {list(indexed)[:3]}")
+    return result
+
+
+def faithfulness_groups(records, *, include_iou=False):
     grouped = defaultdict(list)
     for record in records:
         faithfulness.validate_record(record, record["sample_dir"])
@@ -108,6 +141,8 @@ def faithfulness_groups(records):
         config = faithfulness.configuration(record) | {
             "eps": context["eps"], "loss_type": context["loss_type"],
         }
+        if include_iou:
+            config["localization_protocol"] = record["localization_protocol"]
         grouped[config_key(config)].append(record)
     groups = {}
     for config, payloads in grouped.items():
@@ -121,7 +156,7 @@ def faithfulness_groups(records):
             for seed, entries in by_seed.items():
                 values = {
                     metric: mean(score[metric] for _, score in entries)
-                    for metric in METRICS["faithfulness"]
+                    for metric in (*METRICS["faithfulness"], *(("iou",) if include_iou else ()))
                 }
                 add_seed(
                     cells, cell_key(model, method, approach), seed, values,
@@ -173,7 +208,10 @@ def paired_comparison(ours, baseline, metric, higher, ttest):
     return result | {"p_value": p_value, "status": "ok"}
 
 
-def render_table(kind, cells, *, use_ttest=True, alpha=0.05, correction="none", precision=4):
+def render_table(kind, cells, *, use_ttest=True, alpha=0.05, correction="none", precision=4,
+                 include_iou=False):
+    if include_iou and kind != "faithfulness":
+        raise ValueError("IoU columns are only supported for faithfulness tables")
     if use_ttest:
         try:
             from scipy.stats import ttest_rel
@@ -181,7 +219,7 @@ def render_table(kind, cells, *, use_ttest=True, alpha=0.05, correction="none", 
             raise RuntimeError("T-tests require scipy; install scipy or pass --no-ttest") from exc
     else:
         ttest_rel = None
-    metrics = METRICS[kind]
+    metrics = (*METRICS[kind], *(("iou",) if include_iou else ()))
     summary = summarize_cells(cells, metrics)
     approaches = (("clean",) + APPROACHES) if kind == "faithfulness" else APPROACHES
     tests = []
@@ -241,8 +279,18 @@ def render_table(kind, cells, *, use_ttest=True, alpha=0.05, correction="none", 
     row_index = 0
     rendered = []
     for line in lines:
+        if include_iou:
+            line = line.replace("{ll|ccc|ccc|ccc}", "{ll|cccc|cccc|cccc}")
+            line = line.replace(r"\multicolumn{3}", r"\multicolumn{4}")
+            line = line.replace("{3-5}", "{3-6}").replace("{6-8}", "{7-10}").replace("{9-11}", "{11-14}")
+            line = line.replace(r"IMD $\uparrow$", r"IMD $\uparrow$ & IoU $\uparrow$")
         if line.startswith(r"\caption{"):
             prefix = line.split("All experiments", 1)[0]
+            if include_iou:
+                prefix = prefix.replace(
+                    r", and IMD $\uparrow$ & IoU $\uparrow$.",
+                    r", IMD $\uparrow$, and localization IoU $\uparrow$ against SAM3 pseudo-GT.",
+                )
             rendered.append(prefix + caption + "}")
             continue
         if line.startswith(r"\textit{"):
@@ -308,6 +356,8 @@ def main(argv=None):
                         help="Cached all_runs.json files produced by run_score")
     source.add_argument("--faithfulness-input-dirs", nargs="+", type=Path,
                         help="Roots containing per-sample faithfulness.json")
+    parser.add_argument("--localization-records", type=Path,
+                        help="Exact records JSON from run_localization_iou; adds IoU to faithfulness tables")
     parser.add_argument("--output-dir", type=Path, default=TEMPLATE_DIR / "generated")
     parser.add_argument("--use-ttest", dest="use_ttest", action="store_true", default=True)
     parser.add_argument("--no-ttest", dest="use_ttest", action="store_false")
@@ -318,6 +368,8 @@ def main(argv=None):
     parser.add_argument("--loss-type")
     parser.add_argument("--strategy")
     args = parser.parse_args(argv)
+    if args.localization_records and not args.faithfulness_input_dirs:
+        parser.error("--localization-records requires --faithfulness-input-dirs")
     if not 0 < args.ttest_alpha < 1:
         parser.error("--ttest-alpha must be between 0 and 1")
     if not 0 <= args.precision <= 12:
@@ -329,7 +381,19 @@ def main(argv=None):
                 raise NotADirectoryError(root)
             paths.update(path.resolve() for path in root.rglob("faithfulness.json"))
         records = [json.loads(path.read_text(encoding="utf-8")) for path in sorted(paths)]
-        groups = faithfulness_groups(records)
+        if args.localization_records:
+            payload = json.loads(args.localization_records.read_text(encoding="utf-8"))
+            if payload.get("schema_version") != 1:
+                raise ValueError(f"{args.localization_records}: unsupported localization record schema")
+            # Apply the same filters used by the CPU localization job before joining.
+            records = [
+                record for record in records
+                if (args.eps is None or record["context"]["eps"] in args.eps)
+                and (args.loss_type is None or record["context"]["loss_type"] == args.loss_type)
+                and (args.strategy is None or record["context"]["strategy"] == args.strategy)
+            ]
+            records = attach_localization(records, payload["records"])
+        groups = faithfulness_groups(records, include_iou=bool(args.localization_records))
         kind = "faithfulness"
     else:
         runs = []
@@ -353,7 +417,15 @@ def main(argv=None):
         latex, report = render_table(
             kind, cells, use_ttest=args.use_ttest, alpha=args.ttest_alpha,
             correction=args.ttest_correction, precision=args.precision,
+            include_iou=bool(args.localization_records),
         )
+        if args.localization_records:
+            protocol = json.loads(key)["localization_protocol"]
+            latex = latex.replace(
+                "Each seed is averaged",
+                f"Localization uses top {protocol['top_k_percent']:g}"
+                + r"\% pixels against SAM3 pseudo-GT. Each seed is averaged",
+            )
         if not report["cells"]:
             raise ValueError(f"No data matches the fixed {kind} template models/explainers: {key}")
         report["configuration"] = json.loads(key)

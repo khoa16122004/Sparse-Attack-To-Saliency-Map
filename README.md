@@ -183,11 +183,22 @@ IoU protocol:
   undefined SD (`--`). Clean is deduplicated across approaches; duplicate runs
   or inconsistent Clean/GT inputs are rejected.
 
-IoU outputs go to `result_latexs/localization_<hash>/`:
+With `RUN_IOU=1` (the default), the CPU runner also joins the exact per-sample
+IoU records into the faithfulness table: **Ins / Del / IMD / IoU** for each
+model and Clean/GASS/Ours row. All four metrics use the same samples and seeds;
+missing/extra samples or mismatched experiment contexts cause an error.
+IoU uses the existing mean/SD, best-value bolding and optional paired t-test
+logic (higher is better). The combined table records the localization protocol,
+including top-k and GT manifest hash, in its configuration.
+
+IoU-only outputs go to `result_latexs/localization_<hash>/`:
 `table.tex` (Clean/GASS/Ours, best means bold), `samples.csv` (per-sample IoU),
 and `statistics.json` (per-seed values, configuration, provenance and counts).
 Different eps/loss/strategy, GT manifests, map encodings or protocols are kept
-in separate tables. Existing Ins/Del/IMD tables remain in `faithfulness_<hash>/`.
+in separate tables. Combined Ins/Del/IMD/IoU tables are in `faithfulness_<hash>/`;
+`RUN_IOU=0` instead produces the original three-metric faithfulness tables.
+The exact records used to join are saved as
+`faithfulness_aggregates/localization_records.json` (under `OUTPUT_DIR`).
 The runner forwards `EPS`, `LOSS_TYPE`, `STRATEGY`, `PRECISION` and `TABLE_DIR`
 to IoU reporting; `RUN_IOU=0` preserves the old faithfulness-only workflow.
 
@@ -195,4 +206,5 @@ Focused tests are provided for manual execution:
 
 ```sh
 python -m unittest discover -s tests -p test_localization_iou.py
+python -m unittest discover -s tests -p test_latex_tables.py
 ```

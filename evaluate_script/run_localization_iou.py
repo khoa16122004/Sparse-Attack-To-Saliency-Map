@@ -195,6 +195,8 @@ def main(argv=None):
     parser.add_argument("--imagenet-root", type=Path, required=True)
     parser.add_argument("--mask-root", type=Path, default=Path("imagenet_mask"))
     parser.add_argument("--output-dir", type=Path, default=Path("result_latexs"))
+    parser.add_argument("--records-output", type=Path,
+                        help="Write exact per-sample records for the combined faithfulness table")
     parser.add_argument("--top-k-percent", type=float, default=80)
     parser.add_argument("--empty-gt", choices=("error", "zero"), default="error",
                         help="Default rejects empty SAM/cropped masks; zero explicitly scores them as 0")
@@ -276,6 +278,12 @@ def main(argv=None):
     if not records:
         raise ValueError("No matching successful samples for localization IoU")
     save_reports(records, args.output_dir, args.precision)
+    if args.records_output:
+        args.records_output.parent.mkdir(parents=True, exist_ok=True)
+        args.records_output.write_text(
+            json.dumps({"schema_version": 1, "records": records}, indent=2, allow_nan=False) + "\n",
+            encoding="utf-8",
+        )
 
 
 if __name__ == "__main__":

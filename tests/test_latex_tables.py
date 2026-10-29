@@ -108,6 +108,64 @@ class SeedStatisticsTests(unittest.TestCase):
         self.assertNotIn(r"\textcolor{blue}{\mathbf", latex)
 
 
+class CombinedLocalizationTests(unittest.TestCase):
+    def localization(self, record, value=0.6):
+        return {
+            "sample_dir": record["sample_dir"], "context": copy.deepcopy(record["context"]),
+            "clean_iou": 0.4, "perturbation_iou": value,
+            "protocol": {"top_k_percent": 80},
+            "clean_rgb_sha256": "rgb", "gt_mask_sha256": "mask",
+            "clean_binary_sha256": "binary",
+        }
+
+    def test_join_and_seed_statistics_include_iou(self):
+        records = [faith_record(seed, "a", None, 0.7) for seed in (1, 2)]
+        localization = [self.localization(records[0], 0.5), self.localization(records[1], 0.9)]
+        joined = tables.attach_localization(records, localization)
+        cells = next(iter(tables.faithfulness_groups(joined, include_iou=True).values()))
+        stats = tables.summarize_cells(cells, (*tables.METRICS["faithfulness"], "iou"))
+        ours = stats[("resnet50", "simple_gradient", "nsgaii")]["iou"]
+        self.assertAlmostEqual(ours["mean"], 0.7)
+        self.assertAlmostEqual(ours["std"], stdev([0.5, 0.9]))
+        self.assertNotIn("iou", records[0]["maps"]["clean"])
+
+    def test_four_column_latex_structure(self):
+        latex, _ = tables.render_table("faithfulness", {}, include_iou=True, use_ttest=False)
+        self.assertEqual(latex.count(r"\begin{tabular}{ll|cccc|cccc|cccc}"), 2)
+        self.assertEqual(latex.count(r"IoU $\uparrow$"), 6)
+        for span in ("{3-6}", "{7-10}", "{11-14}"):
+            self.assertEqual(latex.count(span), 2)
+        rows = [line for line in latex.splitlines() if line.startswith("& Clean")]
+        self.assertEqual(len(rows), 8)
+        self.assertTrue(all(line.count("&") == 13 for line in rows))
+        old, _ = tables.render_table("faithfulness", {}, use_ttest=False)
+        self.assertNotIn("IoU", old)
+        self.assertIn(r"\begin{tabular}{ll|ccc|ccc|ccc}", old)
+
+    def test_join_rejects_missing_extra_duplicate_context_and_invalid_values(self):
+        record = faith_record(1, "a", None, 0.7)
+        localization = self.localization(record)
+        wrong_context = copy.deepcopy(localization)
+        wrong_context["context"]["seed"] = "2"
+        invalid = copy.deepcopy(localization)
+        invalid["perturbation_iou"] = float("nan")
+        for records, local in (
+            ([record], []), ([], [localization]),
+            ([record], [localization, localization]),
+            ([record], [wrong_context]), ([record], [invalid]),
+        ):
+            with self.subTest(local=local), self.assertRaises(ValueError):
+                tables.attach_localization(records, local)
+
+    def test_clean_iou_cannot_differ_across_approaches(self):
+        records = [faith_record(1, "a", weight, 0.7) for weight in (0.0, None)]
+        localization = [self.localization(record) for record in records]
+        localization[1]["clean_iou"] = 0.9
+        joined = tables.attach_localization(records, localization)
+        with self.assertRaisesRegex(ValueError, "Inconsistent clean IoU"):
+            tables.faithfulness_groups(joined, include_iou=True)
+
+
 class PairedTests(unittest.TestCase):
     def cells(self, last_baseline_better=False):
         runs = []
