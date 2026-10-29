@@ -51,10 +51,12 @@ def best_mask(masks, scores, height, width):
         raise ValueError("SAM returned no candidates even at the configured confidence threshold")
     if (confidence < 0).any() or (confidence > 1).any():
         raise ValueError("SAM confidence scores must be in [0, 1]")
-    index = int(np.argmax(confidence))
+    nonempty = (array > 0.5).any(axis=(1, 2))
+    candidates = np.flatnonzero(nonempty)
+    if not len(candidates):
+        raise ValueError("All SAM candidate masks are empty at mask threshold 0.5")
+    index = int(candidates[np.argmax(confidence[candidates])])
     mask = array[index] > 0.5
-    if not mask.any():
-        raise ValueError(f"Highest-confidence SAM mask is empty (score={confidence[index]:.6g})")
     return mask, float(confidence[index]), index, len(array)
 
 
@@ -120,8 +122,9 @@ def main(argv=None):
             "model": "sam3", "checkpoint": str(args.checkpoint) if args.checkpoint else "sam3_hub_default",
             "checkpoint_sha256": sha256(args.checkpoint) if args.checkpoint else None,
             "confidence_threshold": args.confidence_threshold,
-            "instance_reduction": "highest_confidence_single_mask", "mask_threshold": 0.5,
-            "confidence_tie_break": "first_candidate", "empty_selected_mask": "error",
+            "instance_reduction": "highest_confidence_nonempty_single_mask", "mask_threshold": 0.5,
+            "confidence_tie_break": "first_candidate", "empty_candidates": "exclude",
+            "all_empty_masks": "error",
             "coordinates": "original_image", "foreground_value": 255,
             "ground_truth": "text_prompted_pseudo_gt",
             "precision": "cuda_bfloat16_autocast" if args.device == "cuda" else "cpu_default",

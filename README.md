@@ -104,10 +104,12 @@ first class names in [synset_words.txt](synset_words.txt). To customize them,
 pass `PROMPTS_JSON` pointing to a JSON object such as
 `{"n01440764": "tench fish", "n02123045": "tabby cat"}`.
 The confidence threshold defaults to **0**. Exactly one candidate is selected:
-the mask with the highest returned SAM3 confidence score (first candidate on
-ties), not a union of instances. Confidence, candidate index and candidate
-count are saved per image. No candidates or an empty highest-confidence mask
-cause an explicit error; the generator does not fabricate a pseudo-GT.
+the nonempty mask with the highest returned SAM3 confidence score (first candidate
+on ties), not a union of instances. Candidates with no foreground pixels above
+the mask threshold of 0.5 are excluded before ranking. Confidence, original
+candidate index and total candidate count are saved per image. No candidates or
+all-empty candidates cause an explicit error; the generator does not fabricate
+a pseudo-GT. The nonempty selection policy is recorded in the manifest.
 Both shell runners default to `/datastore/quanphm/datasets/ImageNet/val`;
 `imagenet_mask` is created relative to the repository root, not inside the
 shared ImageNet directory. Mask generation processes every image under the
@@ -136,7 +138,8 @@ The generator rejects duplicate output stems and writes a completed
 `mask_manifest.json` with prompts, hashes and selected confidence scores. An interrupted
 job leaves an incomplete manifest which the evaluator rejects. Review the
 prompt if no valid mask is returned. `SAM_CONFIDENCE` defaults to 0.
-Regenerate old union masks with `REPLACE=1` to apply the new selection protocol.
+Regenerate old masks with `REPLACE=1` to apply the nonempty selection protocol;
+this is also required to rerun a partially completed generation job.
 Even a nonempty original-resolution mask can become empty after model
 center-crop; lowering confidence cannot guarantee foreground survives cropping.
 
