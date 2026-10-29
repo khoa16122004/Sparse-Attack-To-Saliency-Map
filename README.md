@@ -117,6 +117,15 @@ input root (the full validation set when using this default).
 CUDA inference wraps both image encoding and text prompting in BF16 autocast
 and requires a BF16-capable GPU; model weights are not manually converted.
 The selected precision is recorded in the mask manifest.
+To bound candidate-mask memory for large source images, the longest image side
+passed to SAM3 is capped at 1024 pixels, preserving aspect ratio and never
+upscaling. Only the selected binary mask is restored to the original resolution
+on CPU using nearest-neighbor interpolation. This can change segmentation
+results; the resize policy and per-image inference dimensions are recorded in
+the manifest. GPU tensors from each image are released before the next inference.
+Override the cap with `SAM_MAX_IMAGE_SIDE` (or `--max-image-side` for Python).
+Lowering it can reduce candidate-mask memory, but does not reduce model weights
+or guarantee that inference fits on a busy GPU.
 
 ```sh
 conda activate Sparse_Attack
@@ -128,6 +137,10 @@ SAM_CHECKPOINT=/path/to/sam3.pt PROMPTS_JSON=class_prompts.json \
 
 # Regenerate existing masks explicitly:
 REPLACE=1 sbatch script_sh/run_generate_imagenet_masks.sh /path/to/imagenet imagenet_mask
+
+# Smaller inference images if GPU memory is limited:
+SAM_MAX_IMAGE_SIDE=768 REPLACE=1 \
+    sbatch script_sh/run_generate_imagenet_masks.sh /path/to/imagenet imagenet_mask
 ```
 
 For example, `imagenet/n01440764/example.JPEG` becomes

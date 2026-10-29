@@ -1,19 +1,113 @@
 import json
+import sys
 import tempfile
+import types
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
 import torch
 from PIL import Image
 
-from evaluate_script.generate_imagenet_masks import best_mask, load_prompts
+from evaluate_script.generate_imagenet_masks import (
+    best_mask, load_prompts, main as generate_masks, resize_for_inference, sha256,
+)
 from evaluate_script.run_localization_iou import (
     align_target, binary_iou, load_clean_map, save_reports, top_k_mask,
 )
 
 
 class MaskGenerationTests(unittest.TestCase):
+    def test_inference_resize_bounds_both_orientations_without_upscaling(self):
+        for size, expected in (((400, 200), (100, 50)),
+                               ((200, 400), (50, 100)),
+                               ((80, 40), (80, 40)),
+                               ((1, 400), (1, 100))):
+            with self.subTest(size=size):
+                original = Image.new("RGB", size)
+                resized = resize_for_inference(original, 100)
+                self.assertEqual(resized.size, expected)
+                self.assertEqual(original.size, size)
+        with self.assertRaises(ValueError):
+            resize_for_inference(Image.new("RGB", (2, 2)), 0)
+
+    def test_generation_bounds_inputs_and_restores_binary_original_size_masks(self):
+        input_sizes = []
+
+        class FakeModel:
+            def eval(self):
+                return self
+
+        class FakeProcessor:
+            def __init__(self, model, **kwargs):
+                pass
+
+            def set_image(self, image):
+                input_sizes.append(image.size)
+                return image.size
+
+            def set_text_prompt(self, state, prompt):
+                width, height = state
+                masks = torch.zeros(2, 1, height, width)
+                masks[0, :, :, :width // 2] = 1
+                masks[1, :, :, width // 2:] = 1
+                return {"masks": masks, "scores": torch.tensor([0.2, 0.9])}
+
+        builder = types.ModuleType("sam3.model_builder")
+        builder.build_sam3_image_model = lambda **kwargs: FakeModel()
+        processor = types.ModuleType("sam3.model.sam3_image_processor")
+        processor.Sam3Processor = FakeProcessor
+        modules = {
+            "sam3": types.ModuleType("sam3"),
+            "sam3.model": types.ModuleType("sam3.model"),
+            "sam3.model_builder": builder,
+            "sam3.model.sam3_image_processor": processor,
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "images"
+            (source / "n001").mkdir(parents=True)
+            sizes = {"large": (12, 8), "small": (4, 2)}
+            for name, size in sizes.items():
+                Image.new("RGB", size).save(source / "n001" / f"{name}.png")
+            synsets = root / "synsets.txt"
+            synsets.write_text("n001 cat\n", encoding="utf-8")
+            output = root / "masks"
+            with patch.dict(sys.modules, modules):
+                generate_masks([
+                    "--imagenet-root", str(source), "--output-dir", str(output),
+                    "--synset-words", str(synsets), "--device", "cpu",
+                    "--max-image-side", "6",
+                ])
+            self.assertEqual(input_sizes, [(6, 4), (4, 2)])
+            manifest = json.loads((output / "mask_manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(manifest["status"], "complete")
+            self.assertEqual(manifest["protocol"]["inference_max_image_side"], 6)
+            self.assertEqual(manifest["protocol"]["coordinates"], "original_image")
+            for name, (width, height) in sizes.items():
+                relative = f"n001/{name}.png"
+                item = manifest["images"][relative]
+                with Image.open(output / relative) as mask:
+                    self.assertEqual(mask.mode, "L")
+                    self.assertEqual(mask.size, (width, height))
+                    expected = np.zeros((height, width), dtype=np.uint8)
+                    expected[:, width // 2:] = 255
+                    np.testing.assert_array_equal(np.asarray(mask), expected)
+                self.assertEqual(item["shape"], [height, width])
+                self.assertEqual(item["inference_shape"],
+                                 [4, 6] if name == "large" else [2, 4])
+                self.assertEqual(item["foreground_pixels"], width * height // 2)
+                self.assertEqual(item["selected_index"], 1)
+                self.assertEqual(item["mask_sha256"], sha256(output / relative))
+                self.assertEqual(item["source_sha256"], sha256(source / relative))
+
+    def test_invalid_inference_limit_is_rejected_before_loading_model(self):
+        for value in ("0", "-1"):
+            with self.subTest(value=value), self.assertRaises(SystemExit) as exc:
+                generate_masks(["--imagenet-root", ".", "--max-image-side", value])
+            self.assertEqual(exc.exception.code, 2)
+
     def test_prompts_default_and_override(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

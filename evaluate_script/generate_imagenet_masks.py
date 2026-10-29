@@ -60,6 +60,14 @@ def best_mask(masks, scores, height, width):
     return mask, float(confidence[index]), index, len(array)
 
 
+def resize_for_inference(image, max_image_side):
+    if max_image_side < 1:
+        raise ValueError("Maximum inference image side must be positive")
+    resized = image.copy()
+    resized.thumbnail((max_image_side, max_image_side), Image.Resampling.LANCZOS)
+    return resized
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--imagenet-root", type=Path, required=True,
@@ -68,12 +76,16 @@ def main(argv=None):
     parser.add_argument("--prompts-json", type=Path)
     parser.add_argument("--synset-words", type=Path, default=ROOT / "synset_words.txt")
     parser.add_argument("--confidence-threshold", type=float, default=0.0)
+    parser.add_argument("--max-image-side", type=int, default=1024,
+                        help="Limit SAM3 input's longest side, preserving aspect ratio (default: 1024)")
     parser.add_argument("--checkpoint", type=Path, help="Local SAM3 checkpoint; otherwise use SAM3's hub default")
     parser.add_argument("--device", choices=("cuda", "cpu"), default="cuda")
     parser.add_argument("--replace", action="store_true")
     args = parser.parse_args(argv)
     if not 0 <= args.confidence_threshold <= 1:
         parser.error("--confidence-threshold must be in [0, 1]")
+    if args.max_image_side < 1:
+        parser.error("--max-image-side must be positive")
     source = args.imagenet_root.resolve()
     output = args.output_dir.resolve()
     if not source.is_dir():
@@ -126,6 +138,9 @@ def main(argv=None):
             "confidence_tie_break": "first_candidate", "empty_candidates": "exclude",
             "all_empty_masks": "error",
             "coordinates": "original_image", "foreground_value": 255,
+            "inference_max_image_side": args.max_image_side,
+            "inference_resize": "aspect_preserving_lanczos_no_upscale",
+            "selected_mask_restore": "nearest_original_resolution",
             "ground_truth": "text_prompted_pseudo_gt",
             "precision": "cuda_bfloat16_autocast" if args.device == "cuda" else "cpu_default",
         },
@@ -142,6 +157,8 @@ def main(argv=None):
             with Image.open(path) as image:
                 image = image.convert("RGB")
                 width, height = image.size
+                image = resize_for_inference(image, args.max_image_side)
+                inference_width, inference_height = image.size
                 with torch.autocast(
                     device_type=args.device, dtype=torch.bfloat16,
                     enabled=args.device == "cuda",
@@ -150,25 +167,34 @@ def main(argv=None):
                     result = processor.set_text_prompt(state=state, prompt=prompt)
             try:
                 mask, confidence, selected_index, candidate_count = best_mask(
-                    result["masks"], result["scores"], height, width,
+                    result["masks"], result["scores"], inference_height, inference_width,
                 )
             except ValueError as exc:
                 raise ValueError(f"{relative} | prompt={prompt!r}: {exc}") from exc
+            # Release candidate masks and image features before the next GPU inference.
+            del result, state
+            mask_image = Image.fromarray(mask.astype(np.uint8) * 255)
+            if mask_image.size != (width, height):
+                mask_image = mask_image.resize((width, height), Image.Resampling.NEAREST)
+            mask = np.asarray(mask_image) == 255
             destination = output / relative.with_suffix(".png")
             destination.parent.mkdir(parents=True, exist_ok=True)
-            Image.fromarray(mask.astype(np.uint8) * 255).save(destination)
+            mask_image.save(destination)
             empty = not mask.any()
             empty_count += int(empty)
             manifest["images"][relative.as_posix()] = {
                 "mask": relative.with_suffix(".png").as_posix(), "prompt": prompt,
                 "source_sha256": sha256(path), "mask_sha256": sha256(destination),
                 "shape": [height, width], "foreground_pixels": int(mask.sum()),
+                "inference_shape": [inference_height, inference_width],
                 "selected_confidence": confidence, "selected_index": selected_index,
                 "candidate_count": candidate_count,
                 "empty": empty,
             }
             print(f"[OK] {relative} | prompt={prompt!r} | confidence={confidence:.6g}"
-                  f" | candidate={selected_index}/{candidate_count}", flush=True)
+                  f" | candidate={selected_index}/{candidate_count}"
+                  f" | input={inference_width}x{inference_height}"
+                  f" | original={width}x{height}", flush=True)
     manifest.update(status="complete", empty_masks=empty_count)
     manifest_path.write_text(json.dumps(manifest, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     print(f"[DONE] {len(images)} masks; {empty_count} empty (review before using as pseudo-GT)")
