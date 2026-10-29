@@ -45,9 +45,24 @@ class MaskGenerationTests(unittest.TestCase):
         self.assertEqual(index, 0)
         np.testing.assert_array_equal(mask, [[True, False]])
 
-    def test_empty_best_mask_does_not_silently_pick_another(self):
-        with self.assertRaisesRegex(ValueError, "Highest-confidence SAM mask is empty"):
-            best_mask(torch.tensor([[[0]], [[1]]]), torch.tensor([0.9, 0.1]), 1, 1)
+    def test_empty_candidates_are_excluded_before_ranking(self):
+        masks = torch.tensor([[[[0.0, 0.5]]], [[[0.0, 1.0]]], [[[1.0, 0.0]]]])
+        mask, score, index, count = best_mask(
+            masks, torch.tensor([0.832031, 0.4, 0.2]), 1, 2,
+        )
+        np.testing.assert_array_equal(mask, [[False, True]])
+        self.assertAlmostEqual(score, 0.4)
+        self.assertEqual((index, count), (1, 3))
+
+    def test_nonempty_confidence_ties_select_first_original_candidate(self):
+        masks = torch.tensor([[[0, 0]], [[1, 0]], [[0, 1]]])
+        mask, _, index, count = best_mask(masks, torch.tensor([0.9, 0.2, 0.2]), 1, 2)
+        np.testing.assert_array_equal(mask, [[True, False]])
+        self.assertEqual((index, count), (1, 3))
+
+    def test_all_empty_candidates_are_rejected(self):
+        with self.assertRaisesRegex(ValueError, "All SAM candidate masks are empty"):
+            best_mask(torch.tensor([[[0.0]], [[0.5]]]), torch.tensor([0.9, 0.1]), 1, 1)
 
     def test_invalid_scores_are_rejected(self):
         for scores in (torch.tensor([float("nan")]), torch.tensor([1.2]), torch.empty(2)):
