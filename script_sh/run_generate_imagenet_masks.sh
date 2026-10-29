@@ -47,3 +47,4 @@ case "${REPLACE:-0}" in
     *) printf 'ERROR: REPLACE must be 0 or 1\n' >&2; exit 1 ;;
 esac
 "$PYTHON" -u -m evaluate_script.generate_imagenet_masks "${ARGS[@]}"
+
