@@ -142,6 +142,37 @@ class CombinedLocalizationTests(unittest.TestCase):
         self.assertNotIn("IoU", old)
         self.assertIn(r"\begin{tabular}{ll|ccc|ccc|ccc}", old)
 
+    def test_subscript_sd_three_decimals_without_ttest_coloring(self):
+        cells = {
+            ("vgg16", "simple_gradient", "clean"): {
+                "1": {"metrics": {
+                    "ins_auc": 0.123456, "del_auc": 0.234567,
+                    "imd": 0.345678, "iou": 0.456789,
+                }, "sample_ids": [("n001", "a")]},
+                "2": {"metrics": {
+                    "ins_auc": 0.123456, "del_auc": 0.234567,
+                    "imd": 0.345678, "iou": 0.456789,
+                }, "sample_ids": [("n001", "a")]},
+            },
+        }
+        latex, report = tables.render_table(
+            "faithfulness", cells, include_iou=True, use_ttest=False,
+            precision=3, sd_format="subscript",
+        )
+        self.assertIn(r"$\mathbf{0.123_{0.000}}$", latex)
+        self.assertIn(r"$\mathbf{0.457_{0.000}}$", latex)
+        self.assertIn("lower-right subscript", latex)
+        self.assertNotIn(r"\pm", latex)
+        self.assertNotIn(r"\textcolor{blue}", latex)
+        self.assertNotIn("t-tests", latex)
+        self.assertFalse(report["ttest"]["enabled"])
+        del cells[("vgg16", "simple_gradient", "clean")]["2"]
+        latex, _ = tables.render_table(
+            "faithfulness", cells, include_iou=True, use_ttest=False,
+            precision=3, sd_format="subscript",
+        )
+        self.assertIn(r"$\mathbf{0.123_{--}}$", latex)
+
     def test_join_rejects_missing_extra_duplicate_context_and_invalid_values(self):
         record = faith_record(1, "a", None, 0.7)
         localization = self.localization(record)

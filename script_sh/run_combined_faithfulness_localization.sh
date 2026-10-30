@@ -31,8 +31,8 @@ fi
 
 ARGS=(--faithfulness-input-dirs "${INPUT_DIRS[@]}"
       --localization-records "$LOCALIZATION_RECORDS"
-      --output-dir "$TABLE_DIR" --precision "${PRECISION:-4}")
-case "${USE_TTEST:-1}" in
+      --output-dir "$TABLE_DIR" --precision "${PRECISION:-3}" --sd-format subscript)
+case "${USE_TTEST:-0}" in
     0) ARGS+=(--no-ttest) ;;
     1) ARGS+=(--use-ttest --ttest-alpha "${TTEST_ALPHA:-0.05}"
               --ttest-correction "${TTEST_CORRECTION:-none}") ;;

@@ -212,7 +212,9 @@ def paired_comparison(ours, baseline, metric, higher, ttest):
 
 
 def render_table(kind, cells, *, use_ttest=True, alpha=0.05, correction="none", precision=4,
-                 include_iou=False):
+                 include_iou=False, sd_format="pm"):
+    if sd_format not in ("pm", "subscript"):
+        raise ValueError(f"Unsupported SD format: {sd_format}")
     if include_iou and kind != "faithfulness":
         raise ValueError("IoU columns are only supported for faithfulness tables")
     if use_ttest:
@@ -268,6 +270,11 @@ def render_table(kind, cells, *, use_ttest=True, alpha=0.05, correction="none", 
         r"Missing values and undefined standard deviations are shown as --. "
         r"The best mean for each explainer, model, and metric is in \textbf{bold}."
     )
+    if sd_format == "subscript":
+        caption = caption.replace(
+            r"mean $\pm$ sample standard deviation",
+            r"mean with sample standard deviation as a lower-right subscript",
+        )
     if use_ttest:
         threshold = alpha / 3 if correction == "bonferroni" else alpha
         caption += (
@@ -320,7 +327,11 @@ def render_table(kind, cells, *, use_ttest=True, alpha=0.05, correction="none", 
                     ]
                     best = (min if metric in ("sro", "del_auc") else max)(candidates)
                     sd = "--" if stat["std"] is None else f"{stat['std']:.{precision}f}"
-                    value = f"{stat['mean']:.{precision}f}" + r" \pm " + sd
+                    value = f"{stat['mean']:.{precision}f}"
+                    if sd_format == "subscript":
+                        value += "_{" + sd + "}"
+                    else:
+                        value += r" \pm " + sd
                     if stat["mean"] == best:
                         value = r"\mathbf{" + value + "}"
                     if approach == "nsgaii" and (model, method, metric) in significant:
@@ -367,6 +378,8 @@ def main(argv=None):
     parser.add_argument("--ttest-alpha", type=float, default=0.05)
     parser.add_argument("--ttest-correction", choices=("none", "bonferroni"), default="none")
     parser.add_argument("--precision", type=int, default=4)
+    parser.add_argument("--sd-format", choices=("pm", "subscript"), default="pm",
+                        help="Display SD after plus/minus or as a lower-right subscript")
     parser.add_argument("--eps", nargs="+", type=int)
     parser.add_argument("--loss-type")
     parser.add_argument("--strategy")
@@ -421,6 +434,7 @@ def main(argv=None):
             kind, cells, use_ttest=args.use_ttest, alpha=args.ttest_alpha,
             correction=args.ttest_correction, precision=args.precision,
             include_iou=bool(args.localization_records),
+            sd_format=args.sd_format,
         )
         if args.localization_records:
             protocol = json.loads(key)["localization_protocol"]

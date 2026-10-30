@@ -247,7 +247,10 @@ LOCALIZATION_RECORDS=faithfulness_aggregates/localization_records.json \
 Pass one or more run roots containing per-sample `faithfulness.json` files.
 The default root is `offical_faithfulness/server_run_seed`. Output is
 `result_latexs/faithfulness_<hash>/table.tex` and `statistics.json`, with
-Ins / Del / IMD / IoU columns. Existing outputs for the same configuration
+Ins / Del / IMD / IoU columns. The join-only runner defaults to three decimal
+places, SD as a lower-right subscript (`$0.277_{0.001}$`), and bold best means
+without blue t-test highlighting (`USE_TTEST=0`). Set `USE_TTEST=1` to re-enable
+the significance tests and coloring. Existing outputs for the same configuration
 are overwritten. `TABLE_DIR`, `PRECISION`, `USE_TTEST`, `TTEST_ALPHA`,
 `TTEST_CORRECTION`, `EPS`, `LOSS_TYPE`, and `STRATEGY` use the same conventions
 as the CPU aggregation runner.
