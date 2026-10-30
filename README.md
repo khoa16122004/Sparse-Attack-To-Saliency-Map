@@ -232,6 +232,33 @@ The exact records used to join are saved as
 The runner forwards `EPS`, `LOSS_TYPE`, `STRATEGY`, `PRECISION` and `TABLE_DIR`
 to IoU reporting; `RUN_IOU=0` preserves the old faithfulness-only workflow.
 
+#### 3. Combine already saved per-sample scores only
+
+If `faithfulness.json` and `localization_records.json` already exist, use
+[the join-only runner](script_sh/run_combined_faithfulness_localization.sh).
+It does not regenerate masks, calculate IoU, or run model inference:
+
+```sh
+LOCALIZATION_RECORDS=faithfulness_aggregates/localization_records.json \
+    bash script_sh/run_combined_faithfulness_localization.sh \
+    offical_faithfulness/server_run_seed
+```
+
+Pass one or more run roots containing per-sample `faithfulness.json` files.
+The default root is `offical_faithfulness/server_run_seed`. Output is
+`result_latexs/faithfulness_<hash>/table.tex` and `statistics.json`, with
+Ins / Del / IMD / IoU columns. Existing outputs for the same configuration
+are overwritten. `TABLE_DIR`, `PRECISION`, `USE_TTEST`, `TTEST_ALPHA`,
+`TTEST_CORRECTION`, `EPS`, `LOSS_TYPE`, and `STRATEGY` use the same conventions
+as the CPU aggregation runner.
+
+The join checks exact sample paths and contexts, and rejects duplicate,
+missing, or extra samples instead of merging unrelated scores. Use the same
+run roots and filters that produced the localization records. If results
+were moved from another machine, the `sample_dir` paths in both inputs must
+resolve to the same samples. A localization `table.tex` alone is not enough:
+the exact records JSON is required.
+
 Focused tests are provided for manual execution:
 
 ```sh

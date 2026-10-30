@@ -1,0 +1,101 @@
+\begin{table*}[t]
+\centering
+\caption{Attack performance of different explanation methods across CNN and ViT models. We report attack success rate (ASR) $\uparrow$, Spearman's rank-order correlation (SRO) $\downarrow$, and H-Score $\uparrow$. Each seed is averaged over its samples first; results are the equally weighted mean $\pm$ sample standard deviation across seeds (available seeds per cell: 5). Missing values and undefined standard deviations are shown as --. The best mean for each explainer, model, and metric is in \textbf{bold}. \textcolor{blue}{Blue} marks Ours only when it improves over all three GASS baselines in two-sided paired t-tests on matching seeds ($p < 0.05$, uncorrected); at least two matched seed pairs are required.}
+\label{tab:attack_performance}
+\textit{CNN models}\\[0.1cm]
+\resizebox{0.8\textwidth}{!}{
+\begin{tabular}{ll|ccc|ccc|ccc}
+\toprule
+\multirow{2}{*}{Explain}
+& \multirow{2}{*}{Algorithm}
+& \multicolumn{3}{c|}{ResNet-50}
+& \multicolumn{3}{c|}{VGG-16}
+& \multicolumn{3}{c}{Densenet-121} \\
+\cmidrule(lr){3-5}
+\cmidrule(lr){6-8}
+\cmidrule(lr){9-11}
+& & ASR $\uparrow$ & SRO $\downarrow$ & H-Score $\uparrow$
+  & ASR $\uparrow$ & SRO $\downarrow$ & H-Score $\uparrow$
+  & ASR $\uparrow$ & SRO $\downarrow$ & H-Score $\uparrow$ \\
+\midrule
+
+\multirow{4}{*}{Simple Gradient}
+& GASS ($\lambda=0.0$) & -- & -- & -- & $0.3200 \pm 0.0071$ & $\mathbf{0.3846 \pm 0.0047}$ & $0.4210 \pm 0.0055$ & -- & -- & -- \\
+& GASS ($\lambda=0.5$) & -- & -- & -- & $0.9260 \pm 0.0114$ & $0.4877 \pm 0.0025$ & $0.6596 \pm 0.0032$ & -- & -- & -- \\
+& GASS ($\lambda=1.0$) & -- & -- & -- & $\mathbf{0.9320 \pm 0.0084}$ & $0.4896 \pm 0.0010$ & $0.6596 \pm 0.0024$ & -- & -- & -- \\
+& \textbf{Ours} & -- & -- & -- & $0.8680 \pm 0.0045$ & $0.4067 \pm 0.0018$ & $\textcolor{blue}{\mathbf{0.7048 \pm 0.0024}}$ & -- & -- & -- \\
+\midrule
+
+\multirow{4}{*}{Input $\odot$ Gradient}
+& GASS ($\lambda=0.0$) & -- & -- & -- & $0.3020 \pm 0.0277$ & $\mathbf{0.4783 \pm 0.0031}$ & $0.3819 \pm 0.0214$ & -- & -- & -- \\
+& GASS ($\lambda=0.5$) & -- & -- & -- & $0.9240 \pm 0.0055$ & $0.5609 \pm 0.0009$ & $0.5953 \pm 0.0014$ & -- & -- & -- \\
+& GASS ($\lambda=1.0$) & -- & -- & -- & $\mathbf{0.9320 \pm 0.0084}$ & $0.5610 \pm 0.0013$ & $0.5969 \pm 0.0028$ & -- & -- & -- \\
+& \textbf{Ours} & -- & -- & -- & $0.8680 \pm 0.0148$ & $0.4968 \pm 0.0027$ & $\textcolor{blue}{\mathbf{0.6370 \pm 0.0029}}$ & -- & -- & -- \\
+\midrule
+
+\multirow{4}{*}{GradCAM}
+& GASS ($\lambda=0.0$) & -- & -- & -- & $0.3500 \pm 0.0265$ & $\mathbf{0.1994 \pm 0.0122}$ & $0.4867 \pm 0.0274$ & -- & -- & -- \\
+& GASS ($\lambda=0.5$) & -- & -- & -- & $0.9280 \pm 0.0110$ & $0.5675 \pm 0.0079$ & $0.5900 \pm 0.0091$ & -- & -- & -- \\
+& GASS ($\lambda=1.0$) & -- & -- & -- & $\mathbf{0.9320 \pm 0.0084}$ & $0.6033 \pm 0.0082$ & $0.5565 \pm 0.0094$ & -- & -- & -- \\
+& \textbf{Ours} & -- & -- & -- & $0.8620 \pm 0.0110$ & $0.2070 \pm 0.0101$ & $\textcolor{blue}{\mathbf{0.8260 \pm 0.0069}}$ & -- & -- & -- \\
+
+\midrule
+\multirow{4}{*}{XGradCAM}
+& GASS ($\lambda=0.0$) & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& GASS ($\lambda=0.5$) & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& GASS ($\lambda=1.0$) & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& \textbf{Ours} & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+
+\bottomrule
+\end{tabular}
+}
+
+\vspace{0.5cm}
+\textit{ViT models}\\[0.1cm]
+\resizebox{0.8\textwidth}{!}{
+\begin{tabular}{ll|ccc|ccc|ccc}
+\toprule
+\multirow{2}{*}{Explain}
+& \multirow{2}{*}{Algorithm}
+& \multicolumn{3}{c|}{ViT-B-32}
+& \multicolumn{3}{c|}{ViT-B-16}
+& \multicolumn{3}{c}{Swin-V2} \\
+\cmidrule(lr){3-5}
+\cmidrule(lr){6-8}
+\cmidrule(lr){9-11}
+& & ASR $\uparrow$ & SRO $\downarrow$ & H-Score $\uparrow$
+  & ASR $\uparrow$ & SRO $\downarrow$ & H-Score $\uparrow$
+  & ASR $\uparrow$ & SRO $\downarrow$ & H-Score $\uparrow$ \\
+\midrule
+
+\multirow{4}{*}{Raw Attention}
+& GASS ($\lambda=0.0$) & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& GASS ($\lambda=0.5$) & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& GASS ($\lambda=1.0$) & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& \textbf{Ours} & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\midrule
+
+\multirow{4}{*}{Attention Rollout}
+& GASS ($\lambda=0.0$) & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& GASS ($\lambda=0.5$) & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& GASS ($\lambda=1.0$) & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& \textbf{Ours} & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\midrule
+
+\multirow{4}{*}{Attention Flow}
+& GASS ($\lambda=0.0$) & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& GASS ($\lambda=0.5$) & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& GASS ($\lambda=1.0$) & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& \textbf{Ours} & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\midrule
+
+\multirow{4}{*}{Partial LRP}
+& GASS ($\lambda=0.0$) & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& GASS ($\lambda=0.5$) & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& GASS ($\lambda=1.0$) & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& \textbf{Ours} & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+
+\bottomrule
+\end{tabular}
+}
+\end{table*}

@@ -1,0 +1,4790 @@
+{
+  "averaging": "equal_weight_seed_means",
+  "std": "sample_std_ddof_1",
+  "ttest": {
+    "enabled": true,
+    "alpha": 0.05,
+    "correction": "none",
+    "alternative": "two-sided",
+    "comparisons": [
+      {
+        "model": "resnet18",
+        "explain_method": "simple_gradient",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "simple_gradient",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "simple_gradient",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "simple_gradient",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "simple_gradient",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "simple_gradient",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "simple_gradient",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "simple_gradient",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "simple_gradient",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "simple_gradient",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "simple_gradient",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "simple_gradient",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "simple_gradient",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.0002776722626886972,
+        "improved": true,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "simple_gradient",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.058469810774485965,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "simple_gradient",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.00849011454629052,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "simple_gradient",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.014139655160466485,
+        "improved": true,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "simple_gradient",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.48122367826750895,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "simple_gradient",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.03977902576396407,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "simple_gradient",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 9.489953458360967e-05,
+        "improved": true,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "simple_gradient",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.07130489165812914,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "simple_gradient",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.0007579828547716514,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "simple_gradient",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.00070756636201376,
+        "improved": true,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "simple_gradient",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.0002733143337863697,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "simple_gradient",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.0017107876985342839,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "simple_gradient",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "simple_gradient",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "simple_gradient",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "simple_gradient",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "simple_gradient",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "simple_gradient",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "simple_gradient",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "simple_gradient",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "simple_gradient",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "simple_gradient",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "simple_gradient",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "simple_gradient",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "input_gradient",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "input_gradient",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "input_gradient",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "input_gradient",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "input_gradient",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "input_gradient",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "input_gradient",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "input_gradient",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "input_gradient",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "input_gradient",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "input_gradient",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "input_gradient",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "input_gradient",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 1.4510161862114515e-05,
+        "improved": true,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "input_gradient",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.018867686740489498,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "input_gradient",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.21950110589551391,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "input_gradient",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.004422977042034275,
+        "improved": true,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "input_gradient",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.15868256467132577,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "input_gradient",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.09417775262298707,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "input_gradient",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.0001186756162565218,
+        "improved": true,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "input_gradient",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.01284819398815734,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "input_gradient",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.0018264470121170187,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "input_gradient",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.0005721250236920947,
+        "improved": true,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "input_gradient",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.022946981072494963,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "input_gradient",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.02146670966169788,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "input_gradient",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "input_gradient",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "input_gradient",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "input_gradient",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "input_gradient",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "input_gradient",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "input_gradient",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "input_gradient",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "input_gradient",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "input_gradient",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "input_gradient",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "input_gradient",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "grad_cam",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "grad_cam",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "grad_cam",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "grad_cam",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "grad_cam",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "grad_cam",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "grad_cam",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "grad_cam",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "grad_cam",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "grad_cam",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "grad_cam",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "grad_cam",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "grad_cam",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.0001848199369319109,
+        "improved": true,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "grad_cam",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.34986426371299867,
+        "improved": true,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "grad_cam",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.46635734064274353,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "grad_cam",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.00018380375827304864,
+        "improved": true,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "grad_cam",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.0037975859242343037,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "grad_cam",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.00015926248224719906,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "grad_cam",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 3.806573673791214e-05,
+        "improved": true,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "grad_cam",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.006950179301663629,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "grad_cam",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.0002722710911230554,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "grad_cam",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.003766996861484546,
+        "improved": true,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "grad_cam",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.12578888526329776,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "grad_cam",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [
+          "22520691",
+          "22520692",
+          "22520693",
+          "22520694",
+          "22520695"
+        ],
+        "n_pairs": 5,
+        "p_value": 0.0008855795535935285,
+        "improved": false,
+        "status": "ok"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "grad_cam",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "grad_cam",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "grad_cam",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "grad_cam",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "grad_cam",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "grad_cam",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "grad_cam",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "grad_cam",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "grad_cam",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "grad_cam",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "grad_cam",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "grad_cam",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "xgrad_cam",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "xgrad_cam",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "xgrad_cam",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "xgrad_cam",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "xgrad_cam",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "xgrad_cam",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "xgrad_cam",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "xgrad_cam",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "xgrad_cam",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "xgrad_cam",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "xgrad_cam",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "resnet18",
+        "explain_method": "xgrad_cam",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "xgrad_cam",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "xgrad_cam",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "xgrad_cam",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "xgrad_cam",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "xgrad_cam",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "xgrad_cam",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "xgrad_cam",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "xgrad_cam",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "xgrad_cam",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "xgrad_cam",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "xgrad_cam",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vgg16",
+        "explain_method": "xgrad_cam",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "xgrad_cam",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "xgrad_cam",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "xgrad_cam",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "xgrad_cam",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "xgrad_cam",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "xgrad_cam",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "xgrad_cam",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "xgrad_cam",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "xgrad_cam",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "xgrad_cam",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "xgrad_cam",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "densenet121",
+        "explain_method": "xgrad_cam",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "raw_attention",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "raw_attention",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "raw_attention",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "raw_attention",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "raw_attention",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "raw_attention",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "raw_attention",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "raw_attention",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "raw_attention",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "raw_attention",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "raw_attention",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "raw_attention",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "raw_attention",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "raw_attention",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "raw_attention",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "raw_attention",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "raw_attention",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "raw_attention",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "raw_attention",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "raw_attention",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "raw_attention",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "raw_attention",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "raw_attention",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "raw_attention",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "raw_attention",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "raw_attention",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "raw_attention",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "raw_attention",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "raw_attention",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "raw_attention",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "raw_attention",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "raw_attention",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "raw_attention",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "raw_attention",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "raw_attention",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "raw_attention",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_rollout",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_rollout",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_rollout",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_rollout",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_rollout",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_rollout",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_rollout",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_rollout",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_rollout",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_rollout",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_rollout",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_rollout",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_rollout",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_rollout",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_rollout",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_rollout",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_rollout",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_rollout",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_rollout",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_rollout",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_rollout",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_rollout",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_rollout",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_rollout",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_rollout",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_rollout",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_rollout",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_rollout",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_rollout",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_rollout",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_rollout",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_rollout",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_rollout",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_rollout",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_rollout",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_rollout",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_flow",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_flow",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_flow",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_flow",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_flow",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_flow",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_flow",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_flow",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_flow",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_flow",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_flow",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "attention_flow",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_flow",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_flow",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_flow",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_flow",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_flow",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_flow",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_flow",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_flow",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_flow",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_flow",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_flow",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "attention_flow",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_flow",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_flow",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_flow",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_flow",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_flow",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_flow",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_flow",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_flow",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_flow",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_flow",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_flow",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "attention_flow",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "partial_lrp",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "partial_lrp",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "partial_lrp",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "partial_lrp",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "partial_lrp",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "partial_lrp",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "partial_lrp",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "partial_lrp",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "partial_lrp",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "partial_lrp",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "partial_lrp",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_32",
+        "explain_method": "partial_lrp",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "partial_lrp",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "partial_lrp",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "partial_lrp",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "partial_lrp",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "partial_lrp",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "partial_lrp",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "partial_lrp",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "partial_lrp",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "partial_lrp",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "partial_lrp",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "partial_lrp",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "vit_b_16",
+        "explain_method": "partial_lrp",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "partial_lrp",
+        "metric": "ins_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "partial_lrp",
+        "metric": "ins_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "partial_lrp",
+        "metric": "ins_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "partial_lrp",
+        "metric": "del_auc",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "partial_lrp",
+        "metric": "del_auc",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "partial_lrp",
+        "metric": "del_auc",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "partial_lrp",
+        "metric": "imd",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "partial_lrp",
+        "metric": "imd",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "partial_lrp",
+        "metric": "imd",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "partial_lrp",
+        "metric": "iou",
+        "baseline": "ga_0",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "partial_lrp",
+        "metric": "iou",
+        "baseline": "ga_0.5",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      },
+      {
+        "model": "swin_v2",
+        "explain_method": "partial_lrp",
+        "metric": "iou",
+        "baseline": "ga_1",
+        "seeds": [],
+        "n_pairs": 0,
+        "p_value": null,
+        "improved": false,
+        "status": "insufficient_pairs"
+      }
+    ]
+  },
+  "cells": [
+    {
+      "model": "vgg16",
+      "explain_method": "grad_cam",
+      "approach": "clean",
+      "metrics": {
+        "ins_auc": {
+          "mean": 0.7248477054687378,
+          "std": 0.0,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.7248477054687378,
+            "22520692": 0.7248477054687378,
+            "22520693": 0.7248477054687378,
+            "22520694": 0.7248477054687378,
+            "22520695": 0.7248477054687378
+          }
+        },
+        "del_auc": {
+          "mean": 0.11358926148182302,
+          "std": 0.0,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.11358926148182302,
+            "22520692": 0.11358926148182302,
+            "22520693": 0.11358926148182302,
+            "22520694": 0.11358926148182302,
+            "22520695": 0.11358926148182302
+          }
+        },
+        "imd": {
+          "mean": 0.6112584439869148,
+          "std": 0.0,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.6112584439869148,
+            "22520692": 0.6112584439869148,
+            "22520693": 0.6112584439869148,
+            "22520694": 0.6112584439869148,
+            "22520695": 0.6112584439869148
+          }
+        },
+        "iou": {
+          "mean": 0.25734431057464957,
+          "std": 0.0,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.25734431057464957,
+            "22520692": 0.25734431057464957,
+            "22520693": 0.25734431057464957,
+            "22520694": 0.25734431057464957,
+            "22520695": 0.25734431057464957
+          }
+        }
+      }
+    },
+    {
+      "model": "vgg16",
+      "explain_method": "grad_cam",
+      "approach": "ga_0",
+      "metrics": {
+        "ins_auc": {
+          "mean": 0.6455011359858269,
+          "std": 0.006942124851496075,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.6370754126328166,
+            "22520692": 0.6552524558097581,
+            "22520693": 0.6453597585584622,
+            "22520694": 0.6413055446383383,
+            "22520695": 0.6485125082897595
+          }
+        },
+        "del_auc": {
+          "mean": 0.245819534016845,
+          "std": 0.005214227245076879,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.24871946301781428,
+            "22520692": 0.24594730800201642,
+            "22520693": 0.24872468351555113,
+            "22520694": 0.2489476744422804,
+            "22520695": 0.23675854110656286
+          }
+        },
+        "imd": {
+          "mean": 0.39968160196898195,
+          "std": 0.010362714545575198,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.3883559496150024,
+            "22520692": 0.4093051478077417,
+            "22520693": 0.39663507504291107,
+            "22520694": 0.392357870196058,
+            "22520695": 0.4117539671831966
+          }
+        },
+        "iou": {
+          "mean": 0.2605891091493207,
+          "std": 0.00270144982497696,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.2622731592566009,
+            "22520692": 0.2570700997816283,
+            "22520693": 0.2613452419379502,
+            "22520694": 0.2636601427024778,
+            "22520695": 0.25859690206794644
+          }
+        }
+      }
+    },
+    {
+      "model": "vgg16",
+      "explain_method": "grad_cam",
+      "approach": "ga_0.5",
+      "metrics": {
+        "ins_auc": {
+          "mean": 0.692573115010459,
+          "std": 0.005375695729357067,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.7003736244092966,
+            "22520692": 0.6888290984598321,
+            "22520693": 0.6879410075771065,
+            "22520694": 0.6897702325631536,
+            "22520695": 0.6959516120429066
+          }
+        },
+        "del_auc": {
+          "mean": 0.173889048114566,
+          "std": 0.002291387744446327,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.1752425566604542,
+            "22520692": 0.17265967924813214,
+            "22520693": 0.17146666244812175,
+            "22520694": 0.17717704678966262,
+            "22520695": 0.17289929542645935
+          }
+        },
+        "imd": {
+          "mean": 0.5186840668958931,
+          "std": 0.005218969767326008,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.5251310677488424,
+            "22520692": 0.5161694192117,
+            "22520693": 0.5164743451289847,
+            "22520694": 0.512593185773491,
+            "22520695": 0.5230523166164472
+          }
+        },
+        "iou": {
+          "mean": 0.27349806201165944,
+          "std": 0.003441740785676843,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.2735306571372686,
+            "22520692": 0.2748199148649929,
+            "22520693": 0.27196428080933055,
+            "22520694": 0.2782388250616112,
+            "22520695": 0.26893663218509395
+          }
+        }
+      }
+    },
+    {
+      "model": "vgg16",
+      "explain_method": "grad_cam",
+      "approach": "ga_1",
+      "metrics": {
+        "ins_auc": {
+          "mean": 0.6966117228998358,
+          "std": 0.006633765677793641,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.6887037508973278,
+            "22520692": 0.6986710501343696,
+            "22520693": 0.7009446430944712,
+            "22520694": 0.6906864859609975,
+            "22520695": 0.7040526844120125
+          }
+        },
+        "del_auc": {
+          "mean": 0.17076162803995293,
+          "std": 0.004795804987918136,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.17592194535397346,
+            "22520692": 0.1752078331588007,
+            "22520693": 0.16807487174496324,
+            "22520694": 0.16461463443196045,
+            "22520695": 0.1699888555100668
+          }
+        },
+        "imd": {
+          "mean": 0.5258500948598828,
+          "std": 0.008562532228379828,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.5127818055433544,
+            "22520692": 0.5234632169755689,
+            "22520693": 0.532869771349508,
+            "22520694": 0.526071851529037,
+            "22520695": 0.5340638289019458
+          }
+        },
+        "iou": {
+          "mean": 0.27698021907631565,
+          "std": 0.0012391878261158356,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.2763343252244899,
+            "22520692": 0.27648259481706466,
+            "22520693": 0.2771468210425081,
+            "22520694": 0.27589187685858996,
+            "22520695": 0.27904547743892555
+          }
+        }
+      }
+    },
+    {
+      "model": "vgg16",
+      "explain_method": "grad_cam",
+      "approach": "nsgaii",
+      "metrics": {
+        "ins_auc": {
+          "mean": 0.694312320885873,
+          "std": 0.004083705383075063,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.6972979768500228,
+            "22520692": 0.6924903928881498,
+            "22520693": 0.6938635715386837,
+            "22520694": 0.6887579064147629,
+            "22520695": 0.699151756737746
+          }
+        },
+        "del_auc": {
+          "mean": 0.19783598940412014,
+          "std": 0.00831565383491885,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.20822626978317704,
+            "22520692": 0.20482778810739846,
+            "22520693": 0.19555423214811965,
+            "22520694": 0.18976575948520844,
+            "22520695": 0.19080589749669713
+          }
+        },
+        "imd": {
+          "mean": 0.49647633148175285,
+          "std": 0.008412567617494142,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.4890717070668457,
+            "22520692": 0.48766260478075135,
+            "22520693": 0.4983093393905641,
+            "22520694": 0.4989921469295544,
+            "22520695": 0.5083458592410488
+          }
+        },
+        "iou": {
+          "mean": 0.26959991015674273,
+          "std": 0.001825611799559348,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.2720010296954409,
+            "22520692": 0.2687647989841961,
+            "22520693": 0.2677647451505904,
+            "22520694": 0.2684183207798107,
+            "22520695": 0.2710506561736755
+          }
+        }
+      }
+    },
+    {
+      "model": "vgg16",
+      "explain_method": "input_gradient",
+      "approach": "clean",
+      "metrics": {
+        "ins_auc": {
+          "mean": 0.45456256495406355,
+          "std": 9.881007125352928e-08,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.45456261950773785,
+            "22520692": 0.4545626175109483,
+            "22520693": 0.4545625800864955,
+            "22520694": 0.4545626170021891,
+            "22520695": 0.4545623906629469
+          }
+        },
+        "del_auc": {
+          "mean": 0.029697003666534556,
+          "std": 5.495316497950409e-08,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.029697027879392535,
+            "22520692": 0.029697029158524207,
+            "22520693": 0.02969702781269152,
+            "22520694": 0.02969702811397012,
+            "22520695": 0.029696905368094408
+          }
+        },
+        "imd": {
+          "mean": 0.424865561287529,
+          "std": 4.547253534949645e-08,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.4248655916283453,
+            "22520692": 0.4248655883524241,
+            "22520693": 0.424865552273804,
+            "22520694": 0.42486558888821896,
+            "22520695": 0.4248654852948525
+          }
+        },
+        "iou": {
+          "mean": 0.25230572210197205,
+          "std": 0.0,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.25230572210197205,
+            "22520692": 0.25230572210197205,
+            "22520693": 0.25230572210197205,
+            "22520694": 0.25230572210197205,
+            "22520695": 0.25230572210197205
+          }
+        }
+      }
+    },
+    {
+      "model": "vgg16",
+      "explain_method": "input_gradient",
+      "approach": "ga_0",
+      "metrics": {
+        "ins_auc": {
+          "mean": 0.6382905051908441,
+          "std": 0.004555396905602998,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.6403040868117217,
+            "22520692": 0.6328822385751682,
+            "22520693": 0.6403829259050468,
+            "22520694": 0.634225890594587,
+            "22520695": 0.6436573840676969
+          }
+        },
+        "del_auc": {
+          "mean": 0.2057166845518536,
+          "std": 0.008288826988429856,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.19991920556333906,
+            "22520692": 0.21562727369869233,
+            "22520693": 0.21042386651486766,
+            "22520694": 0.20770699679239193,
+            "22520695": 0.194906080189977
+          }
+        },
+        "imd": {
+          "mean": 0.4325738206389905,
+          "std": 0.012256529780518305,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.44038488124838265,
+            "22520692": 0.4172549648764759,
+            "22520693": 0.4299590593901791,
+            "22520694": 0.42651889380219504,
+            "22520695": 0.44875130387771994
+          }
+        },
+        "iou": {
+          "mean": 0.2593722130484953,
+          "std": 0.0025384299965820725,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.2589787968316158,
+            "22520692": 0.2605597944236289,
+            "22520693": 0.2556332494396085,
+            "22520694": 0.25912798568047235,
+            "22520695": 0.2625612388671508
+          }
+        }
+      }
+    },
+    {
+      "model": "vgg16",
+      "explain_method": "input_gradient",
+      "approach": "ga_0.5",
+      "metrics": {
+        "ins_auc": {
+          "mean": 0.6988634051635111,
+          "std": 0.0039447501139638335,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.696224569144112,
+            "22520692": 0.7053565309381031,
+            "22520693": 0.6953956124151431,
+            "22520694": 0.6979560840199751,
+            "22520695": 0.6993842293002218
+          }
+        },
+        "del_auc": {
+          "mean": 0.1645116262071088,
+          "std": 0.004449716756283484,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.17034402274801064,
+            "22520692": 0.16319434174589637,
+            "22520693": 0.1593945583069605,
+            "22520694": 0.16189008210861833,
+            "22520695": 0.16773512612605812
+          }
+        },
+        "imd": {
+          "mean": 0.5343517789564023,
+          "std": 0.006035880515544825,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.5258805463961014,
+            "22520692": 0.5421621891922068,
+            "22520693": 0.5360010541081827,
+            "22520694": 0.5360660019113568,
+            "22520695": 0.5316491031741637
+          }
+        },
+        "iou": {
+          "mean": 0.2753231897350891,
+          "std": 0.0017129019159941644,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.2771626997618619,
+            "22520692": 0.27648936984448436,
+            "22520693": 0.27372248579924185,
+            "22520694": 0.2759327775217907,
+            "22520695": 0.2733086157480669
+          }
+        }
+      }
+    },
+    {
+      "model": "vgg16",
+      "explain_method": "input_gradient",
+      "approach": "ga_1",
+      "metrics": {
+        "ins_auc": {
+          "mean": 0.6940847413368804,
+          "std": 0.005574237457169236,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.6912259600155319,
+            "22520692": 0.6960068266316061,
+            "22520693": 0.6963869740357396,
+            "22520694": 0.6861153815551396,
+            "22520695": 0.7006885644463844
+          }
+        },
+        "del_auc": {
+          "mean": 0.16380330906695129,
+          "std": 0.004745454497259783,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.17171027135586778,
+            "22520692": 0.16230402168065286,
+            "22520693": 0.15914643479706275,
+            "22520694": 0.1619055808081291,
+            "22520695": 0.16395023669304393
+          }
+        },
+        "imd": {
+          "mean": 0.5302814322699291,
+          "std": 0.007977976011193082,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.5195156886596641,
+            "22520692": 0.5337028049509532,
+            "22520693": 0.5372405392386769,
+            "22520694": 0.5242098007470105,
+            "22520695": 0.5367383277533404
+          }
+        },
+        "iou": {
+          "mean": 0.2765506152820307,
+          "std": 0.0016970601703448819,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.27613527444199487,
+            "22520692": 0.2789458232999937,
+            "22520693": 0.2742237940952882,
+            "22520694": 0.2769850885001828,
+            "22520695": 0.2764630960726939
+          }
+        }
+      }
+    },
+    {
+      "model": "vgg16",
+      "explain_method": "input_gradient",
+      "approach": "nsgaii",
+      "metrics": {
+        "ins_auc": {
+          "mean": 0.6894971705845228,
+          "std": 0.0026215165488451867,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.6930695248371498,
+            "22520692": 0.6871403445241158,
+            "22520693": 0.6866885756327524,
+            "22520694": 0.6903829105360829,
+            "22520695": 0.6902044973925127
+          }
+        },
+        "del_auc": {
+          "mean": 0.17133936995259222,
+          "std": 0.009082587700132568,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.17987240041823707,
+            "22520692": 0.1660461128347175,
+            "22520693": 0.16323022398750914,
+            "22520694": 0.1824783303364574,
+            "22520695": 0.16506978218603996
+          }
+        },
+        "imd": {
+          "mean": 0.5181578006319305,
+          "std": 0.007333700346760324,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.5131971244189127,
+            "22520692": 0.5210942316893983,
+            "22520693": 0.5234583516452433,
+            "22520694": 0.5079045801996255,
+            "22520695": 0.5251347152064727
+          }
+        },
+        "iou": {
+          "mean": 0.27285542139188973,
+          "std": 0.0009255868207451423,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.27417433903456884,
+            "22520692": 0.27181425390570535,
+            "22520693": 0.27280603767804507,
+            "22520694": 0.2732773146582198,
+            "22520695": 0.2722051616829096
+          }
+        }
+      }
+    },
+    {
+      "model": "vgg16",
+      "explain_method": "simple_gradient",
+      "approach": "clean",
+      "metrics": {
+        "ins_auc": {
+          "mean": 0.48313161968306934,
+          "std": 2.4495943454184936e-07,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.4831319370288885,
+            "22520692": 0.4831312702818214,
+            "22520693": 0.48313172071328214,
+            "22520694": 0.4831315370031833,
+            "22520695": 0.4831316333881713
+          }
+        },
+        "del_auc": {
+          "mean": 0.03488631899393702,
+          "std": 6.490462538670837e-09,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.03488631592705734,
+            "22520692": 0.034886316253825864,
+            "22520693": 0.03488631626025848,
+            "22520694": 0.03488631592785772,
+            "22520695": 0.03488633060068571
+          }
+        },
+        "imd": {
+          "mean": 0.44824530068913226,
+          "std": 2.44922410070516e-07,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.4482456211018312,
+            "22520692": 0.4482449540279955,
+            "22520693": 0.44824540445302363,
+            "22520694": 0.44824522107532555,
+            "22520695": 0.44824530278748553
+          }
+        },
+        "iou": {
+          "mean": 0.2696670783235139,
+          "std": 0.0,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.2696670783235139,
+            "22520692": 0.2696670783235139,
+            "22520693": 0.2696670783235139,
+            "22520694": 0.2696670783235139,
+            "22520695": 0.2696670783235139
+          }
+        }
+      }
+    },
+    {
+      "model": "vgg16",
+      "explain_method": "simple_gradient",
+      "approach": "ga_0",
+      "metrics": {
+        "ins_auc": {
+          "mean": 0.629233203583692,
+          "std": 0.0030779171152631323,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.6280160780211302,
+            "22520692": 0.62572181503448,
+            "22520693": 0.632981360951264,
+            "22520694": 0.631908996007965,
+            "22520695": 0.6275377679036206
+          }
+        },
+        "del_auc": {
+          "mean": 0.1984503523437608,
+          "std": 0.013906873968735118,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.19325488804937943,
+            "22520692": 0.19031087532149946,
+            "22520693": 0.2201431915741784,
+            "22520694": 0.20362164766854138,
+            "22520695": 0.1849211591052053
+          }
+        },
+        "imd": {
+          "mean": 0.4307828512399312,
+          "std": 0.011241923120819083,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.4347611899717508,
+            "22520692": 0.43541093971298056,
+            "22520693": 0.4128381693770857,
+            "22520694": 0.4282873483394236,
+            "22520695": 0.4426166087984153
+          }
+        },
+        "iou": {
+          "mean": 0.26319257946451013,
+          "std": 0.0013351029214806178,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.2630038686331578,
+            "22520692": 0.26366191269733114,
+            "22520693": 0.2616605103032048,
+            "22520694": 0.2624501255220195,
+            "22520695": 0.26518648016683755
+          }
+        }
+      }
+    },
+    {
+      "model": "vgg16",
+      "explain_method": "simple_gradient",
+      "approach": "ga_0.5",
+      "metrics": {
+        "ins_auc": {
+          "mean": 0.6932885151289793,
+          "std": 0.00320838233025544,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.6901955076957147,
+            "22520692": 0.6965132410986438,
+            "22520693": 0.6950263147573634,
+            "22520694": 0.6952209689366671,
+            "22520695": 0.6894865431565071
+          }
+        },
+        "del_auc": {
+          "mean": 0.1657323441169301,
+          "std": 0.004745758211229742,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.17205615851151157,
+            "22520692": 0.1654941046095055,
+            "22520693": 0.162063792086086,
+            "22520694": 0.1604212588813435,
+            "22520695": 0.16862640649620395
+          }
+        },
+        "imd": {
+          "mean": 0.5275561710120491,
+          "std": 0.007536627816990689,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.5181393491842031,
+            "22520692": 0.5310191364891382,
+            "22520693": 0.5329625226712774,
+            "22520694": 0.5347997100553236,
+            "22520695": 0.5208601366603032
+          }
+        },
+        "iou": {
+          "mean": 0.2765855388942731,
+          "std": 0.00044102209997962886,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.27685960411340305,
+            "22520692": 0.2759042040177796,
+            "22520693": 0.27673903737632,
+            "22520694": 0.276410008110254,
+            "22520695": 0.2770148408536089
+          }
+        }
+      }
+    },
+    {
+      "model": "vgg16",
+      "explain_method": "simple_gradient",
+      "approach": "ga_1",
+      "metrics": {
+        "ins_auc": {
+          "mean": 0.6943709950837952,
+          "std": 0.005458267523041437,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.6882536503291055,
+            "22520692": 0.6983490837074567,
+            "22520693": 0.6976340484605003,
+            "22520694": 0.6885820196486745,
+            "22520695": 0.6990361732732391
+          }
+        },
+        "del_auc": {
+          "mean": 0.16140256340667292,
+          "std": 0.0035747373829587937,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.1664533146390181,
+            "22520692": 0.16269805868143267,
+            "22520693": 0.15693464733986018,
+            "22520694": 0.16151226824735027,
+            "22520695": 0.1594145281257034
+          }
+        },
+        "imd": {
+          "mean": 0.5329684316771223,
+          "std": 0.008227245013775645,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.5218003356900873,
+            "22520692": 0.535651025026024,
+            "22520693": 0.5406994011206401,
+            "22520694": 0.5270697514013242,
+            "22520695": 0.5396216451475357
+          }
+        },
+        "iou": {
+          "mean": 0.27640518800207803,
+          "std": 0.0014323397110806736,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.2759180160851006,
+            "22520692": 0.27743366795727153,
+            "22520693": 0.2741101954387324,
+            "22520694": 0.2770511784461781,
+            "22520695": 0.2775128820831076
+          }
+        }
+      }
+    },
+    {
+      "model": "vgg16",
+      "explain_method": "simple_gradient",
+      "approach": "nsgaii",
+      "metrics": {
+        "ins_auc": {
+          "mean": 0.6825857615376881,
+          "std": 0.007362870949316933,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.6836369153873273,
+            "22520692": 0.688157578845281,
+            "22520693": 0.6806312176987633,
+            "22520694": 0.6710325443122878,
+            "22520695": 0.6894705514447813
+          }
+        },
+        "del_auc": {
+          "mean": 0.16699193552637434,
+          "std": 0.006363763969807117,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.17810125509639693,
+            "22520692": 0.16602888522885811,
+            "22520693": 0.16413647963177944,
+            "22520694": 0.16213948450362534,
+            "22520695": 0.16455357317121191
+          }
+        },
+        "imd": {
+          "mean": 0.5155938260113138,
+          "std": 0.008314208780979214,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.5055356602909303,
+            "22520692": 0.5221286936164228,
+            "22520693": 0.5164947380669839,
+            "22520694": 0.5088930598086625,
+            "22520695": 0.5249169782735694
+          }
+        },
+        "iou": {
+          "mean": 0.26984968150172844,
+          "std": 0.0012858997507578084,
+          "n_seeds": 5,
+          "seed_values": {
+            "22520691": 0.2680432561418913,
+            "22520692": 0.26953261873084017,
+            "22520693": 0.2708303871014795,
+            "22520694": 0.26951672442041646,
+            "22520695": 0.27132542111401475
+          }
+        }
+      }
+    }
+  ],
+  "missing_cells": [
+    [
+      "densenet121",
+      "grad_cam",
+      "clean"
+    ],
+    [
+      "densenet121",
+      "grad_cam",
+      "ga_0"
+    ],
+    [
+      "densenet121",
+      "grad_cam",
+      "ga_0.5"
+    ],
+    [
+      "densenet121",
+      "grad_cam",
+      "ga_1"
+    ],
+    [
+      "densenet121",
+      "grad_cam",
+      "nsgaii"
+    ],
+    [
+      "densenet121",
+      "input_gradient",
+      "clean"
+    ],
+    [
+      "densenet121",
+      "input_gradient",
+      "ga_0"
+    ],
+    [
+      "densenet121",
+      "input_gradient",
+      "ga_0.5"
+    ],
+    [
+      "densenet121",
+      "input_gradient",
+      "ga_1"
+    ],
+    [
+      "densenet121",
+      "input_gradient",
+      "nsgaii"
+    ],
+    [
+      "densenet121",
+      "simple_gradient",
+      "clean"
+    ],
+    [
+      "densenet121",
+      "simple_gradient",
+      "ga_0"
+    ],
+    [
+      "densenet121",
+      "simple_gradient",
+      "ga_0.5"
+    ],
+    [
+      "densenet121",
+      "simple_gradient",
+      "ga_1"
+    ],
+    [
+      "densenet121",
+      "simple_gradient",
+      "nsgaii"
+    ],
+    [
+      "densenet121",
+      "xgrad_cam",
+      "clean"
+    ],
+    [
+      "densenet121",
+      "xgrad_cam",
+      "ga_0"
+    ],
+    [
+      "densenet121",
+      "xgrad_cam",
+      "ga_0.5"
+    ],
+    [
+      "densenet121",
+      "xgrad_cam",
+      "ga_1"
+    ],
+    [
+      "densenet121",
+      "xgrad_cam",
+      "nsgaii"
+    ],
+    [
+      "resnet18",
+      "grad_cam",
+      "clean"
+    ],
+    [
+      "resnet18",
+      "grad_cam",
+      "ga_0"
+    ],
+    [
+      "resnet18",
+      "grad_cam",
+      "ga_0.5"
+    ],
+    [
+      "resnet18",
+      "grad_cam",
+      "ga_1"
+    ],
+    [
+      "resnet18",
+      "grad_cam",
+      "nsgaii"
+    ],
+    [
+      "resnet18",
+      "input_gradient",
+      "clean"
+    ],
+    [
+      "resnet18",
+      "input_gradient",
+      "ga_0"
+    ],
+    [
+      "resnet18",
+      "input_gradient",
+      "ga_0.5"
+    ],
+    [
+      "resnet18",
+      "input_gradient",
+      "ga_1"
+    ],
+    [
+      "resnet18",
+      "input_gradient",
+      "nsgaii"
+    ],
+    [
+      "resnet18",
+      "simple_gradient",
+      "clean"
+    ],
+    [
+      "resnet18",
+      "simple_gradient",
+      "ga_0"
+    ],
+    [
+      "resnet18",
+      "simple_gradient",
+      "ga_0.5"
+    ],
+    [
+      "resnet18",
+      "simple_gradient",
+      "ga_1"
+    ],
+    [
+      "resnet18",
+      "simple_gradient",
+      "nsgaii"
+    ],
+    [
+      "resnet18",
+      "xgrad_cam",
+      "clean"
+    ],
+    [
+      "resnet18",
+      "xgrad_cam",
+      "ga_0"
+    ],
+    [
+      "resnet18",
+      "xgrad_cam",
+      "ga_0.5"
+    ],
+    [
+      "resnet18",
+      "xgrad_cam",
+      "ga_1"
+    ],
+    [
+      "resnet18",
+      "xgrad_cam",
+      "nsgaii"
+    ],
+    [
+      "swin_v2",
+      "attention_flow",
+      "clean"
+    ],
+    [
+      "swin_v2",
+      "attention_flow",
+      "ga_0"
+    ],
+    [
+      "swin_v2",
+      "attention_flow",
+      "ga_0.5"
+    ],
+    [
+      "swin_v2",
+      "attention_flow",
+      "ga_1"
+    ],
+    [
+      "swin_v2",
+      "attention_flow",
+      "nsgaii"
+    ],
+    [
+      "swin_v2",
+      "attention_rollout",
+      "clean"
+    ],
+    [
+      "swin_v2",
+      "attention_rollout",
+      "ga_0"
+    ],
+    [
+      "swin_v2",
+      "attention_rollout",
+      "ga_0.5"
+    ],
+    [
+      "swin_v2",
+      "attention_rollout",
+      "ga_1"
+    ],
+    [
+      "swin_v2",
+      "attention_rollout",
+      "nsgaii"
+    ],
+    [
+      "swin_v2",
+      "partial_lrp",
+      "clean"
+    ],
+    [
+      "swin_v2",
+      "partial_lrp",
+      "ga_0"
+    ],
+    [
+      "swin_v2",
+      "partial_lrp",
+      "ga_0.5"
+    ],
+    [
+      "swin_v2",
+      "partial_lrp",
+      "ga_1"
+    ],
+    [
+      "swin_v2",
+      "partial_lrp",
+      "nsgaii"
+    ],
+    [
+      "swin_v2",
+      "raw_attention",
+      "clean"
+    ],
+    [
+      "swin_v2",
+      "raw_attention",
+      "ga_0"
+    ],
+    [
+      "swin_v2",
+      "raw_attention",
+      "ga_0.5"
+    ],
+    [
+      "swin_v2",
+      "raw_attention",
+      "ga_1"
+    ],
+    [
+      "swin_v2",
+      "raw_attention",
+      "nsgaii"
+    ],
+    [
+      "vgg16",
+      "xgrad_cam",
+      "clean"
+    ],
+    [
+      "vgg16",
+      "xgrad_cam",
+      "ga_0"
+    ],
+    [
+      "vgg16",
+      "xgrad_cam",
+      "ga_0.5"
+    ],
+    [
+      "vgg16",
+      "xgrad_cam",
+      "ga_1"
+    ],
+    [
+      "vgg16",
+      "xgrad_cam",
+      "nsgaii"
+    ],
+    [
+      "vit_b_16",
+      "attention_flow",
+      "clean"
+    ],
+    [
+      "vit_b_16",
+      "attention_flow",
+      "ga_0"
+    ],
+    [
+      "vit_b_16",
+      "attention_flow",
+      "ga_0.5"
+    ],
+    [
+      "vit_b_16",
+      "attention_flow",
+      "ga_1"
+    ],
+    [
+      "vit_b_16",
+      "attention_flow",
+      "nsgaii"
+    ],
+    [
+      "vit_b_16",
+      "attention_rollout",
+      "clean"
+    ],
+    [
+      "vit_b_16",
+      "attention_rollout",
+      "ga_0"
+    ],
+    [
+      "vit_b_16",
+      "attention_rollout",
+      "ga_0.5"
+    ],
+    [
+      "vit_b_16",
+      "attention_rollout",
+      "ga_1"
+    ],
+    [
+      "vit_b_16",
+      "attention_rollout",
+      "nsgaii"
+    ],
+    [
+      "vit_b_16",
+      "partial_lrp",
+      "clean"
+    ],
+    [
+      "vit_b_16",
+      "partial_lrp",
+      "ga_0"
+    ],
+    [
+      "vit_b_16",
+      "partial_lrp",
+      "ga_0.5"
+    ],
+    [
+      "vit_b_16",
+      "partial_lrp",
+      "ga_1"
+    ],
+    [
+      "vit_b_16",
+      "partial_lrp",
+      "nsgaii"
+    ],
+    [
+      "vit_b_16",
+      "raw_attention",
+      "clean"
+    ],
+    [
+      "vit_b_16",
+      "raw_attention",
+      "ga_0"
+    ],
+    [
+      "vit_b_16",
+      "raw_attention",
+      "ga_0.5"
+    ],
+    [
+      "vit_b_16",
+      "raw_attention",
+      "ga_1"
+    ],
+    [
+      "vit_b_16",
+      "raw_attention",
+      "nsgaii"
+    ],
+    [
+      "vit_b_32",
+      "attention_flow",
+      "clean"
+    ],
+    [
+      "vit_b_32",
+      "attention_flow",
+      "ga_0"
+    ],
+    [
+      "vit_b_32",
+      "attention_flow",
+      "ga_0.5"
+    ],
+    [
+      "vit_b_32",
+      "attention_flow",
+      "ga_1"
+    ],
+    [
+      "vit_b_32",
+      "attention_flow",
+      "nsgaii"
+    ],
+    [
+      "vit_b_32",
+      "attention_rollout",
+      "clean"
+    ],
+    [
+      "vit_b_32",
+      "attention_rollout",
+      "ga_0"
+    ],
+    [
+      "vit_b_32",
+      "attention_rollout",
+      "ga_0.5"
+    ],
+    [
+      "vit_b_32",
+      "attention_rollout",
+      "ga_1"
+    ],
+    [
+      "vit_b_32",
+      "attention_rollout",
+      "nsgaii"
+    ],
+    [
+      "vit_b_32",
+      "partial_lrp",
+      "clean"
+    ],
+    [
+      "vit_b_32",
+      "partial_lrp",
+      "ga_0"
+    ],
+    [
+      "vit_b_32",
+      "partial_lrp",
+      "ga_0.5"
+    ],
+    [
+      "vit_b_32",
+      "partial_lrp",
+      "ga_1"
+    ],
+    [
+      "vit_b_32",
+      "partial_lrp",
+      "nsgaii"
+    ],
+    [
+      "vit_b_32",
+      "raw_attention",
+      "clean"
+    ],
+    [
+      "vit_b_32",
+      "raw_attention",
+      "ga_0"
+    ],
+    [
+      "vit_b_32",
+      "raw_attention",
+      "ga_0.5"
+    ],
+    [
+      "vit_b_32",
+      "raw_attention",
+      "ga_1"
+    ],
+    [
+      "vit_b_32",
+      "raw_attention",
+      "nsgaii"
+    ]
+  ],
+  "excluded_cells": [],
+  "configuration": {
+    "eps": 20,
+    "localization_protocol": {
+      "alignment": "model_default_resize_center_crop_nearest_mask",
+      "clean_baseline_selection": "first_seed_then_path_per_model_explainer_sample",
+      "clean_source": "inverted_quantized_rgb",
+      "empty_gt": "error",
+      "gt": "sam3_pseudo_gt",
+      "gt_manifest_sha256": "79cf9d629ff160466e71059fd1bac8ed725f9ac8cc5c8475ff8d3782970e5c14",
+      "perturbation_source": "smoothed_density_tensor",
+      "pixel_count": "ceil(H*W*k/100)",
+      "tie_break": "stable_row_major",
+      "top_k_percent": 80.0
+    },
+    "loss_type": "margin_loss",
+    "perturbation_metadata": {
+      "grid_size": [
+        4,
+        4
+      ],
+      "grid_value": "mean changed-pixel frequency within each cell",
+      "sigma": 1.0
+    },
+    "protocol": {
+      "auc_axis": "fraction_of_pixels",
+      "curve_values": "raw_softmax_probability",
+      "deletion_baseline": "black_rgb",
+      "evaluation_image": "clean",
+      "explanation_source": "recomputed_from_saved_rgb",
+      "insertion_baseline": "gaussian_blur_rgb",
+      "kernel_sigma": 5.0,
+      "kernel_size": 11,
+      "perturbation_source": "minmax_smoothed_density_tensor",
+      "step": 224,
+      "target": "true_label",
+      "tie_break": "stable_row_major"
+    },
+    "strategy": "uniform"
+  }
+}
