@@ -241,8 +241,7 @@ def main(argv=None):
         if key in index:
             raise ValueError(f"Ambiguous class/image stem in mask manifest: {key}")
         index[key] = (relative, item)
-    records = []
-    manifest_hash = sha256(manifest_path)
+    samples = []
     for path in discover_samples(args.input_dirs):
         summary = json.loads(path.read_text(encoding="utf-8"))
         if summary.get("status") != "ok":
@@ -255,6 +254,16 @@ def main(argv=None):
             continue
         if str(context["seed"]) in ("", "None", "default", "unknown"):
             raise ValueError(f"{path}: explicit seed required")
+        samples.append((path, summary, context))
+    samples.sort(key=lambda sample: (
+        (0, int(sample[2]["seed"])) if str(sample[2]["seed"]).isdigit()
+        else (1, str(sample[2]["seed"])),
+        str(sample[0]),
+    ))
+    records = []
+    clean_baselines = {}
+    manifest_hash = sha256(manifest_path)
+    for path, summary, context in samples:
         identity = (path.parent.parent.name, path.parent.name)
         relative, item = index[identity]
         source_path = args.imagenet_root / relative
@@ -266,28 +275,47 @@ def main(argv=None):
             if args.empty_gt == "error":
                 raise ValueError(f"{mask_path}: empty GT after crop; review prompt or explicitly use --empty-gt zero")
             print(f"[EMPTY GT -> IoU=0] {path.parent}")
-        clean_map, clean_source = load_clean_map(path.parent)
+        clean_rgb_hash = sha256(path.parent / "clean.png")
+        baseline_key = (context["model"], context["explain_method"], *identity)
+        if baseline_key not in clean_baselines:
+            clean_map, clean_source = load_clean_map(path.parent)
+            clean_binary = top_k_mask(clean_map, args.top_k_percent)
+            clean_baselines[baseline_key] = {
+                "clean_iou": binary_iou(clean_binary, target),
+                "clean_rgb_sha256": clean_rgb_hash,
+                "gt_mask_sha256": item["mask_sha256"],
+                "clean_binary_sha256": hashlib.sha256(clean_binary.tobytes()).hexdigest(),
+                "clean_source": clean_source,
+                "clean_baseline_dir": str(path.parent),
+                "clean_baseline_seed": str(context["seed"]),
+            }
+            print(f"[CLEAN BASELINE] {baseline_key}: seed={context['seed']} {path.parent}")
+        baseline = clean_baselines[baseline_key]
+        if (clean_rgb_hash != baseline["clean_rgb_sha256"]
+                or item["mask_sha256"] != baseline["gt_mask_sha256"]):
+            raise ValueError(
+                f"{path.parent}: Clean RGB/GT differs from shared baseline "
+                f"{baseline['clean_baseline_dir']}; refusing misaligned IoU"
+            )
         archive_path = path.parent / "perturbation_density.pt"
         archive = torch.load(archive_path, map_location="cpu", weights_only=True)
         density = archive["smoothed_density"]
         if not isinstance(density, torch.Tensor) or density.ndim != 2:
             raise ValueError(f"{archive_path}: expected 2D smoothed_density tensor")
-        clean_binary = top_k_mask(clean_map, args.top_k_percent)
         perturbation_binary = top_k_mask(density.float().numpy(), args.top_k_percent)
         records.append({
             "context": context, "identity": list(identity), "sample_dir": str(path.parent),
-            "clean_iou": binary_iou(clean_binary, target),
+            **{key: value for key, value in baseline.items() if key != "clean_source"},
             "perturbation_iou": binary_iou(perturbation_binary, target),
-            "clean_rgb_sha256": sha256(path.parent / "clean.png"),
-            "gt_mask_sha256": item["mask_sha256"],
-            "clean_binary_sha256": hashlib.sha256(clean_binary.tobytes()).hexdigest(),
             "gt_foreground_pixels": int(target.sum()),
             "protocol": {
                 "top_k_percent": args.top_k_percent, "pixel_count": "ceil(H*W*k/100)",
                 "tie_break": "stable_row_major", "empty_gt": args.empty_gt,
                 "gt_manifest_sha256": manifest_hash, "gt": "sam3_pseudo_gt",
                 "alignment": "model_default_resize_center_crop_nearest_mask",
-                "clean_source": clean_source, "perturbation_source": "smoothed_density_tensor",
+                "clean_source": baseline["clean_source"],
+                "clean_baseline_selection": "first_seed_then_path_per_model_explainer_sample",
+                "perturbation_source": "smoothed_density_tensor",
             },
             "perturbation_metadata": {
                 key: summary.get("perturbation_density", {}).get(key)

@@ -14,7 +14,7 @@ from evaluate_script.generate_imagenet_masks import (
     best_mask, load_prompts, main as generate_masks, resize_for_inference, sha256,
 )
 from evaluate_script.run_localization_iou import (
-    align_target, binary_iou, load_clean_map, save_reports, top_k_mask,
+    align_target, binary_iou, load_clean_map, main as evaluate_iou, save_reports, top_k_mask,
 )
 
 
@@ -300,6 +300,99 @@ class LocalizationReportingTests(unittest.TestCase):
         self.assertIn("clean_iou: 0.2 != 0.3", message)
         self.assertIn("clean_binary_sha256:", message)
         self.assertNotIn("gt_mask_sha256:", message)
+
+
+class SharedCleanBaselineTests(unittest.TestCase):
+    def evaluate(self, root, *, wrong_rgb=False, invalid_baseline=False, separate_model=False):
+        source = root / "images"
+        masks = root / "masks"
+        (source / "n001").mkdir(parents=True)
+        (masks / "n001").mkdir(parents=True)
+        Image.new("RGB", (2, 2), "white").save(source / "n001" / "a.png")
+        Image.fromarray(np.array([[255, 0], [255, 0]], dtype=np.uint8)).save(
+            masks / "n001" / "a.png")
+        (masks / "mask_manifest.json").write_text(json.dumps({
+            "schema_version": 1, "status": "complete",
+            "images": {"n001/a.png": {
+                "mask": "n001/a.png", "mask_sha256": sha256(masks / "n001" / "a.png"),
+                "source_sha256": sha256(source / "n001" / "a.png"),
+            }},
+        }), encoding="utf-8")
+        samples = []
+        contexts = {}
+        for seed, name, weight in (("10", "a", 0.5), ("2", "b", 1.0), ("2", "a", 0.5)):
+            directory = root / seed / name / "n001" / "a"
+            directory.mkdir(parents=True)
+            path = directory / "summary.json"
+            path.write_text('{"status": "ok"}', encoding="utf-8")
+            Image.new("RGB", (2, 2), "black" if wrong_rgb and seed == "10"
+                      else "white").save(directory / "clean.png")
+            torch.save({"smoothed_density": torch.tensor([[1., 2.], [3., 4.]])},
+                       directory / "perturbation_density.pt")
+            context = LocalizationReportingTests().record(seed, "a", 0, weight)["context"]
+            if separate_model and seed == "10":
+                context["model"] = "vgg16"
+            contexts[path] = context
+            samples.append(path)
+            if name == "a":
+                values = [[4., 3.], [2., 1.]] if seed == "2" else [[1., 2.], [3., 4.]]
+                if invalid_baseline and seed == "2":
+                    values[0][0] = float("nan")
+                torch.save(torch.tensor(values), directory / "clean_map.pt")
+            # The other approach deliberately has no Clean saliency map.
+        output = root / "records.json"
+        with patch("evaluate_script.run_localization_iou.discover_samples", return_value=samples), \
+                patch("evaluate_script.run_localization_iou.sample_context",
+                      side_effect=lambda path, summary: contexts[path]), \
+                patch("evaluate_script.run_localization_iou.align_target",
+                      return_value=np.array([[True, False], [True, False]])) as align, \
+                patch("evaluate_script.run_localization_iou.load_clean_map",
+                      wraps=load_clean_map) as load:
+            evaluate_iou([
+                "--input-dirs", str(root), "--imagenet-root", str(source),
+                "--mask-root", str(masks), "--output-dir", str(root / "reports"),
+                "--records-output", str(output), "--top-k-percent", "50",
+            ])
+        return json.loads(output.read_text(encoding="utf-8"))["records"], load, align
+
+    def test_first_numeric_seed_map_is_scored_once_and_reused_across_approaches_and_seeds(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            records, load, align = self.evaluate(root)
+            self.assertEqual(len(records), 3)
+            load.assert_called_once_with(root / "2" / "a" / "n001" / "a")
+            self.assertEqual(align.call_count, 3)
+            self.assertEqual({record["clean_baseline_seed"] for record in records}, {"2"})
+            self.assertEqual({record["clean_baseline_dir"] for record in records},
+                             {str(root / "2" / "a" / "n001" / "a")})
+            self.assertEqual(len({record["clean_binary_sha256"] for record in records}), 1)
+            for record in records:
+                self.assertAlmostEqual(record["clean_iou"], 1 / 3)
+                self.assertAlmostEqual(record["perturbation_iou"], 1 / 3)
+                self.assertEqual(record["protocol"]["clean_baseline_selection"],
+                                 "first_seed_then_path_per_model_explainer_sample")
+            report = json.loads(next((root / "reports").glob(
+                "localization_*/statistics.json")).read_text(encoding="utf-8"))
+            clean = next(cell for cell in report["cells"] if cell["approach"] == "clean")
+            self.assertEqual(clean["iou"]["n_seeds"], 2)
+            self.assertEqual(clean["iou"]["std"], 0)
+
+    def test_different_models_select_separate_baselines(self):
+        with tempfile.TemporaryDirectory() as directory:
+            records, load, _ = self.evaluate(Path(directory), separate_model=True)
+            self.assertEqual(load.call_count, 2)
+            self.assertEqual({record["clean_baseline_seed"] for record in records}, {"2", "10"})
+            self.assertEqual(len({record["clean_binary_sha256"] for record in records}), 2)
+
+    def test_changed_clean_rgb_is_still_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(ValueError, "Clean RGB/GT differs from shared baseline"):
+                self.evaluate(Path(directory), wrong_rgb=True)
+
+    def test_invalid_first_seed_map_is_not_silently_replaced(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(ValueError, "finite 2D array"):
+                self.evaluate(Path(directory), invalid_baseline=True)
 
 
 if __name__ == "__main__":

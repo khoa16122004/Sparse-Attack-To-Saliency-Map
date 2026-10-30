@@ -173,9 +173,10 @@ python -m evaluate_script.run_localization_iou \
     --top-k-percent 80 --output-dir result_latexs
 ```
 
-Input run roots must retain the successful sample summaries, `clean.png`,
-`clean_map.png` (or `clean_map.pt`) and `perturbation_density.pt`, in the
-existing `strategy-*/class/image_stem/` layout. The combined runner additionally
+Input run roots must retain the successful sample summaries, `clean.png`
+and `perturbation_density.pt`, in the existing `strategy-*/class/image_stem/`
+layout. The selected Clean baseline must also retain `clean_map.png` (or
+`clean_map.pt`); other runs' Clean maps are not read. The combined runner additionally
 requires the precomputed `faithfulness.json` files. It **does not calculate
 new Ins/Del/IMD model predictions**, and does not import SAM3 or load a model.
 The CPU environment needs NumPy, Pillow, PyTorch, torchvision and SciPy.
@@ -190,6 +191,16 @@ IoU protocol:
 - Use model-default resize and center-crop coordinates, nearest-neighbor
   interpolation for binary GT. Verify the transformed source RGB image against
   saved `clean.png` before scoring; wrong images/transforms fail explicitly.
+- For each (model, explainer, class, image), read and score Clean only once
+  from the first seed with a successful sample surviving the CLI filters.
+  Numeric seeds sort numerically; nonnumeric seeds follow in lexical order.
+  Within that seed, choose the first sample by sorted full path, independently
+  of input-root argument order. Reuse this baseline across all seeds and
+  approaches, not each run's own Clean map. Log the selected source and save
+  `clean_baseline_dir`/`clean_baseline_seed` in the exact records (also retained
+  in combined-table provenance). Every run must still have matching Clean RGB
+  and GT. This is a shared-baseline protocol, not independent Clean trials;
+  identical sample sets therefore give zero Clean variation across seeds.
 - New batch attacks save the unquantized `clean_map.pt`. Older runs use the
   inverse of the project's RGB heatmap ramp, **not grayscale luminance**;
   quantization ties are recorded in the protocol. Density uses the saved

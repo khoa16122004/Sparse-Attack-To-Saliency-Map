@@ -125,6 +125,9 @@ def attach_localization(records, localization_records):
             key: localization[key]
             for key in ("clean_rgb_sha256", "gt_mask_sha256", "clean_binary_sha256")
         }
+        for key in ("clean_baseline_dir", "clean_baseline_seed"):
+            if key in localization:
+                record["localization_provenance"][key] = localization[key]
         result.append(record)
     if indexed:
         raise ValueError(f"Localization samples have no faithfulness scores: {list(indexed)[:3]}")
