@@ -36,6 +36,23 @@ The command above creates these main files:
 
 The terminal also prints an `Attack summary`, including clean/adv predictions, `l0_distance`, `margin_loss`, `saliency_loss`, and more.
 
+### Attack LaTeX tables from multiple roots
+
+```sh
+python -m evaluate_latex_generate.generate_tables \
+    --attack-input-dirs path/to/preferred_runs path/to/reruns \
+    --duplicate-runs first --output-dir result_latexs --no-ttest
+```
+
+Duplicate attack runs are rejected by default. Use `--duplicate-runs first`
+only for copies or reruns: the first run encountered for each
+`(model, explainer, approach, seed, strategy, eps, loss_type)` is kept.
+Roots are processed in command-line order; within each root, the loader's
+run order determines priority. Each discarded run is reported on stderr with
+both paths and recorded under `duplicate_runs` in the table's `statistics.json`.
+The same option works with `--all-runs-json file_a.json file_b.json`.
+It does not merge split sample sets and cannot be used with faithfulness inputs.
+
 ### Faithfulness scoring
 
 Activate the project's Python environment with CUDA-enabled PyTorch, then run

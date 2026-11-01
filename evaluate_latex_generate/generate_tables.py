@@ -70,12 +70,15 @@ def add_seed(cells, key, seed, values, sample_ids=None):
     cells[key][seed] = {"metrics": values, "sample_ids": sample_ids}
 
 
-def attack_groups(runs):
+def attack_groups(runs, *, duplicate_runs="error", skipped_runs=None):
+    if duplicate_runs not in ("error", "first"):
+        raise ValueError(f"Unsupported duplicate run policy: {duplicate_runs}")
     groups = {}
     seen_paths = set()
+    selected_paths = {}
     for run in runs:
         path = run.run_dir.resolve()
-        if path in seen_paths:
+        if path in seen_paths and duplicate_runs == "error":
             raise ValueError(f"Duplicate attack run: {path}")
         seen_paths.add(path)
         if run.seed in ("", "default", "unknown", "None"):
@@ -90,12 +93,32 @@ def attack_groups(runs):
             "algorithm": run_score._normalize_algorithm(run.algorithm),
             "w_m": run.w_m, "w_s": run.w_s,
         })
+        key = cell_key(run.model, run.explain_method, approach)
+        identity = (config_key(config), key, str(run.seed))
+        if identity in selected_paths:
+            kept_path = selected_paths[identity]
+            message = (
+                f"Duplicate run for {key}, seed={run.seed}, configuration={config}; "
+                f"kept={kept_path}; skipped={path}"
+            )
+            if duplicate_runs == "error":
+                raise ValueError(message + "; do not mix repeated runs")
+            print(f"[WARN] {message}", file=sys.stderr)
+            if skipped_runs is not None:
+                skipped_runs.append({
+                    "configuration": config, "model": key[0],
+                    "explain_method": key[1], "approach": key[2],
+                    "seed": str(run.seed), "kept_run_dir": str(kept_path),
+                    "skipped_run_dir": str(path),
+                })
+            continue
         # H-score must be computed within each seed, before averaging seeds.
         values = {
             "asr": run.asr, "sro": run.spearman,
             "h_score": run_score._h_score(run.asr, run.spearman),
         }
-        add_seed(cells, cell_key(run.model, run.explain_method, approach), run.seed, values)
+        add_seed(cells, key, run.seed, values)
+        selected_paths[identity] = path
     return groups
 
 
@@ -372,6 +395,8 @@ def main(argv=None):
                         help="Roots containing per-sample faithfulness.json")
     parser.add_argument("--localization-records", type=Path,
                         help="Exact records JSON from run_localization_iou; adds IoU to faithfulness tables")
+    parser.add_argument("--duplicate-runs", choices=("error", "first"), default="error",
+                        help="Attack runs only: reject duplicates or keep the first run in input order")
     parser.add_argument("--output-dir", type=Path, default=TEMPLATE_DIR / "generated")
     parser.add_argument("--use-ttest", dest="use_ttest", action="store_true", default=True)
     parser.add_argument("--no-ttest", dest="use_ttest", action="store_false")
@@ -384,12 +409,15 @@ def main(argv=None):
     parser.add_argument("--loss-type")
     parser.add_argument("--strategy")
     args = parser.parse_args(argv)
+    if args.faithfulness_input_dirs and args.duplicate_runs != "error":
+        parser.error("--duplicate-runs first only applies to attack inputs")
     if args.localization_records and not args.faithfulness_input_dirs:
         parser.error("--localization-records requires --faithfulness-input-dirs")
     if not 0 < args.ttest_alpha < 1:
         parser.error("--ttest-alpha must be between 0 and 1")
     if not 0 <= args.precision <= 12:
         parser.error("--precision must be between 0 and 12")
+    skipped_runs = []
     if args.faithfulness_input_dirs:
         paths = set()
         for root in args.faithfulness_input_dirs:
@@ -419,7 +447,9 @@ def main(argv=None):
         else:
             for root in dict.fromkeys(path.resolve() for path in args.attack_input_dirs):
                 runs.extend(run_score._load_all_runs(root))
-        groups = attack_groups(runs)
+        groups = attack_groups(
+            runs, duplicate_runs=args.duplicate_runs, skipped_runs=skipped_runs,
+        )
         kind = "attack"
     groups = {
         key: cells for key, cells in groups.items()
@@ -446,6 +476,14 @@ def main(argv=None):
         if not report["cells"]:
             raise ValueError(f"No data matches the fixed {kind} template models/explainers: {key}")
         report["configuration"] = json.loads(key)
+        if kind == "attack":
+            report["duplicate_runs"] = {
+                "policy": args.duplicate_runs,
+                "skipped": [
+                    run for run in skipped_runs
+                    if run["configuration"] == report["configuration"]
+                ],
+            }
         folder = args.output_dir / (kind + "_" + hashlib.sha256(key.encode()).hexdigest()[:12])
         folder.mkdir(parents=True, exist_ok=True)
         (folder / "table.tex").write_text(latex, encoding="utf-8")

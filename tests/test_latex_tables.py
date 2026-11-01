@@ -1,11 +1,14 @@
 import copy
+import io
 import json
 import math
 import tempfile
 import unittest
+from contextlib import redirect_stderr
 from pathlib import Path
 from statistics import mean, stdev
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from evaluate_latex_generate import generate_tables as tables
 
@@ -106,6 +109,38 @@ class SeedStatisticsTests(unittest.TestCase):
         self.assertIn(r"0.8000 \pm --", latex)
         self.assertIsNone(report["cells"][0]["metrics"]["asr"]["std"])
         self.assertNotIn(r"\textcolor{blue}{\mathbf", latex)
+
+    def test_duplicate_first_keeps_metrics_and_logs_paths(self):
+        first = attack_run(1, run_dir=Path("preferred"), asr=0.3)
+        repeated = attack_run(1, run_dir=Path("rerun"), asr=0.9)
+        skipped = []
+        stderr = io.StringIO()
+        with redirect_stderr(stderr):
+            groups = tables.attack_groups(
+                [first, repeated, first, attack_run(2), attack_run(1, eps=50)],
+                duplicate_runs="first", skipped_runs=skipped,
+            )
+        cells = groups[tables.config_key({
+            "strategy": "uniform", "eps": 20, "loss_type": "margin_loss",
+        })]
+        entries = cells[("resnet50", "simple_gradient", "nsgaii")]
+        self.assertEqual(entries["1"]["metrics"]["asr"], 0.3)
+        self.assertEqual(len(entries), 2)
+        self.assertEqual(len(groups), 2)
+        self.assertEqual(len(skipped), 2)
+        self.assertEqual(skipped[0]["kept_run_dir"], str(first.run_dir.resolve()))
+        self.assertEqual(skipped[0]["skipped_run_dir"], str(repeated.run_dir.resolve()))
+        self.assertIn("[WARN]", stderr.getvalue())
+        self.assertIn(str(first.run_dir.resolve()), stderr.getvalue())
+        self.assertIn(str(repeated.run_dir.resolve()), stderr.getvalue())
+
+    def test_duplicate_error_identifies_both_paths(self):
+        first = attack_run(1, run_dir=Path("preferred"))
+        repeated = attack_run(1, run_dir=Path("rerun"))
+        with self.assertRaises(ValueError) as caught:
+            tables.attack_groups([first, repeated])
+        self.assertIn(str(first.run_dir.resolve()), str(caught.exception))
+        self.assertIn(str(repeated.run_dir.resolve()), str(caught.exception))
 
 
 class CombinedLocalizationTests(unittest.TestCase):
@@ -259,6 +294,42 @@ class PairedTests(unittest.TestCase):
 
 
 class TemplateTests(unittest.TestCase):
+    def test_cli_duplicate_policy_preserves_input_order_and_audit(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            first = attack_run(1, run_dir=root / "preferred", model="resnet18", asr=0.3)
+            repeated = attack_run(1, run_dir=root / "rerun", model="resnet18", asr=0.9)
+            for source, loader in (
+                ("--attack-input-dirs", "_load_all_runs"),
+                ("--all-runs-json", "_load_runs_from_json"),
+            ):
+                with self.subTest(source=source), patch.object(
+                    tables.run_score, loader, side_effect=[[first], [repeated]],
+                ) as load, redirect_stderr(io.StringIO()):
+                    output = root / loader
+                    tables.main([
+                        source, str(root / "a"), str(root / "b"),
+                        "--duplicate-runs", "first", "--no-ttest",
+                        "--output-dir", str(output),
+                    ])
+                    self.assertEqual(
+                        [call.args[0] for call in load.call_args_list],
+                        [(root / "a").resolve(), (root / "b").resolve()],
+                    )
+                    report_path = next(output.glob("*/statistics.json"))
+                    report = json.loads(report_path.read_text())
+                    self.assertEqual(report["cells"][0]["metrics"]["asr"]["mean"], 0.3)
+                    self.assertEqual(report["cells"][0]["metrics"]["asr"]["n_seeds"], 1)
+                    audit = report["duplicate_runs"]
+                    self.assertEqual(audit["policy"], "first")
+                    self.assertEqual(len(audit["skipped"]), 1)
+                    self.assertEqual(audit["skipped"][0]["kept_run_dir"], str(first.run_dir.resolve()))
+
+    def test_cli_rejects_attack_duplicate_policy_for_faithfulness(self):
+        with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as caught:
+            tables.main(["--faithfulness-input-dirs", ".", "--duplicate-runs", "first"])
+        self.assertEqual(caught.exception.code, 2)
+
     def test_structure_and_fixed_models(self):
         for kind in ("attack", "faithfulness"):
             with self.subTest(kind=kind):
