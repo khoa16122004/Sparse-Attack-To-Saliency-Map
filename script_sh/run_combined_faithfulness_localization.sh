@@ -8,14 +8,25 @@ cd -- "$REPO_DIR"
 export CUDA_VISIBLE_DEVICES=""
 
 PYTHON="${PYTHON:-python}"
-INPUT_DIR="${INPUT_DIR:-offical_faithfulness/server_run_seed}"
 LOCALIZATION_RECORDS="${LOCALIZATION_RECORDS:-faithfulness_aggregates/localization_records.json}"
 TABLE_DIR="${TABLE_DIR:-result_latexs}"
 
+# Add one faithfulness root per line; paths with spaces must stay quoted.
+INPUT_DIRS=(
+    "offical_faithfulness/server_run_seed"
+    # "/absolute/path/to/another_attack_dir"
+    # "/absolute/path/to/third_attack_dir"
+)
+
 if (( $# > 0 )); then
     INPUT_DIRS=("$@")
-else
+elif [[ -n "${INPUT_DIR:-}" ]]; then
     INPUT_DIRS=("$INPUT_DIR")
+fi
+
+if (( ${#INPUT_DIRS[@]} == 0 )); then
+    printf 'ERROR: configure at least one faithfulness input directory\n' >&2
+    exit 1
 fi
 
 for input_dir in "${INPUT_DIRS[@]}"; do

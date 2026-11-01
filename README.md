@@ -245,7 +245,18 @@ LOCALIZATION_RECORDS=faithfulness_aggregates/localization_records.json \
 ```
 
 Pass one or more run roots containing per-sample `faithfulness.json` files.
-The default root is `offical_faithfulness/server_run_seed`. Output is
+To run without arguments, edit the `INPUT_DIRS` array in the join-only runner,
+adding one quoted root per line, then run:
+
+```sh
+bash script_sh/run_combined_faithfulness_localization.sh
+```
+
+Command-line roots override the configured array; when no arguments are given,
+a non-empty `INPUT_DIR` environment variable overrides it with a single root.
+The array initially contains `offical_faithfulness/server_run_seed`.
+`LOCALIZATION_RECORDS` must cover exactly the samples in the selected roots
+after filtering. Output is
 `result_latexs/faithfulness_<hash>/table.tex` and `statistics.json`, with
 Ins / Del / IMD / IoU columns. The join-only runner defaults to three decimal
 places, SD as a lower-right subscript (`$0.277_{0.001}$`), and bold best means
