@@ -36,6 +36,17 @@ The command above creates these main files:
 
 The terminal also prints an `Attack summary`, including clean/adv predictions, `l0_distance`, `margin_loss`, `saliency_loss`, and more.
 
+### Experiment models
+
+The standard CNN models are `resnet18`, `vgg16`, and `densenet121`.
+The Transformer models are `vit_b_32`, `vit_b_16`, and Swin V2 Tiny
+(`swin_v2_t` in torchvision; `swin_v2` is also accepted by the shared loader
+and is the canonical reporting name). Attack and faithfulness tables use
+this same six-model order. Evaluation loads the model recorded in each run;
+it does not substitute ResNet-50 or EfficientNet for another architecture.
+Existing generated tables must be regenerated to update their model headings;
+do not rename old ResNet-50/EfficientNet experiment data as ResNet-18/DenseNet.
+
 ### Attack LaTeX tables from multiple roots
 
 ```sh

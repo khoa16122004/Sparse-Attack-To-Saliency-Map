@@ -78,6 +78,8 @@ def get_torchvision_model(
     pretrained=True,
     num_classes=None,
 ):
+    if model_name == "swin_v2":
+        model_name = "swin_v2_t"
     model_fn = getattr(tv_models, model_name)
 
     if pretrained:

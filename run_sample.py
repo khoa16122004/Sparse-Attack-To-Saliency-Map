@@ -38,7 +38,7 @@ def parse_args():
     parser.add_argument("--history-chart-output", type=str, default=None, help="Base path used to derive *_margin and *_saliency chart files")
     parser.add_argument("--margin-chart-output", type=str, default=None, help="Path to save margin score chart")
     parser.add_argument("--saliency-chart-output", type=str, default=None, help="Path to save saliency score chart")
-    parser.add_argument("--model", type=str, default="resnet50", help="Torchvision model name")
+    parser.add_argument("--model", type=str, default="resnet18", help="Torchvision model name")
     parser.add_argument("--label", type=int, default=None, help="True label index. If omitted, uses model prediction")
     parser.add_argument(
         "--explain-method",

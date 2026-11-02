@@ -9,9 +9,9 @@
 \toprule
 \multirow{2}{*}{Explain}
 & \multirow{2}{*}{Saliency Map}
-& \multicolumn{3}{c|}{ResNet-50}
+& \multicolumn{3}{c|}{ResNet-18}
 & \multicolumn{3}{c|}{VGG-16}
-& \multicolumn{3}{c}{EfficientNet-B0} \\
+& \multicolumn{3}{c}{DenseNet-121} \\
 \cmidrule(lr){3-5}
 \cmidrule(lr){6-8}
 \cmidrule(lr){9-11}

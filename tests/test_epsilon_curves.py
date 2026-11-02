@@ -11,7 +11,7 @@ from evaluate_latex_generate import plot_epsilon_curves as curves
 def report(eps):
     cells = []
     for approach in curves.APPROACHES:
-        for model, offset in (("resnet50", 0.0), ("vgg16", 0.2)):
+        for model, offset in (("resnet18", 0.0), ("vgg16", 0.2)):
             cells.append({
                 "model": model,
                 "explain_method": "simple_gradient",

@@ -22,6 +22,13 @@ except ImportError:
         return iterable
 
 
+MODEL_FAMILIES = (
+    ("resnet18", "vgg16", "densenet121"),
+    ("vit_b_32", "vit_b_16", "swin_v2"),
+)
+STANDARD_MODELS = tuple(model for family in MODEL_FAMILIES for model in family)
+
+
 @dataclass
 class RunStats:
     run_dir: Path
@@ -114,7 +121,12 @@ def _normalize_algorithm(name: str) -> str:
 
 
 def _normalize_model_name(name: str) -> str:
-    return str(name or "").strip().lower()
+    normalized = str(name or "").strip().lower().replace("-", "_")
+    return {
+        "resnet_18": "resnet18", "resnet_50": "resnet50",
+        "vgg_16": "vgg16", "densenet_121": "densenet121",
+        "swin_v2_t": "swin_v2",
+    }.get(normalized, normalized)
 
 
 def _parse_approach(approach: str) -> Dict[str, object]:
@@ -842,6 +854,8 @@ def _format_model_latex_name(model_name: str) -> str:
         "vgg19": "VGG19",
         "vit_b_32": "ViT-B-32",
         "vit-b-32": "ViT-B-32",
+        "vit_b_16": "ViT-B-16",
+        "swin_v2": "Swin-V2",
         "densenet121": "DenseNet121",
         "inception_v3": "InceptionV3",
     }
@@ -849,7 +863,7 @@ def _format_model_latex_name(model_name: str) -> str:
 
 
 def _sort_model_keys(models: List[str]) -> List[str]:
-    priority = {"resnet18": 0, "vgg16": 1, "vit_b_32": 2, "vit-b-32": 2}
+    priority = {model: index for index, model in enumerate(STANDARD_MODELS)}
     return sorted(models, key=lambda m: (priority.get(_normalize_model_name(m), 99), m))
 
 
@@ -1100,7 +1114,7 @@ def _build_overleaf_table(
         ("ga_1.0", r"GA ($\lambda=1.0$)"),
         ("nsgaii", r"\textbf{NSGA-II}"),
     ]
-    standard_models: List[str] = ["resnet18", "vgg16", "vit_b_32"]
+    standard_models = STANDARD_MODELS
 
     if ttest_metrics is None:
         ttest_metrics = ["h_score"]

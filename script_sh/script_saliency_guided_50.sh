@@ -53,7 +53,7 @@ export CUDA_VISIBLE_DEVICES=$BEST_GPU
 # =========================================================
 # RUN BATCH WITH SALIENCY-GUIDED INIT
 # =========================================================
-MODEL_NAMES="vgg16 resnet50 densenet121 vit_b_32"
+MODEL_NAMES="${MODEL_NAMES:-resnet18 vgg16 densenet121 vit_b_32 vit_b_16 swin_v2_t}"
 NUM_SAMPLE=50
 EPSILONS="5 10 20 50"
 FITNESSES="margin_saliency"

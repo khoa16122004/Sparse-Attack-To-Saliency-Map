@@ -16,7 +16,7 @@ from evaluate_latex_generate import generate_tables as tables
 def attack_run(seed, weight=None, **changes):
     values = dict(
         run_dir=Path(f"seed_{seed}_weight_{weight}"),
-        model="resnet50", explain_method="simple_gradient",
+        model="resnet18", explain_method="simple_gradient",
         strategy="uniform", eps=20, loss_type="margin_loss", seed=str(seed),
         algorithm="nsgaii" if weight is None else "weighted_sum_ga",
         w_m=weight, w_s=None if weight is None else 1 - weight,
@@ -37,7 +37,7 @@ def faith_record(seed, sample, weight, insertion):
         "schema_version": 1, "status": "ok",
         "sample_dir": str(Path(str(seed)) / approach / "class" / sample),
         "context": {
-            "model": "resnet50", "explain_method": "simple_gradient",
+            "model": "resnet18", "explain_method": "simple_gradient",
             "eps": 20, "loss_type": "margin_loss", "seed": str(seed),
             "algorithm": "nsgaii" if weight is None else "weighted_sum_ga",
             "strategy": "uniform", "w_m": weight,
@@ -57,7 +57,7 @@ class SeedStatisticsTests(unittest.TestCase):
         ])
         cells = next(iter(groups.values()))
         stat = tables.summarize_cells(cells, tables.METRICS["attack"])[
-            ("resnet50", "simple_gradient", "nsgaii")
+            ("resnet18", "simple_gradient", "nsgaii")
         ]["h_score"]
         values = [tables.run_score._h_score(0.2, 0.1), tables.run_score._h_score(0.9, 0.7)]
         self.assertAlmostEqual(stat["mean"], mean(values))
@@ -75,11 +75,11 @@ class SeedStatisticsTests(unittest.TestCase):
         cells = next(iter(tables.faithfulness_groups(records).values()))
         self.assertEqual(len(cells), 5)
         stats = tables.summarize_cells(cells, tables.METRICS["faithfulness"])
-        stat = stats[("resnet50", "simple_gradient", "clean")]["ins_auc"]
+        stat = stats[("resnet18", "simple_gradient", "clean")]["ins_auc"]
         self.assertAlmostEqual(stat["mean"], 0.55)
         self.assertAlmostEqual(stat["std"], stdev([0.2, 0.9]))
         self.assertEqual(stat["n_seeds"], 2)
-        self.assertEqual(len(cells[("resnet50", "simple_gradient", "clean")]["2"]["sample_ids"]), 2)
+        self.assertEqual(len(cells[("resnet18", "simple_gradient", "clean")]["2"]["sample_ids"]), 2)
 
     def test_configurations_are_not_mixed(self):
         runs = [
@@ -123,7 +123,7 @@ class SeedStatisticsTests(unittest.TestCase):
         cells = groups[tables.config_key({
             "strategy": "uniform", "eps": 20, "loss_type": "margin_loss",
         })]
-        entries = cells[("resnet50", "simple_gradient", "nsgaii")]
+        entries = cells[("resnet18", "simple_gradient", "nsgaii")]
         self.assertEqual(entries["1"]["metrics"]["asr"], 0.3)
         self.assertEqual(len(entries), 2)
         self.assertEqual(len(groups), 2)
@@ -159,7 +159,7 @@ class CombinedLocalizationTests(unittest.TestCase):
         joined = tables.attach_localization(records, localization)
         cells = next(iter(tables.faithfulness_groups(joined, include_iou=True).values()))
         stats = tables.summarize_cells(cells, (*tables.METRICS["faithfulness"], "iou"))
-        ours = stats[("resnet50", "simple_gradient", "nsgaii")]["iou"]
+        ours = stats[("resnet18", "simple_gradient", "nsgaii")]["iou"]
         self.assertAlmostEqual(ours["mean"], 0.7)
         self.assertAlmostEqual(ours["std"], stdev([0.5, 0.9]))
         self.assertNotIn("iou", records[0]["maps"]["clean"])
@@ -280,7 +280,7 @@ class PairedTests(unittest.TestCase):
     def test_bonferroni_threshold(self):
         cells = self.cells()
         for seed, value in zip(range(1, 6), [0.01, 0.02, 0.03, 0.04, 0.13]):
-            cells[("resnet50", "simple_gradient", "nsgaii")][str(seed)]["metrics"]["asr"] = 0.4 + value
+            cells[("resnet18", "simple_gradient", "nsgaii")][str(seed)]["metrics"]["asr"] = 0.4 + value
         _, report = tables.render_table("attack", cells, correction="bonferroni")
         tests = [
             test for test in report["ttest"]["comparisons"]
@@ -340,8 +340,72 @@ class TemplateTests(unittest.TestCase):
                 self.assertEqual(len(rows), expected_rows)
                 self.assertTrue(all(line.count("&") == 10 for line in rows))
                 self.assertEqual(len(report["missing_cells"]), expected_rows * 3)
-                self.assertIn("Densenet-121" if kind == "attack" else "EfficientNet-B0", latex)
+                headings = [
+                    "ResNet-18", "VGG-16", "DenseNet-121",
+                    "ViT-B-32", "ViT-B-16", "Swin-V2",
+                ]
+                positions = [latex.index("{" + heading + "}") for heading in headings]
+                self.assertEqual(positions, sorted(positions))
+                self.assertNotIn("ResNet-50", latex)
+                self.assertNotIn("EfficientNet", latex)
                 self.assertNotIn("five independent random seeds", latex)
+
+    def test_all_six_models_populate_their_labeled_columns(self):
+        families = (
+            ("resnet18", "vgg16", "densenet121"),
+            ("vit_b_32", "vit_b_16", "swin_v2_t"),
+        )
+        self.assertEqual(tables.MODELS["attack"], tables.MODELS["faithfulness"])
+        runs = []
+        records = []
+        for family, models in enumerate(families):
+            method = "simple_gradient" if family == 0 else "raw_attention"
+            for index, model in enumerate(models):
+                value = (index + 1) / 10
+                runs.append(attack_run(
+                    1, model=model, explain_method=method,
+                    run_dir=Path(model), asr=value,
+                ))
+                record = faith_record(1, model, None, value)
+                record["context"].update(model=model, explain_method=method)
+                records.append(record)
+        for kind, groups, include_iou in (
+            ("attack", tables.attack_groups(runs), False),
+            ("faithfulness", tables.faithfulness_groups(records), False),
+        ):
+            with self.subTest(kind=kind):
+                cells = next(iter(groups.values()))
+                latex, report = tables.render_table(
+                    kind, cells, use_ttest=False, include_iou=include_iou,
+                )
+                self.assertEqual(report["excluded_cells"], [])
+                self.assertEqual(
+                    {cell["model"] for cell in report["cells"]},
+                    set(tables.run_score.STANDARD_MODELS),
+                )
+                rows = [line for line in latex.splitlines() if line.startswith(r"& \textbf{Ours}")]
+                self.assertEqual(len(rows), 8)
+                for family in range(2):
+                    columns = rows[family * 4].split("&")[2:]
+                    for index in range(3):
+                        self.assertIn(f"{(index + 1) / 10:.4f}", columns[index * 3])
+
+    def test_model_aliases_and_legacy_models_are_not_relabelled(self):
+        for alias, canonical in (
+            ("ResNet-18", "resnet18"), ("vgg_16", "vgg16"),
+            ("DenseNet-121", "densenet121"), ("ViT-B-32", "vit_b_32"),
+            ("ViT-B-16", "vit_b_16"), ("swin_v2_t", "swin_v2"),
+        ):
+            with self.subTest(alias=alias):
+                self.assertEqual(tables.canonical_model(alias), canonical)
+        self.assertEqual(tables.canonical_model("resnet50"), "resnet50")
+        self.assertEqual(tables.canonical_model("efficientnet_b0"), "efficientnet_b0")
+        self.assertEqual(
+            tables.run_score._sort_model_keys(list(reversed(tables.run_score.STANDARD_MODELS))),
+            list(tables.run_score.STANDARD_MODELS),
+        )
+        self.assertEqual(tables.run_score._format_model_latex_name("swin_v2_t"), "Swin-V2")
+        self.assertEqual(tables.run_score._format_model_latex_name("vit_b_16"), "ViT-B-16")
 
     def test_cli_writes_both_outputs_and_does_not_change_template(self):
         template = tables.TEMPLATE_DIR / "faithfulness.text"

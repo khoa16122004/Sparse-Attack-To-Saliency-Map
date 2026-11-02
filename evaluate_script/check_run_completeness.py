@@ -11,9 +11,9 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 if __package__:
-    from .run_score import _normalize_algorithm, _parse_approach, _resolve_run_context
+    from .run_score import STANDARD_MODELS, _normalize_algorithm, _parse_approach, _resolve_run_context
 else:
-    from run_score import _normalize_algorithm, _parse_approach, _resolve_run_context
+    from run_score import STANDARD_MODELS, _normalize_algorithm, _parse_approach, _resolve_run_context
 
 
 @dataclass(frozen=True, order=True)
@@ -292,7 +292,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--expected-seeds", nargs="+", default=[
         str(seed) for seed in range(22520691, 22520696)
     ])
-    parser.add_argument("--expected-models", nargs="+", default=["resnet18", "vgg16", "vit_b_32"])
+    parser.add_argument("--expected-models", nargs="+", default=list(STANDARD_MODELS))
     parser.add_argument("--expected-explain-methods", nargs="+", default=[
         "simple_gradient", "input_gradient", "grad_cam", "raw_attention"
     ])

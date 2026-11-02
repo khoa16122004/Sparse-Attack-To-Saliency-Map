@@ -6,11 +6,18 @@ from pathlib import Path
 from unittest.mock import patch
 
 from evaluate_script.check_run_completeness import (
-    Combination, InventoryRun, build_report, expected_grid, load_cache, scan_root,
+    Combination, InventoryRun, build_report, expected_grid, load_cache, parse_args, scan_root,
 )
 
 
 class CompletenessTests(unittest.TestCase):
+    def test_default_models_cover_three_cnns_and_three_transformers(self):
+        with patch("sys.argv", ["check_run_completeness"]):
+            args = parse_args()
+        self.assertEqual(args.expected_models, [
+            "resnet18", "vgg16", "densenet121", "vit_b_32", "vit_b_16", "swin_v2",
+        ])
+
     def test_standard_grid_and_missing_entire_seed(self):
         args = argparse.Namespace(
             seed="all", model="all", explain_method="all", algorithm="all", eps="all",

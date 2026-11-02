@@ -25,14 +25,8 @@ METRICS = {
     "faithfulness": ("ins_auc", "del_auc", "imd"),
 }
 MODELS = {
-    "attack": (
-        ("resnet18", "vgg16", "densenet121"),
-        ("vit_b_32", "vit_b_16", "swin_v2"),
-    ),
-    "faithfulness": (
-        ("resnet18", "vgg16", "densenet121"),
-        ("vit_b_32", "vit_b_16", "swin_v2"),
-    ),
+    "attack": run_score.MODEL_FAMILIES,
+    "faithfulness": run_score.MODEL_FAMILIES,
 }
 METHODS = (
     ("simple_gradient", "input_gradient", "grad_cam", "xgrad_cam"),
@@ -46,11 +40,7 @@ METHOD_ALIASES = {
 
 
 def canonical_model(name):
-    name = name.strip().lower().replace("-", "_")
-    return {
-        "resnet_50": "resnet50", "vgg_16": "vgg16",
-        "densenet_121": "densenet121", "swin_v2_t": "swin_v2",
-    }.get(name, name)
+    return run_score._normalize_model_name(name)
 
 
 def cell_key(model, method, approach):
