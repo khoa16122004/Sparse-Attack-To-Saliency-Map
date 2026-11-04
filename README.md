@@ -226,6 +226,16 @@ requires the precomputed `faithfulness.json` files. It **does not calculate
 new Ins/Del/IMD model predictions**, and does not import SAM3 or load a model.
 The CPU environment needs NumPy, Pillow, PyTorch, torchvision and SciPy.
 
+Localization report generation streams JSON and CSV to disk rather than building
+full JSON strings and CSV row lists in memory. Sample records and duplicate-check
+indexes are still kept in memory; seed means, sample SD and duplicate checks are
+unchanged. Progress bars distinguish grouping, validation, CSV aggregation and JSON
+output. With `--records-output` (enabled by the CPU shell runner), records are saved
+before report rendering. JSON output uses a temporary file followed by replacement,
+so a failed serialization does not replace an existing completed JSON file.
+If report rendering fails after `[SAVED]`, the combined runner can reuse that records
+file through `LOCALIZATION_RECORDS` without recalculating IoU.
+
 IoU protocol:
 
 - Compare Clean saliency and each GASS/Ours perturbation-density map with the

@@ -1,3 +1,4 @@
+import csv
 import json
 import sys
 import tempfile
@@ -15,7 +16,7 @@ from evaluate_script.generate_imagenet_masks import (
 )
 from evaluate_script.run_localization_iou import (
     align_target, binary_iou, load_clean_map, main as evaluate_iou, save_reports,
-    threshold_mask, top_k_mask,
+    threshold_mask, top_k_mask, write_json,
 )
 
 
@@ -298,6 +299,25 @@ class LocalizationReportingTests(unittest.TestCase):
             self.assertIn(r"80\%", latex)
             self.assertIn(r"grad\_cam", latex)
             self.assertTrue((folder / "samples.csv").is_file())
+            with (folder / "samples.csv").open(newline="", encoding="utf-8") as handle:
+                rows = list(csv.DictReader(handle))
+            self.assertEqual(len(rows), 7)
+            self.assertEqual(
+                [(row["seed"], row["image_stem"], float(row["iou"]))
+                 for row in rows if row["approach"] == "clean"],
+                [("1", "a", 0.0), ("1", "b", 0.0), ("2", "a", 1.0)],
+            )
+            self.assertEqual(report["records"], records)
+
+    def test_streamed_json_preserves_existing_file_on_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "records.json"
+            write_json(path, {"schema_version": 1, "records": []})
+            original = path.read_bytes()
+            with self.assertRaises(ValueError):
+                write_json(path, {"value": float("nan")})
+            self.assertEqual(path.read_bytes(), original)
+            self.assertFalse(path.with_name("records.json.tmp").exists())
 
     def test_duplicate_approach_is_rejected(self):
         record = self.record("1", "a", 0.2)
@@ -330,6 +350,17 @@ class LocalizationReportingTests(unittest.TestCase):
 
 
 class SharedCleanBaselineTests(unittest.TestCase):
+    def test_records_are_saved_before_report_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with patch("evaluate_script.run_localization_iou.save_reports",
+                       side_effect=PermissionError("report output denied")):
+                with self.assertRaisesRegex(PermissionError, "report output denied"):
+                    self.evaluate(root)
+            payload = json.loads((root / "records.json").read_text(encoding="utf-8"))
+            self.assertEqual(payload["schema_version"], 1)
+            self.assertEqual(len(payload["records"]), 3)
+
     def evaluate(self, root, *, wrong_rgb=False, invalid_baseline=False, separate_model=False):
         source = root / "images"
         masks = root / "masks"

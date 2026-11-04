@@ -108,9 +108,21 @@ def latex_escape(value):
     return str(value).replace("\\", r"\textbackslash{}").replace("_", r"\_").replace("%", r"\%")
 
 
+def write_json(path, payload):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(path.name + ".tmp")
+    try:
+        with temporary.open("w", encoding="utf-8") as handle:
+            json.dump(payload, handle, indent=2, allow_nan=False)
+            handle.write("\n")
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def save_reports(records, output_dir, precision):
     groups = defaultdict(list)
-    for record in records:
+    for record in tqdm(records, desc="Group localization records", unit="sample"):
         context = record["context"]
         config = {
             "eps": context["eps"], "loss_type": context["loss_type"],
@@ -118,10 +130,10 @@ def save_reports(records, output_dir, precision):
             "perturbation_metadata": record["perturbation_metadata"],
         }
         groups[json.dumps(config, sort_keys=True, allow_nan=False)].append(record)
-    for config, entries in sorted(groups.items()):
+    for config, entries in tqdm(sorted(groups.items()), desc="Localization reports", unit="config"):
         buckets = defaultdict(dict)
         clean_origins = {}
-        for record in entries:
+        for record in tqdm(entries, desc="Validate/deduplicate IoU", unit="sample", leave=False):
             context = record["context"]
             identity = (str(context["seed"]), *record["identity"])
             for name, value in (("clean", record["clean_iou"]),
@@ -155,21 +167,27 @@ def save_reports(records, output_dir, precision):
                     clean_origins[(key, identity)] = record.get("sample_dir", "<unspecified>")
                 buckets[key][identity] = (value, fingerprint)
         cells = defaultdict(dict)
-        sample_rows = []
-        for key, samples in sorted(buckets.items()):
-            by_seed = defaultdict(list)
-            for (seed, class_id, stem), (value, _fingerprint) in sorted(samples.items()):
-                by_seed[seed].append(((class_id, stem), value))
-                sample_rows.append(dict(
-                    model=key[0], explain_method=key[1], approach=key[2],
-                    seed=seed, class_id=class_id, image_stem=stem, iou=value,
-                ))
-            for seed, values in by_seed.items():
-                add_seed(cells, key, seed, {"iou": float(np.mean([v for _, v in values]))},
-                         [list(identity) for identity, _ in values])
-        summary = summarize_cells(cells, ("iou",))
         folder = output_dir / ("localization_" + hashlib.sha256(config.encode()).hexdigest()[:12])
         folder.mkdir(parents=True, exist_ok=True)
+        with (folder / "samples.csv").open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=[
+                "model", "explain_method", "approach", "seed", "class_id", "image_stem", "iou",
+            ])
+            writer.writeheader()
+            with tqdm(total=sum(len(samples) for samples in buckets.values()),
+                      desc="Aggregate/write IoU CSV", unit="sample", leave=False) as progress:
+                for key, samples in sorted(buckets.items()):
+                    by_seed = defaultdict(list)
+                    for (seed, class_id, stem), (value, _fingerprint) in sorted(samples.items()):
+                        by_seed[seed].append(value)
+                        writer.writerow(dict(
+                            model=key[0], explain_method=key[1], approach=key[2],
+                            seed=seed, class_id=class_id, image_stem=stem, iou=value,
+                        ))
+                        progress.update(1)
+                    for seed, values in by_seed.items():
+                        add_seed(cells, key, seed, {"iou": float(np.mean(values))})
+        summary = summarize_cells(cells, ("iou",))
         report = {
             "configuration": json.loads(config), "averaging": "equal_weight_seed_means",
             "std": "sample_std_ddof_1", "cells": [
@@ -177,13 +195,9 @@ def save_reports(records, output_dir, precision):
                 for key, stats in sorted(summary.items())
             ], "records": entries,
         }
-        (folder / "statistics.json").write_text(
-            json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8",
-        )
-        with (folder / "samples.csv").open("w", newline="", encoding="utf-8") as handle:
-            writer = csv.DictWriter(handle, fieldnames=list(sample_rows[0]))
-            writer.writeheader()
-            writer.writerows(sample_rows)
+        with tqdm(total=1, desc="Write IoU statistics JSON", unit="file", leave=False) as progress:
+            write_json(folder / "statistics.json", report)
+            progress.update(1)
         protocol = entries[0]["protocol"]
         if "threshold" in protocol:
             mask_description = (
@@ -220,7 +234,7 @@ def save_reports(records, output_dir, precision):
             lines.append(r"\hline")
         lines.extend([r"\end{tabular}", r"\end{table*}", ""])
         (folder / "table.tex").write_text("\n".join(lines), encoding="utf-8")
-        print(f"[OK] {folder}: samples.csv, statistics.json, table.tex")
+        tqdm.write(f"[OK] {folder}: samples.csv, statistics.json, table.tex")
 
 
 def main(argv=None):
@@ -359,15 +373,12 @@ def main(argv=None):
         })
     if not records:
         raise ValueError("No matching successful samples for localization IoU")
-    with tqdm(total=1, desc="Write localization reports", unit="report") as progress:
-        save_reports(records, args.output_dir, args.precision)
-        progress.update(1)
     if args.records_output:
-        args.records_output.parent.mkdir(parents=True, exist_ok=True)
-        args.records_output.write_text(
-            json.dumps({"schema_version": 1, "records": records}, indent=2, allow_nan=False) + "\n",
-            encoding="utf-8",
-        )
+        with tqdm(total=1, desc="Save localization records", unit="file") as progress:
+            write_json(args.records_output, {"schema_version": 1, "records": records})
+            progress.update(1)
+        tqdm.write(f"[SAVED] {args.records_output}")
+    save_reports(records, args.output_dir, args.precision)
 
 
 if __name__ == "__main__":
