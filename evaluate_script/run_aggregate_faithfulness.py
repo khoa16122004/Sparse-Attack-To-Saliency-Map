@@ -116,7 +116,7 @@ def sample_key(payload):
 def comparison_samples(records):
     buckets = defaultdict(dict)
     clean_samples = {}
-    for payload in tqdm(records, desc="Validate aggregate inputs", unit="sample"):
+    for payload in records:
         context = payload["context"]
         block = block_key(context)
         identity = sample_key(payload)
@@ -256,7 +256,7 @@ def save_curves(output_dir, rows):
 def aggregate_records(records, output_dir, plot_blocks=None):
     groups = defaultdict(list)
     seen_samples = set()
-    for payload in records:
+    for payload in tqdm(records, desc="Validate aggregate inputs", unit="sample"):
         validate_record(payload, payload["sample_dir"])
         identity = payload["sample_dir"]
         if identity in seen_samples:
