@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from PIL import Image
+from tqdm.auto import tqdm
 
 from core.perturbation_archive import normalize_density
 from evaluate_latex_generate.generate_tables import add_seed, cell_key, summarize_cells
@@ -264,21 +265,23 @@ def main(argv=None):
     if not args.imagenet_root.is_dir():
         raise NotADirectoryError(args.imagenet_root)
     manifest_path = args.mask_root / "mask_manifest.json"
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    with tqdm(total=1, desc="Read mask manifest", unit="file") as progress:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        progress.update(1)
     if manifest.get("schema_version") != 1 or manifest.get("status") != "complete":
         raise ValueError(f"{manifest_path}: expected a completed schema-version-1 mask generation")
     index = {}
-    for relative, item in manifest["images"].items():
+    for relative, item in tqdm(manifest["images"].items(), desc="Index masks", unit="image"):
         relative = Path(relative)
         key = (relative.parts[0], relative.stem)
         if key in index:
             raise ValueError(f"Ambiguous class/image stem in mask manifest: {key}")
         index[key] = (relative, item)
     samples = []
-    for path in discover_samples(args.input_dirs):
+    for path in tqdm(discover_samples(args.input_dirs), desc="Read sample summaries", unit="sample"):
         summary = json.loads(path.read_text(encoding="utf-8"))
         if summary.get("status") != "ok":
-            print(f"[SKIP] {path}: attack status={summary.get('status')}")
+            tqdm.write(f"[SKIP] {path}: attack status={summary.get('status')}")
             continue
         context = sample_context(path, summary)
         if ((args.eps is not None and context["eps"] not in args.eps)
@@ -296,7 +299,7 @@ def main(argv=None):
     records = []
     clean_baselines = {}
     manifest_hash = sha256(manifest_path)
-    for path, summary, context in samples:
+    for path, summary, context in tqdm(samples, desc="Localization IoU (CPU)", unit="sample"):
         identity = (path.parent.parent.name, path.parent.name)
         relative, item = index[identity]
         source_path = args.imagenet_root / relative
@@ -307,7 +310,7 @@ def main(argv=None):
         if not target.any():
             if args.empty_gt == "error":
                 raise ValueError(f"{mask_path}: empty GT after crop; review prompt or explicitly use --empty-gt zero")
-            print(f"[EMPTY GT -> IoU=0] {path.parent}")
+            tqdm.write(f"[EMPTY GT -> IoU=0] {path.parent}")
         clean_rgb_hash = sha256(path.parent / "clean.png")
         baseline_key = (context["model"], context["explain_method"], *identity)
         if baseline_key not in clean_baselines:
@@ -322,7 +325,7 @@ def main(argv=None):
                 "clean_baseline_dir": str(path.parent),
                 "clean_baseline_seed": str(context["seed"]),
             }
-            print(f"[CLEAN BASELINE] {baseline_key}: seed={context['seed']} {path.parent}")
+            tqdm.write(f"[CLEAN BASELINE] {baseline_key}: seed={context['seed']} {path.parent}")
         baseline = clean_baselines[baseline_key]
         if (clean_rgb_hash != baseline["clean_rgb_sha256"]
                 or item["mask_sha256"] != baseline["gt_mask_sha256"]):
@@ -356,7 +359,9 @@ def main(argv=None):
         })
     if not records:
         raise ValueError("No matching successful samples for localization IoU")
-    save_reports(records, args.output_dir, args.precision)
+    with tqdm(total=1, desc="Write localization reports", unit="report") as progress:
+        save_reports(records, args.output_dir, args.precision)
+        progress.update(1)
     if args.records_output:
         args.records_output.parent.mkdir(parents=True, exist_ok=True)
         args.records_output.write_text(

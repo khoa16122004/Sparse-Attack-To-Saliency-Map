@@ -45,9 +45,11 @@ def discover_samples(roots):
         if not root.is_dir():
             raise NotADirectoryError(root)
         for name in ("summarize.json", "summary.json"):
-            for path in sorted(root.rglob(name)):
-                # The two names can be aliases for the same sample.
-                samples[path.parent] = path
+            with tqdm(desc=f"Scan {root} ({name})", unit="file") as progress:
+                for path in root.rglob(name):
+                    # The two names can be aliases for the same sample.
+                    samples[path.parent] = path
+                    progress.update(1)
     if not samples:
         raise ValueError("No summary.json or summarize.json files found")
     return sorted(samples.values())

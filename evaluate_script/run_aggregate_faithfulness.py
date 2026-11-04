@@ -13,6 +13,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
+from tqdm.auto import tqdm
 
 
 MAP_NAMES = ("clean", "perturbation")
@@ -115,7 +116,7 @@ def sample_key(payload):
 def comparison_samples(records):
     buckets = defaultdict(dict)
     clean_samples = {}
-    for payload in records:
+    for payload in tqdm(records, desc="Validate aggregate inputs", unit="sample"):
         context = payload["context"]
         block = block_key(context)
         identity = sample_key(payload)
@@ -264,7 +265,7 @@ def aggregate_records(records, output_dir, plot_blocks=None):
         key = json.dumps(configuration(payload), sort_keys=True, allow_nan=False)
         groups[key].append(payload)
     manifest = []
-    for key, records in sorted(groups.items()):
+    for key, records in tqdm(sorted(groups.items()), desc="Aggregate reports/curves", unit="config"):
         folder = output_dir / ("comparison_" + hashlib.sha256(key.encode()).hexdigest()[:12])
         config = json.loads(key)
         write_json(folder / "configuration.json", config)
@@ -305,11 +306,14 @@ def main():
     for root in args.input_dirs:
         if not root.is_dir():
             raise NotADirectoryError(root)
-        paths.update(path.resolve() for path in root.rglob("faithfulness.json"))
+        with tqdm(desc=f"Scan faithfulness {root}", unit="file") as progress:
+            for path in root.rglob("faithfulness.json"):
+                paths.add(path.resolve())
+                progress.update(1)
     if not paths:
         raise ValueError("No faithfulness.json evaluations found")
     records = []
-    for path in sorted(paths):
+    for path in tqdm(sorted(paths), desc="Read faithfulness JSON", unit="file"):
         with path.open(encoding="utf-8") as handle:
             records.append(json.load(handle))
     aggregate_records(records, args.output_dir)

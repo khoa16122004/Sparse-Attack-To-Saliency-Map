@@ -8,7 +8,11 @@ cd -- "$REPO_DIR"
 export CUDA_VISIBLE_DEVICES=""
 
 PYTHON="${PYTHON:-python}"
-INPUT_DIR="${INPUT_DIR:-offical_faithfulness/server_run_seed}"
+# Add one input root per line; quote paths containing spaces.
+INPUT_DIRS=(
+    "offical_faithfulness/server_run_seed"
+    # "/absolute/path/to/another_seed_runs"
+)
 OUTPUT_DIR="${OUTPUT_DIR:-faithfulness_aggregates}"
 TABLE_DIR="${TABLE_DIR:-result_latexs}"
 EPS="${EPS:-}"
@@ -27,8 +31,13 @@ EMPTY_GT="${EMPTY_GT:-error}"
 
 if (( $# > 0 )); then
     INPUT_DIRS=("$@")
-else
+elif [[ -n "${INPUT_DIR:-}" ]]; then
     INPUT_DIRS=("$INPUT_DIR")
+fi
+
+if (( ${#INPUT_DIRS[@]} == 0 )); then
+    printf 'ERROR: configure at least one input directory\n' >&2
+    exit 1
 fi
 
 for input_dir in "${INPUT_DIRS[@]}"; do

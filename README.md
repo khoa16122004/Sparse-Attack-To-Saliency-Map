@@ -194,12 +194,21 @@ existing insertion/deletion/IMD scores and renders their existing tables:
 IMAGENET_ROOT=/path/to/imagenet MASK_ROOT=imagenet_mask IOU_THRESHOLD=0.5 \
     bash script_sh/run_aggregate_faithfulness.sh path/to/seed_runs
 
+# Multiple roots are combined into the same reports (quote paths containing spaces).
+bash script_sh/run_aggregate_faithfulness.sh path/to/seed_1 path/to/seed_2
+
 # IoU only, without requiring precomputed faithfulness.json:
 python -m evaluate_script.run_localization_iou \
     --input-dirs path/to/seed_runs \
     --imagenet-root /path/to/imagenet --mask-root imagenet_mask \
     --threshold 0.5 --output-dir result_latexs
 ```
+
+With no positional roots, the CPU runner uses its `INPUT_DIRS` array;
+`INPUT_DIR` overrides that array when set. Progress bars show file discovery,
+JSON loading, localization IoU, faithfulness aggregation/curves, and table output.
+Discovery bars count matching files without a known total; they are not percentages
+of all directories scanned.
 
 Input run roots must retain the successful sample summaries, `clean.png`
 and `perturbation_density.pt`, in the existing `strategy-*/class/image_stem/`
