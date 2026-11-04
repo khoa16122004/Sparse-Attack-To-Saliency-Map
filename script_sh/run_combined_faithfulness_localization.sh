@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Join saved per-sample faithfulness and localization scores without inference.
+# Progress bars show scanning, JSON loading, IoU joining, aggregation, and table output.
 set -euo pipefail
 
 REPO_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -14,7 +15,7 @@ TABLE_DIR="${TABLE_DIR:-result_latexs}"
 # Add one faithfulness root per line; paths with spaces must stay quoted.
 INPUT_DIRS=(
     "offical_faithfulness/server_run_seed"
-    # "/absolute/path/to/another_attack_dir"
+    "/datastore/khoatn/Sparse-Attack-To-Saliency-Map/offical_faithfulness/server_run_seed/"
     # "/absolute/path/to/third_attack_dir"
 )
 

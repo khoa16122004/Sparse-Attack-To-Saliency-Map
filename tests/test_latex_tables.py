@@ -217,6 +217,34 @@ class CombinedLocalizationTests(unittest.TestCase):
         self.assertAlmostEqual(ours["std"], stdev([0.5, 0.9]))
         self.assertNotIn("iou", records[0]["maps"]["clean"])
 
+    def test_combined_cli_shows_progress_and_writes_iou(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            record = faith_record(1, "a", None, 0.7)
+            (root / "faithfulness.json").write_text(json.dumps(record), encoding="utf-8")
+            localization = root / "localization.json"
+            localization.write_text(json.dumps({
+                "schema_version": 1, "records": [self.localization(record)],
+            }), encoding="utf-8")
+            progress = io.StringIO()
+            with redirect_stderr(progress):
+                tables.main([
+                    "--faithfulness-input-dirs", str(root),
+                    "--localization-records", str(localization),
+                    "--output-dir", str(root / "output"), "--no-ttest",
+                ])
+            for stage in (
+                "Scan", "Read faithfulness JSON", "Read localization JSON",
+                "Index localization", "Join IoU", "Validate faithfulness",
+                "Aggregate metrics", "Write tables",
+            ):
+                self.assertIn(stage, progress.getvalue())
+            output = next((root / "output").iterdir())
+            report = json.loads((output / "statistics.json").read_text(encoding="utf-8"))
+            ours = next(cell for cell in report["cells"] if cell["approach"] == "nsgaii")
+            self.assertAlmostEqual(ours["metrics"]["iou"]["mean"], 0.6)
+            self.assertIn(r"IoU $\uparrow$", (output / "table.tex").read_text(encoding="utf-8"))
+
     def test_four_column_latex_structure(self):
         latex, _ = tables.render_table("faithfulness", {}, include_iou=True, use_ttest=False)
         self.assertEqual(latex.count(r"\begin{tabular}{ll|cccc|cccc|cccc}"), 2)

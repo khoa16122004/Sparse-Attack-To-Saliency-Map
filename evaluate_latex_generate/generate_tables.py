@@ -11,6 +11,8 @@ from collections import defaultdict
 from pathlib import Path
 from statistics import mean, stdev
 
+from tqdm.auto import tqdm
+
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -114,13 +116,13 @@ def attack_groups(runs, *, duplicate_runs="error", skipped_runs=None):
 
 def attach_localization(records, localization_records):
     indexed = {}
-    for record in localization_records:
+    for record in tqdm(localization_records, desc="Index localization", unit="sample"):
         key = Path(record["sample_dir"]).resolve()
         if key in indexed:
             raise ValueError(f"Duplicate localization sample: {key}")
         indexed[key] = record
     result = []
-    for original in records:
+    for original in tqdm(records, desc="Join IoU", unit="sample"):
         path = Path(original["sample_dir"]).resolve()
         if path not in indexed:
             raise ValueError(f"No localization IoU for faithfulness sample: {path}")
@@ -149,7 +151,7 @@ def attach_localization(records, localization_records):
 
 def faithfulness_groups(records, *, include_iou=False):
     grouped = defaultdict(list)
-    for record in records:
+    for record in tqdm(records, desc="Validate faithfulness", unit="sample"):
         faithfulness.validate_record(record, record["sample_dir"])
         context = record["context"]
         if str(context["seed"]) in ("", "default", "unknown", "None"):
@@ -161,7 +163,7 @@ def faithfulness_groups(records, *, include_iou=False):
             config["localization_protocol"] = record["localization_protocol"]
         grouped[config_key(config)].append(record)
     groups = {}
-    for config, payloads in grouped.items():
+    for config, payloads in tqdm(grouped.items(), desc="Aggregate metrics", unit="config"):
         cells = defaultdict(dict)
         for (model, method, _eps, _loss, approach), samples in (
             faithfulness.comparison_samples(payloads).items()
@@ -413,10 +415,18 @@ def main(argv=None):
         for root in args.faithfulness_input_dirs:
             if not root.is_dir():
                 raise NotADirectoryError(root)
-            paths.update(path.resolve() for path in root.rglob("faithfulness.json"))
-        records = [json.loads(path.read_text(encoding="utf-8")) for path in sorted(paths)]
+            with tqdm(desc=f"Scan {root}", unit="file") as progress:
+                for path in root.rglob("faithfulness.json"):
+                    paths.add(path.resolve())
+                    progress.update(1)
+        records = [
+            json.loads(path.read_text(encoding="utf-8"))
+            for path in tqdm(sorted(paths), desc="Read faithfulness JSON", unit="file")
+        ]
         if args.localization_records:
-            payload = json.loads(args.localization_records.read_text(encoding="utf-8"))
+            with tqdm(total=1, desc="Read localization JSON", unit="file") as progress:
+                payload = json.loads(args.localization_records.read_text(encoding="utf-8"))
+                progress.update(1)
             if payload.get("schema_version") != 1:
                 raise ValueError(f"{args.localization_records}: unsupported localization record schema")
             # Apply the same filters used by the CPU localization job before joining.
@@ -449,7 +459,7 @@ def main(argv=None):
     }
     if not groups:
         raise ValueError("No matching evaluations found")
-    for key, cells in sorted(groups.items()):
+    for key, cells in tqdm(sorted(groups.items()), desc="Write tables", unit="table"):
         latex, report = render_table(
             kind, cells, use_ttest=args.use_ttest, alpha=args.ttest_alpha,
             correction=args.ttest_correction, precision=args.precision,
@@ -480,9 +490,9 @@ def main(argv=None):
         (folder / "statistics.json").write_text(
             json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8",
         )
-        print(f"[OK] {folder}: {len(report['cells'])} cells, "
-              f"{len(report['missing_cells'])} missing, "
-              f"{len(report['excluded_cells'])} excluded (see statistics.json)")
+        tqdm.write(f"[OK] {folder}: {len(report['cells'])} cells, "
+                   f"{len(report['missing_cells'])} missing, "
+                   f"{len(report['excluded_cells'])} excluded (see statistics.json)")
 
 
 if __name__ == "__main__":
