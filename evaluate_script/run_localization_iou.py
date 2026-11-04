@@ -374,10 +374,24 @@ def main(argv=None):
     if not records:
         raise ValueError("No matching successful samples for localization IoU")
     if args.records_output:
+        payload = {"schema_version": 1, "records": records}
         with tqdm(total=1, desc="Save localization records", unit="file") as progress:
-            write_json(args.records_output, {"schema_version": 1, "records": records})
+            target_path = args.records_output
+            try:
+                write_json(target_path, payload)
+            except OSError as error:
+                target_path = args.output_dir / args.records_output.name
+                tqdm.write(f"[WARN] Cannot write {args.records_output} ({error}); "
+                           f"falling back to {target_path}")
+                try:
+                    write_json(target_path, payload)
+                except OSError as fallback_error:
+                    tqdm.write(f"[WARN] Fallback failed too ({fallback_error}); "
+                               "continuing to reports without records file")
+                    target_path = None
             progress.update(1)
-        tqdm.write(f"[SAVED] {args.records_output}")
+        if target_path:
+            tqdm.write(f"[SAVED] {target_path}")
     save_reports(records, args.output_dir, args.precision)
 
 
