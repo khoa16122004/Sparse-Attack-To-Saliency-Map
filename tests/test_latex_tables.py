@@ -143,6 +143,59 @@ class SeedStatisticsTests(unittest.TestCase):
         self.assertIn(str(repeated.run_dir.resolve()), str(caught.exception))
 
 
+class AttentionGradTableTests(unittest.TestCase):
+    def test_attention_grad_is_included_in_attack_and_faithfulness_tables(self):
+        for kind in ("attack", "faithfulness"):
+            for model in tables.MODELS[kind][1]:
+                with self.subTest(kind=kind, model=model):
+                    if kind == "attack":
+                        runs = [
+                            attack_run(
+                                seed, weight, model=model,
+                                explain_method="attention_grad",
+                            )
+                            for seed in (1, 2)
+                            for weight in (0.0, 0.5, 1.0, None)
+                        ]
+                        groups = tables.attack_groups(runs)
+                    else:
+                        records = [
+                            faith_record(seed, "a", weight, 0.7)
+                            for seed in (1, 2)
+                            for weight in (0.0, 0.5, 1.0, None)
+                        ]
+                        for record in records:
+                            record["context"].update(
+                                model=model, explain_method="attention_grad",
+                            )
+                        groups = tables.faithfulness_groups(records)
+                    cells = next(iter(groups.values()))
+                    latex, report = tables.render_table(kind, cells, use_ttest=False)
+                    self.assertIn("Attention Grad", latex)
+                    self.assertNotIn("Attention Rollout", latex)
+                    self.assertFalse(report["excluded_cells"])
+                    approaches = set(tables.APPROACHES)
+                    if kind == "faithfulness":
+                        approaches.add("clean")
+                    self.assertEqual(
+                        {(cell["model"], cell["explain_method"], cell["approach"])
+                         for cell in report["cells"]},
+                        {(model, "attention_grad", approach) for approach in approaches},
+                    )
+                    self.assertTrue(all(
+                        stat["n_seeds"] == 2
+                        for cell in report["cells"]
+                        for stat in cell["metrics"].values()
+                    ))
+                    for approach in approaches:
+                        self.assertNotIn(
+                            [model, "attention_grad", approach], report["missing_cells"],
+                        )
+                    block = latex.split("{Attention Grad}", 1)[1].split(r"\midrule", 1)[0]
+                    expected = "0.8000" if kind == "attack" else "0.7000"
+                    self.assertIn(expected, block)
+
+
 class CombinedLocalizationTests(unittest.TestCase):
     def localization(self, record, value=0.6):
         return {

@@ -12,6 +12,7 @@ import numpy as np
 import torch
 from PIL import Image
 
+from core.perturbation_archive import normalize_density
 from evaluate_latex_generate.generate_tables import add_seed, cell_key, summarize_cells
 from evaluate_script.generate_imagenet_masks import sha256
 from evaluate_script.run_aggregate_faithfulness import LABELS, approach_name
@@ -31,6 +32,13 @@ def top_k_mask(saliency, percent):
     result = np.zeros(saliency.size, dtype=bool)
     result[order[:count]] = True
     return result.reshape(saliency.shape)
+
+
+def threshold_mask(saliency, threshold=0.5):
+    if not math.isfinite(threshold) or not 0 <= threshold <= 1:
+        raise ValueError("Threshold must be finite and in [0, 1]")
+    normalized = normalize_density(torch.tensor(np.asarray(saliency), dtype=torch.float64))
+    return normalized.numpy() >= threshold
 
 
 def binary_iou(prediction, target):
@@ -175,10 +183,16 @@ def save_reports(records, output_dir, precision):
             writer = csv.DictWriter(handle, fieldnames=list(sample_rows[0]))
             writer.writeheader()
             writer.writerows(sample_rows)
-        percent = entries[0]["protocol"]["top_k_percent"]
+        protocol = entries[0]["protocol"]
+        if "threshold" in protocol:
+            mask_description = (
+                rf"min-max normalized saliency $\geq {protocol['threshold']:g}$"
+            )
+        else:
+            mask_description = rf"top {protocol['top_k_percent']:g}\% pixels"
         lines = [
             r"\begin{table*}[t]", r"\centering",
-            rf"\caption{{Localization IoU against SAM3 pseudo-GT; top {percent:g}\% pixels. "
+            rf"\caption{{Localization IoU against SAM3 pseudo-GT; {mask_description}. "
             r"Samples are averaged within each seed, then mean $\pm$ sample SD across seeds. "
             r"Single-seed SD and missing cells are --; bold marks the best mean.}",
             r"\begin{tabular}{lllcc}", r"\hline",
@@ -216,7 +230,11 @@ def main(argv=None):
     parser.add_argument("--output-dir", type=Path, default=Path("result_latexs"))
     parser.add_argument("--records-output", type=Path,
                         help="Write exact per-sample records for the combined faithfulness table")
-    parser.add_argument("--top-k-percent", type=float, default=80)
+    binarization = parser.add_mutually_exclusive_group()
+    binarization.add_argument("--threshold", type=float,
+                              help="Min-max normalized saliency cutoff in [0, 1] (default: 0.5)")
+    binarization.add_argument("--top-k-percent", type=float,
+                              help="Use legacy fixed-area top-k selection instead of thresholding")
     parser.add_argument("--empty-gt", choices=("error", "zero"), default="error",
                         help="Default rejects empty SAM/cropped masks; zero explicitly scores them as 0")
     parser.add_argument("--precision", type=int, default=4)
@@ -224,8 +242,23 @@ def main(argv=None):
     parser.add_argument("--loss-type")
     parser.add_argument("--strategy")
     args = parser.parse_args(argv)
-    if not math.isfinite(args.top_k_percent) or not 0 < args.top_k_percent <= 100:
-        parser.error("--top-k-percent must be in (0, 100]")
+    if args.top_k_percent is not None:
+        if not math.isfinite(args.top_k_percent) or not 0 < args.top_k_percent <= 100:
+            parser.error("--top-k-percent must be in (0, 100]")
+        mask_fn = lambda saliency: top_k_mask(saliency, args.top_k_percent)
+        mask_protocol = {
+            "top_k_percent": args.top_k_percent, "pixel_count": "ceil(H*W*k/100)",
+            "tie_break": "stable_row_major",
+        }
+    else:
+        threshold = 0.5 if args.threshold is None else args.threshold
+        if not math.isfinite(threshold) or not 0 <= threshold <= 1:
+            parser.error("--threshold must be finite and in [0, 1]")
+        mask_fn = lambda saliency: threshold_mask(saliency, threshold)
+        mask_protocol = {
+            "threshold": threshold, "normalization": "per_map_min_max",
+            "comparison": ">=", "constant_map": "normalized_to_zero",
+        }
     if not 0 <= args.precision <= 12:
         parser.error("--precision must be in [0, 12]")
     if not args.imagenet_root.is_dir():
@@ -279,9 +312,9 @@ def main(argv=None):
         baseline_key = (context["model"], context["explain_method"], *identity)
         if baseline_key not in clean_baselines:
             clean_map, clean_source = load_clean_map(path.parent)
-            clean_binary = top_k_mask(clean_map, args.top_k_percent)
+            clean_binary = mask_fn(clean_map)
             clean_baselines[baseline_key] = {
-                "clean_iou": binary_iou(clean_binary, target),
+                "clean_iou": binary_iou(clean_binary, target) if target.any() else 0.0,
                 "clean_rgb_sha256": clean_rgb_hash,
                 "gt_mask_sha256": item["mask_sha256"],
                 "clean_binary_sha256": hashlib.sha256(clean_binary.tobytes()).hexdigest(),
@@ -302,15 +335,14 @@ def main(argv=None):
         density = archive["smoothed_density"]
         if not isinstance(density, torch.Tensor) or density.ndim != 2:
             raise ValueError(f"{archive_path}: expected 2D smoothed_density tensor")
-        perturbation_binary = top_k_mask(density.float().numpy(), args.top_k_percent)
+        perturbation_binary = mask_fn(density.float().numpy())
         records.append({
             "context": context, "identity": list(identity), "sample_dir": str(path.parent),
             **{key: value for key, value in baseline.items() if key != "clean_source"},
-            "perturbation_iou": binary_iou(perturbation_binary, target),
+            "perturbation_iou": binary_iou(perturbation_binary, target) if target.any() else 0.0,
             "gt_foreground_pixels": int(target.sum()),
             "protocol": {
-                "top_k_percent": args.top_k_percent, "pixel_count": "ceil(H*W*k/100)",
-                "tie_break": "stable_row_major", "empty_gt": args.empty_gt,
+                **mask_protocol, "empty_gt": args.empty_gt,
                 "gt_manifest_sha256": manifest_hash, "gt": "sam3_pseudo_gt",
                 "alignment": "model_default_resize_center_crop_nearest_mask",
                 "clean_source": baseline["clean_source"],

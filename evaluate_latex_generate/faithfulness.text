@@ -82,7 +82,7 @@
 & \textbf{Ours}        & & & & & & & & & \\
 \midrule
 
-\multirow{5}{*}{Attention Rollout}
+\multirow{5}{*}{Attention Grad}
 & Clean      & & & & & & & & & \\
 & GASS ($\lambda=0.0$) & & & & & & & & & \\
 & GASS ($\lambda=0.5$) & & & & & & & & & \\

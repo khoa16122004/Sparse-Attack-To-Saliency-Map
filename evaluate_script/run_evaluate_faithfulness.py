@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from PIL import Image
+from tqdm.auto import tqdm
 
 ROOT = Path(__file__).resolve().parents[1]
 for directory in (ROOT, ROOT / "core"):
@@ -283,9 +284,11 @@ def main():
     current_model = None
     evaluated = 0
     records = []
+    progress = tqdm(total=len(tasks), desc="Faithfulness eval", unit="sample")
     for block, block_tasks in itertools.groupby(sorted(tasks), key=lambda task: task[0]):
         clean_cache = {}
         for _, _, path, summary, context in block_tasks:
+            progress.update(1)
             result_path = path.parent / RESULT_NAME
             if result_path.exists() and not args.replace:
                 with result_path.open(encoding="utf-8") as handle:
@@ -296,7 +299,7 @@ def main():
                     for key in ("step", "kernel_size", "kernel_sigma")
                 ) or result["protocol"].get("perturbation_source") != "minmax_smoothed_density_tensor":
                     raise ValueError(f"{result_path}: stale context/protocol; use --replace")
-                print(f"[CACHE] {result_path}")
+                tqdm.write(f"[CACHE] {result_path}")
             else:
                 model_name = context["model"]
                 if model_name != current_model:
@@ -315,10 +318,11 @@ def main():
                 metrics = ", ".join(
                     f"{name}: IMD={result['maps'][name]['imd']:.4f}" for name in MAP_NAMES
                 )
-                print(f"[OK] {path.parent} | {metrics}")
+                tqdm.write(f"[OK] {path.parent} | {metrics}")
             records.append(result)
         aggregate_records(records, args.output_dir, plot_blocks={block})
-        print(f"[BLOCK DONE] {block}: comparison tables and curves saved")
+        tqdm.write(f"[BLOCK DONE] {block}: comparison tables and curves saved")
+    progress.close()
     print(f"Evaluated {evaluated} samples; reused {len(records) - evaluated} cached evaluations.")
 
 

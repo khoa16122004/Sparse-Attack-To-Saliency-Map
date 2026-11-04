@@ -14,7 +14,8 @@ from evaluate_script.generate_imagenet_masks import (
     best_mask, load_prompts, main as generate_masks, resize_for_inference, sha256,
 )
 from evaluate_script.run_localization_iou import (
-    align_target, binary_iou, load_clean_map, main as evaluate_iou, save_reports, top_k_mask,
+    align_target, binary_iou, load_clean_map, main as evaluate_iou, save_reports,
+    threshold_mask, top_k_mask,
 )
 
 
@@ -170,6 +171,32 @@ class MaskGenerationTests(unittest.TestCase):
 
 
 class LocalizationTests(unittest.TestCase):
+    def test_threshold_uses_per_map_min_max_and_includes_boundary(self):
+        actual = threshold_mask(np.array([[-2., 0., 2., 6.]]))
+        np.testing.assert_array_equal(actual, [[False, False, True, True]])
+        np.testing.assert_array_equal(
+            threshold_mask(np.array([[0., 0.2, 0.5, 1.]])),
+            [[False, False, True, True]],
+        )
+        np.testing.assert_array_equal(
+            threshold_mask(np.array([[0., 0.2, 0.5, 1.]]), 0.8),
+            [[False, False, False, True]],
+        )
+
+    def test_constant_threshold_maps_normalize_to_zero(self):
+        for value in (0., 5., -2.):
+            self.assertFalse(threshold_mask(np.full((2, 2), value)).any())
+            self.assertTrue(threshold_mask(np.full((2, 2), value), 0).all())
+
+    def test_invalid_thresholds_and_maps_are_rejected(self):
+        for threshold in (-0.1, 1.1, float("nan"), float("inf")):
+            with self.subTest(threshold=threshold), self.assertRaises(ValueError):
+                threshold_mask(np.ones((2, 2)), threshold)
+        for saliency in (np.array([]), np.ones(4), np.array([[np.inf]]),
+                         np.array([[np.nan]])):
+            with self.subTest(saliency=saliency), self.assertRaises(ValueError):
+                threshold_mask(saliency)
+
     def test_top_80_percent_has_exact_count_and_stable_ties(self):
         actual = top_k_mask(np.ones((2, 5)), 80)
         np.testing.assert_array_equal(actual.reshape(-1), [True] * 8 + [False] * 2)

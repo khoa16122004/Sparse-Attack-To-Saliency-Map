@@ -191,14 +191,14 @@ center-crop; lowering confidence cannot guarantee foreground survives cropping.
 existing insertion/deletion/IMD scores and renders their existing tables:
 
 ```sh
-IMAGENET_ROOT=/path/to/imagenet MASK_ROOT=imagenet_mask TOP_K_PERCENT=80 \
+IMAGENET_ROOT=/path/to/imagenet MASK_ROOT=imagenet_mask IOU_THRESHOLD=0.5 \
     bash script_sh/run_aggregate_faithfulness.sh path/to/seed_runs
 
 # IoU only, without requiring precomputed faithfulness.json:
 python -m evaluate_script.run_localization_iou \
     --input-dirs path/to/seed_runs \
     --imagenet-root /path/to/imagenet --mask-root imagenet_mask \
-    --top-k-percent 80 --output-dir result_latexs
+    --threshold 0.5 --output-dir result_latexs
 ```
 
 Input run roots must retain the successful sample summaries, `clean.png`
@@ -212,10 +212,15 @@ The CPU environment needs NumPy, Pillow, PyTorch, torchvision and SciPy.
 IoU protocol:
 
 - Compare Clean saliency and each GASS/Ours perturbation-density map with the
-  same class/sample pseudo-GT. Use the highest **80%** of pixels by default:
-  exactly `ceil(H * W * k / 100)` pixels, descending stable row-major tie order.
-  Constant maps therefore also select k% of pixels; they are not treated as
-  empty predictions. This is a fixed-area ranking metric, not a 0.8 threshold.
+  same class/sample pseudo-GT. Independently min-max normalize each map to
+  `[0, 1]`, then select pixels **>= 0.5** by default. Constant maps normalize
+  to zero and therefore produce empty predictions at this threshold.
+  Set `IOU_THRESHOLD` in the shell runner or pass `--threshold` to change it.
+  For the legacy fixed-area ranking metric, explicitly set `TOP_K_PERCENT=80`
+  or pass `--top-k-percent 80` instead: exactly `ceil(H * W * k / 100)`
+  pixels, descending stable row-major tie order, including constant maps.
+  Thresholding affects localization only; faithfulness Ins/Del/IMD continues
+  to use the full saliency ranking without binarization.
 - Use model-default resize and center-crop coordinates, nearest-neighbor
   interpolation for binary GT. Verify the transformed source RGB image against
   saved `clean.png` before scoring; wrong images/transforms fail explicitly.
@@ -247,7 +252,9 @@ model and Clean/GASS/Ours row. All four metrics use the same samples and seeds;
 missing/extra samples or mismatched experiment contexts cause an error.
 IoU uses the existing mean/SD, best-value bolding and optional paired t-test
 logic (higher is better). The combined table records the localization protocol,
-including top-k and GT manifest hash, in its configuration.
+including threshold/normalization (or legacy top-k) and GT manifest hash,
+in its configuration. Regenerate localization records to apply the new
+threshold; joining saved records does not recompute IoU.
 
 IoU-only outputs go to `result_latexs/localization_<hash>/`:
 `table.tex` (Clean/GASS/Ours, best means bold), `samples.csv` (per-sample IoU),

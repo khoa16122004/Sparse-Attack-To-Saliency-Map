@@ -30,11 +30,11 @@ MODELS = {
 }
 METHODS = (
     ("simple_gradient", "input_gradient", "grad_cam", "xgrad_cam"),
-    ("raw_attention", "attention_rollout", "attention_flow", "partial_lrp"),
+    ("raw_attention", "attention_grad", "attention_flow", "partial_lrp"),
 )
 METHOD_ALIASES = {
     "xgradcam": "xgrad_cam", "x_grad_cam": "xgrad_cam",
-    "rollout": "attention_rollout", "flow": "attention_flow",
+    "flow": "attention_flow",
     "lrp": "partial_lrp",
 }
 

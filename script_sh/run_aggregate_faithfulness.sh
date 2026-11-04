@@ -21,7 +21,8 @@ PRECISION="${PRECISION:-4}"
 RUN_IOU="${RUN_IOU:-1}"
 IMAGENET_ROOT="${IMAGENET_ROOT:-/datastore/quanphm/datasets/ImageNet/val}"
 MASK_ROOT="${MASK_ROOT:-imagenet_mask}"
-TOP_K_PERCENT="${TOP_K_PERCENT:-80}"
+IOU_THRESHOLD="${IOU_THRESHOLD:-0.5}"
+TOP_K_PERCENT="${TOP_K_PERCENT:-}"
 EMPTY_GT="${EMPTY_GT:-error}"
 
 if (( $# > 0 )); then
@@ -71,9 +72,14 @@ fi
 
 if [[ "$RUN_IOU" == 1 ]]; then
     IOU_ARGS=(--input-dirs "${INPUT_DIRS[@]}" --imagenet-root "$IMAGENET_ROOT"
-              --mask-root "$MASK_ROOT" --top-k-percent "$TOP_K_PERCENT"
+              --mask-root "$MASK_ROOT"
               --empty-gt "$EMPTY_GT" --output-dir "$TABLE_DIR" --precision "$PRECISION"
               --records-output "$OUTPUT_DIR/localization_records.json")
+    if [[ -n "$TOP_K_PERCENT" ]]; then
+        IOU_ARGS+=(--top-k-percent "$TOP_K_PERCENT")
+    else
+        IOU_ARGS+=(--threshold "$IOU_THRESHOLD")
+    fi
     if (( ${#EPS_VALUES[@]} > 0 )); then
         IOU_ARGS+=(--eps "${EPS_VALUES[@]}")
     fi
