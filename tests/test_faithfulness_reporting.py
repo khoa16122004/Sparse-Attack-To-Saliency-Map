@@ -11,6 +11,43 @@ from evaluate_script import run_evaluate_faithfulness as evaluator
 from evaluate_script.run_aggregate_faithfulness import configuration, save_group, summarize
 
 
+class SampleDiscoveryTests(unittest.TestCase):
+    def test_direct_layout_multiple_roots_aliases_and_overlaps(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            ga = root / "GA" / "22520691" / "vgg16" / "strategy-uniform__exp-grad_cam"
+            nsga = root / "NSGAII" / "22520692" / "vgg16" / "strategy-uniform__exp-grad_cam"
+            first = ga / "n001" / "image_a"
+            second = nsga / "n002" / "image_b"
+            first.mkdir(parents=True)
+            second.mkdir(parents=True)
+            for name in ("summary.json", "summarize.json"):
+                (first / name).write_text("{}", encoding="utf-8")
+            (second / "summarize.json").write_text("{}", encoding="utf-8")
+            steps = first / "insertion_steps"
+            steps.mkdir()
+            (steps / "summary.json").write_text("{}", encoding="utf-8")
+            original_iterdir = Path.iterdir
+
+            def guarded_iterdir(path):
+                self.assertNotIn(path, (first, second, steps))
+                return original_iterdir(path)
+
+            with patch.object(Path, "iterdir", guarded_iterdir):
+                found = evaluator.discover_samples([root / "GA", root / "NSGAII", ga])
+            self.assertEqual(found, sorted([
+                first / "summary.json", second / "summarize.json",
+            ]))
+
+    def test_missing_root_and_empty_layout_are_explicit_errors(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            with self.assertRaises(NotADirectoryError):
+                evaluator.discover_samples([root / "missing"])
+            with self.assertRaisesRegex(ValueError, "expected strategy-"):
+                evaluator.discover_samples([root])
+
+
 class SharedCleanTests(unittest.TestCase):
     def setUp(self):
         self.args = SimpleNamespace(

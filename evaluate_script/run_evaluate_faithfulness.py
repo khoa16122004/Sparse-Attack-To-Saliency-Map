@@ -40,18 +40,44 @@ def write_json(path, payload):
 
 def discover_samples(roots):
     samples = {}
+    visited = set()
     for root in roots:
         root = root.resolve()
         if not root.is_dir():
             raise NotADirectoryError(root)
-        for name in ("summarize.json", "summary.json"):
-            with tqdm(desc=f"Scan {root} ({name})", unit="file") as progress:
-                for path in root.rglob(name):
-                    # The two names can be aliases for the same sample.
-                    samples[path.parent] = path
-                    progress.update(1)
+        pending = [root]
+        with tqdm(desc=f"Locate sample directories {root}", unit="dir") as progress:
+            while pending:
+                directory = pending.pop()
+                if directory in visited:
+                    continue
+                visited.add(directory)
+                progress.update(1)
+                if directory.name.startswith("strategy-"):
+                    # The layout is strategy-*/class/image_stem/<summary file>.
+                    for class_dir in sorted(directory.iterdir()):
+                        if not class_dir.is_dir() or class_dir.is_symlink():
+                            continue
+                        for sample_dir in sorted(class_dir.iterdir()):
+                            if not sample_dir.is_dir() or sample_dir.is_symlink():
+                                continue
+                            progress.update(1)
+                            progress.set_postfix(samples=len(samples), refresh=False)
+                            for name in ("summary.json", "summarize.json"):
+                                path = sample_dir / name
+                                if path.is_file():
+                                    samples[sample_dir] = path
+                                    break
+                    continue
+                pending.extend(
+                    child for child in sorted(directory.iterdir(), reverse=True)
+                    if child.is_dir() and not child.is_symlink()
+                )
     if not samples:
-        raise ValueError("No summary.json or summarize.json files found")
+        raise ValueError(
+            "No sample summaries found; expected strategy-*/class/image_stem/"
+            "summary.json (or summarize.json)"
+        )
     return sorted(samples.values())
 
 

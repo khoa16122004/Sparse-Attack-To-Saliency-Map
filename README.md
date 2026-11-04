@@ -210,6 +210,14 @@ JSON loading, localization IoU, faithfulness aggregation/curves, and table outpu
 Discovery bars count matching files without a known total; they are not percentages
 of all directories scanned.
 
+For localization IoU and faithfulness evaluation, sample discovery locates
+`strategy-*` directories under the supplied roots, then accesses
+`class/image_stem/summary.json` (or `summarize.json`) directly. It does not descend
+into sample image/curve subdirectories. If both summary names exist, `summary.json`
+takes precedence. The directory progress bar counts visited container/sample
+directories rather than matching summary files; locating unknown run names still
+requires listing the parent directories.
+
 Input run roots must retain the successful sample summaries, `clean.png`
 and `perturbation_density.pt`, in the existing `strategy-*/class/image_stem/`
 layout. The selected Clean baseline must also retain `clean_map.png` (or
