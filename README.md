@@ -64,6 +64,56 @@ both paths and recorded under `duplicate_runs` in the table's `statistics.json`.
 The same option works with `--all-runs-json file_a.json file_b.json`.
 It does not merge split sample sets and cannot be used with faithfulness inputs.
 
+### Per-sample re-evaluation (no aggregation)
+
+`evaluate.py` re-evaluates saved attacks under
+`algorithm/seed/model/strategy-*/class/image_stem/`. It writes
+`evaluation.json` in each successful sample directory without modifying the
+attack summary or generating tables. Multiple result roots are supported; no
+result directories need to exist in this checkout.
+
+The output contains the true and adversarial predictions, per-sample attack
+success and Spearman correlation of the saved grayscale clean/adversarial maps;
+Ins/Del curves, AUC and IMD for the clean explanation and perturbation density;
+and IoU of both maps against the SAM3 pseudo-GT mask. It also stores experiment
+context, histories and evaluation protocols. ASR is the fraction of successful
+samples; H-score uses the run-level ASR and mean valid Spearman, so neither is
+computed per sample. A constant map yields a null Spearman and an explicit
+reason. A later aggregation script must read `evaluation.json`; existing
+reporting scripts do not consume this format.
+
+Generate the SAM3 mask manifest first (see below). Original ImageNet images,
+matching saved maps and `perturbation_density.pt` are required for IoU.
+Faithfulness recomputes the clean explanation from `clean.png` and evaluates
+both maps on that clean image using the true label. The default IoU threshold is
+0.5 after per-map min-max normalization; `--top-k-percent` selects an
+alternative fixed-area mask. Compatible existing outputs are skipped by default,
+so reruns evaluate only new samples; `--replace` recomputes all matching
+samples. Invalid or incompatible outputs stop the run with an error. Cached
+results check the experiment context, predictions, evaluation settings and
+manifest image/mask hashes, but do not detect changes to saved attack maps or
+histories: use `--replace` when those inputs change.
+
+```sh
+python -m evaluate --input-dirs path/to/results path/to/more_results \
+    --imagenet-root /path/to/imagenet/val --mask-root imagenet_mask --device cuda
+
+# Submit from the repository root; the log directory must exist before sbatch starts.
+mkdir -p evaluate_log
+IMAGENET_ROOT=/path/to/imagenet/val MASK_ROOT=/path/to/imagenet_mask \
+    sbatch script_sh/run_evaluate_samples.sh
+```
+
+The Slurm script follows the existing UIT GPU partition configuration and
+activates `Sparse_Attack`. Without arguments it uses the three
+`/datastore/{khangtd,khoatn,hoangln}/Sparse-Attack-To-Saliency-Map/offical/server_run_seed`
+roots. Pass result roots as arguments to override them, or set `INPUT_DIR` for
+a single root. Override `CONDA_SH`, `CONDA_ENV`, or `REPO_DIR` if needed.
+`STEP`, `BATCH_SIZE`, `KERNEL_SIZE`, `KERNEL_SIGMA`, `IOU_THRESHOLD`,
+`TOP_K_PERCENT`, `EMPTY_GT`, `MODEL`, `EXPLAIN_METHOD`, and `REPLACE=1` are
+optional environment overrides. Reduce `BATCH_SIZE` if Ins/Del runs out of GPU
+memory. Log files are written to `evaluate_log/`.
+
 ### Faithfulness scoring
 
 Activate the project's Python environment with CUDA-enabled PyTorch, then run

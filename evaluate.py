@@ -3,12 +3,15 @@
 import argparse
 import json
 import math
+import os
+import tempfile
 from pathlib import Path
 
 import torch
 from tqdm.auto import tqdm
 
 from evaluate_script.generate_imagenet_masks import sha256
+from evaluate_script.run_aggregate_faithfulness import validate_record
 from evaluate_script.run_evaluate_faithfulness import (
     discover_samples, evaluate_sample, sample_context, write_json,
 )
@@ -21,6 +24,58 @@ from evaluate_script.run_score import (
 
 
 RESULT_NAME = "evaluation.json"
+
+
+def validate_cached_result(result_path, summary, context, args, index):
+    try:
+        result = json.loads(result_path.read_text(encoding="utf-8"))
+        faithfulness = result["faithfulness"]
+        validate_record({**faithfulness, "context": result["context"],
+                         "status": result["status"], "schema_version": result["schema_version"]},
+                        result_path)
+        if result["context"] != context:
+            raise ValueError("experiment context changed")
+        attack = result["attack"]
+        true_label = summary.get("true_label", summary.get("clean_pred"))
+        if (attack["true_label"] != true_label or attack["adv_pred"] != summary.get("adv_pred")
+                or attack["success"] != (attack["adv_pred"] != true_label)):
+            raise ValueError("attack predictions changed")
+        if attack["spearman"] is None and not attack["spearman_error"]:
+            raise ValueError("missing Spearman error")
+        if attack["spearman"] is not None and not math.isfinite(attack["spearman"]):
+            raise ValueError("invalid Spearman")
+        protocol = faithfulness["protocol"]
+        if any(protocol[key] != getattr(args, key)
+               for key in ("step", "kernel_size", "kernel_sigma")):
+            raise ValueError("faithfulness settings changed")
+        localization = result["localization"]
+        mask_protocol = localization["protocol"]
+        if (mask_protocol["empty_gt"] != args.empty_gt
+                or mask_protocol.get("top_k_percent") != args.top_k_percent
+                or (args.top_k_percent is None and mask_protocol.get("threshold") != args.threshold)):
+            raise ValueError("localization settings changed")
+        identity = (result_path.parent.parent.name, result_path.parent.name)
+        _, item = index[identity]
+        if (localization["source_sha256"] != item["source_sha256"]
+                or localization["gt_mask_sha256"] != item["mask_sha256"]):
+            raise ValueError("manifest image or mask changed")
+        for key in ("clean_iou", "perturbation_iou"):
+            if not math.isfinite(localization[key]) or not 0 <= localization[key] <= 1:
+                raise ValueError(f"invalid {key}")
+    except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as error:
+        raise ValueError(f"{result_path}: invalid or incompatible evaluation ({error}); "
+                         "use --replace to recompute") from error
+
+
+def write_result(path, result):
+    with tempfile.NamedTemporaryFile(dir=path.parent, prefix=".evaluation-",
+                                     suffix=".tmp", delete=False) as handle:
+        temporary = Path(handle.name)
+    try:
+        write_json(temporary, result)
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def load_mask_index(mask_root):
@@ -166,12 +221,12 @@ def parse_args(argv=None):
 
 def main(argv=None):
     args = parse_args(argv)
-    if args.device == "cuda" and not torch.cuda.is_available():
-        raise RuntimeError("CUDA is unavailable; explicitly use --device cpu")
     if not args.imagenet_root.is_dir():
         raise NotADirectoryError(args.imagenet_root)
     index, manifest_hash = load_mask_index(args.mask_root)
     samples = []
+    cached = 0
+    matched = 0
     for path in tqdm(discover_samples(args.input_dirs), desc="Read summaries", unit="sample"):
         summary = json.loads(path.read_text(encoding="utf-8"))
         if summary.get("status") != "ok":
@@ -182,11 +237,21 @@ def main(argv=None):
             continue
         if args.explain_method and context["explain_method"] != args.explain_method:
             continue
-        if (path.parent / RESULT_NAME).exists() and not args.replace:
-            raise FileExistsError(f"{path.parent / RESULT_NAME}: use --replace to recompute")
+        matched += 1
+        result_path = path.parent / RESULT_NAME
+        if result_path.exists() and not args.replace:
+            validate_cached_result(result_path, summary, context, args, index)
+            cached += 1
+            tqdm.write(f"[CACHED] {result_path}")
+            continue
         samples.append((path, summary, context))
-    if not samples:
+    if not matched:
         raise ValueError("No matching successful samples to evaluate")
+    if not samples:
+        print(f"Evaluated 0 samples; skipped {cached} existing evaluations.")
+        return
+    if args.device == "cuda" and not torch.cuda.is_available():
+        raise RuntimeError("CUDA is unavailable; explicitly use --device cpu")
 
     from RISE.evaluation import gkern
     from util import build_blur_substrate, get_explainable_method, get_torchvision_model
@@ -223,9 +288,10 @@ def main(argv=None):
             },
             "localization": localization,
         }
-        write_json(path.parent / RESULT_NAME, result)
+        write_result(path.parent / RESULT_NAME, result)
         tqdm.write(f"[OK] {path.parent}")
-    print(f"Evaluated {len(samples)} samples; no aggregation was performed.")
+    print(f"Evaluated {len(samples)} samples; skipped {cached} existing evaluations. "
+          "No aggregation was performed.")
 
 
 if __name__ == "__main__":

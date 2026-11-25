@@ -36,7 +36,6 @@ elif [[ -n "${INPUT_DIR:-}" ]]; then
     INPUT_DIRS=("$INPUT_DIR")
 else
     INPUT_DIRS=(
-        "/datastore/khangtd/Sparse-Attack-To-Saliency-Map/khangtd/offical_faithfulness/server_run_seed"
         "/datastore/khoatn/Sparse-Attack-To-Saliency-Map/khoatn/offical_faithfulness/server_run_seed"
         "/datastore/hoangln/Sparse-Attack-To-Saliency-Map/hoangln/offical_faithfulness/server_run_seed"
     )
