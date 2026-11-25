@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=eval_samples
-#SBATCH --output=ESWA/eval_samples_%j.out
-#SBATCH --error=ESWA/eval_samples_%j.err
+#SBATCH --output=evaluate_log/eval_samples_%j.out
+#SBATCH --error=evaluate_log/eval_samples_%j.err
 #SBATCH --account=uit
 #SBATCH --partition=normal
 #SBATCH --ntasks=1
