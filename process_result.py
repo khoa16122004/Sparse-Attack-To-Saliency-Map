@@ -13,6 +13,7 @@ from statistics import mean
 from evaluate_latex_generate import generate_tables as tables
 from evaluate_script import run_aggregate_faithfulness as faithfulness
 from evaluate_script import run_score
+from tqdm.auto import tqdm
 
 
 MIN_SAMPLES = 91
@@ -55,7 +56,7 @@ def load_record(path):
 
 def aggregate(paths):
     groups = defaultdict(lambda: defaultdict(list))
-    for path in paths:
+    for path in tqdm(paths, desc="Aggregating samples", unit="sample"):
         record, attack = load_record(path)
         context = record["context"]
         model = tables.canonical_model(context["model"])
@@ -73,11 +74,13 @@ def aggregate(paths):
         raise ValueError("No CNN evaluation.json records found")
 
     output = {}
-    for config, runs in groups.items():
+    for config, runs in tqdm(groups.items(), desc="Aggregating configs", unit="config"):
         attack_cells = defaultdict(dict)
         eligible = []
         skipped = []
-        for (cell, seed), entries in sorted(runs.items()):
+        for (cell, seed), entries in tqdm(
+            sorted(runs.items()), desc="Aggregating runs", unit="run", leave=False,
+        ):
             run_dirs = {path.parent.parent.parent.resolve() for path, _, _ in entries}
             if len(run_dirs) != 1:
                 raise ValueError(f"Multiple run directories for {cell}, seed={seed}: {sorted(map(str, run_dirs))}")
@@ -96,8 +99,11 @@ def aggregate(paths):
                 "h_score": run_score._h_score(asr, avg_sro),
             })
             if len(sro) != len(entries):
-                print(f"[WARN] {cell}, seed={seed}: {len(entries) - len(sro)} undefined Spearman values",
-                      file=sys.stderr)
+                tqdm.write(
+                    f"[WARN] {cell}, seed={seed}: "
+                    f"{len(entries) - len(sro)} undefined Spearman values",
+                    file=sys.stderr,
+                )
             eligible.extend(record for _, record, _ in entries)
         if eligible:
             faith_groups = tables.faithfulness_groups(eligible, include_iou=True)
@@ -129,10 +135,16 @@ def main(argv=None):
     for root in args.input_dirs:
         if not root.is_dir():
             raise NotADirectoryError(root)
-        paths.update(path.resolve() for path in root.rglob("evaluation.json"))
+        for path in tqdm(
+            root.rglob("evaluation.json"), desc=f"Scanning {root.name}", unit="file",
+        ):
+            paths.add(path.resolve())
     if not paths:
         raise ValueError("No evaluation.json files found")
-    for config, (attack_cells, faith_cells, skipped) in sorted(aggregate(sorted(paths)).items()):
+    tqdm.write(f"[SCAN] Found {len(paths)} unique evaluation files")
+    for config, (attack_cells, faith_cells, skipped) in tqdm(
+        sorted(aggregate(sorted(paths)).items()), desc="Writing tables", unit="config",
+    ):
         folder = args.output_dir / hashlib.sha256(config.encode()).hexdigest()[:12]
         folder.mkdir(parents=True, exist_ok=True)
         for kind, cells, filename in (
@@ -154,7 +166,7 @@ def main(argv=None):
             (folder / f"{kind}_statistics.json").write_text(
                 json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8",
             )
-        print(f"[OK] {folder}: {len(skipped)} runs below {MIN_SAMPLES} samples")
+        tqdm.write(f"[OK] {folder}: {len(skipped)} runs below {MIN_SAMPLES} samples")
 
 
 if __name__ == "__main__":
