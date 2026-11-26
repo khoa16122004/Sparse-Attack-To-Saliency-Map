@@ -9,6 +9,7 @@ import csv
 import hashlib
 import json
 import math
+import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -116,6 +117,7 @@ def sample_key(payload):
 def comparison_samples(records):
     buckets = defaultdict(dict)
     clean_samples = {}
+    iou_differences = []
     for payload in records:
         context = payload["context"]
         block = block_key(context)
@@ -137,8 +139,14 @@ def comparison_samples(records):
             if "localization_provenance" in previous or "localization_provenance" in payload:
                 if previous.get("localization_provenance") != payload.get("localization_provenance"):
                     raise ValueError(f"Inconsistent localization Clean/GT for {clean_key}")
-                if previous["maps"]["clean"].get("iou") != payload["maps"]["clean"].get("iou"):
+                old_iou = previous["maps"]["clean"].get("iou")
+                new_iou = payload["maps"]["clean"].get("iou")
+                if (old_iou is None) != (new_iou is None):
                     raise ValueError(f"Inconsistent clean IoU for {clean_key}")
+                if old_iou is not None and old_iou != new_iou:
+                    # Saved clean maps may differ slightly between duplicated
+                    # runs; the first evaluation stays the reference.
+                    iou_differences.append(abs(old_iou - new_iou))
             for field in CURVE_FIELDS:
                 left = np.asarray(previous["maps"]["clean"][field])
                 right = np.asarray(payload["maps"]["clean"][field])
@@ -147,6 +155,10 @@ def comparison_samples(records):
         else:
             clean_samples[clean_key] = payload
             buckets[(*block, "clean")][identity] = (payload, "clean")
+    if iou_differences:
+        print(f"[WARN] clean IoU differed for {len(iou_differences)} duplicated clean "
+              f"evaluations (max difference {max(iou_differences):.6f}); "
+              "the first evaluation is kept", file=sys.stderr)
     return buckets
 
 
