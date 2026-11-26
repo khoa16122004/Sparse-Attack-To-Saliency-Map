@@ -55,10 +55,14 @@ def load_record(path):
     return record, attack
 
 
-def aggregate(paths):
+def aggregate(paths, debug_files=False):
     groups = defaultdict(lambda: defaultdict(list))
     for path in tqdm(paths, desc="Aggregating samples", unit="sample"):
+        if debug_files:
+            print(f"[READ] {path}", flush=True)
         record, attack = load_record(path)
+        if debug_files:
+            print(f"[LOADED] {path}", flush=True)
         context = record["context"]
         model = tables.canonical_model(context["model"])
         if model not in tables.MODELS["attack"][0]:
@@ -131,6 +135,8 @@ def main(argv=None):
     parser.add_argument("--input-dirs", nargs="+", type=Path, required=True,
                         help="Roots containing per-sample evaluation.json files")
     parser.add_argument("--output-dir", type=Path, default=Path("result_latexs") / "processed")
+    parser.add_argument("--debug-files", action="store_true",
+                        help="Log each evaluation file before and after loading and validation")
     args = parser.parse_args(argv)
     paths = set()
     for root in args.input_dirs:
@@ -145,7 +151,8 @@ def main(argv=None):
         raise ValueError("No evaluation.json files found")
     tqdm.write(f"[SCAN] Found {len(paths)} unique evaluation files")
     for config, (attack_cells, faith_cells, skipped) in tqdm(
-        sorted(aggregate(sorted(paths)).items()), desc="Writing tables", unit="config",
+        sorted(aggregate(sorted(paths), debug_files=args.debug_files).items()),
+        desc="Writing tables", unit="config",
     ):
         folder = args.output_dir / hashlib.sha256(config.encode()).hexdigest()[:12]
         folder.mkdir(parents=True, exist_ok=True)
