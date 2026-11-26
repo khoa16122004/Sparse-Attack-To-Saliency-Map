@@ -5,6 +5,7 @@ import copy
 import hashlib
 import json
 import math
+import os
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -135,10 +136,11 @@ def main(argv=None):
     for root in args.input_dirs:
         if not root.is_dir():
             raise NotADirectoryError(root)
-        for path in tqdm(
-            root.rglob("evaluation.json"), desc=f"Scanning {root.name}", unit="file",
+        for directory, _, filenames in tqdm(
+            os.walk(root), desc=f"Scanning {root.name}", unit="dir",
         ):
-            paths.add(path.resolve())
+            if "evaluation.json" in filenames:
+                paths.add((Path(directory) / "evaluation.json").resolve())
     if not paths:
         raise ValueError("No evaluation.json files found")
     tqdm.write(f"[SCAN] Found {len(paths)} unique evaluation files")
