@@ -3,13 +3,16 @@
 #SBATCH --output=evaluate_log/process_result_%j.out
 #SBATCH --error=evaluate_log/process_result_%j.err
 #SBATCH --account=uit
-#SBATCH --partition=small
+#SBATCH --partition=normal
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=8G
-#SBATCH --time=12:00:00
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=4G
+#SBATCH --time=72:00:00
+#SBATCH --gres=gpu:2g.35gb:1
 
-# CPU-only: aggregates per-sample evaluation.json files into CNN LaTeX tables.
+# Aggregates per-sample evaluation.json files into CNN LaTeX tables.
+# The aggregation itself is CPU-only; the GPU request only satisfies the
+# cluster's QoS requirement for this account/partition.
 set -euo pipefail
 
 REPO_DIR="${REPO_DIR:-${SLURM_SUBMIT_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}}"
