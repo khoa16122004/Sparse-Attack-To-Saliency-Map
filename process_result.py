@@ -1,7 +1,6 @@
 """Aggregate per-sample evaluation.json files into CNN LaTeX tables."""
 
 import argparse
-import copy
 import hashlib
 import json
 import math
@@ -10,6 +9,8 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 from statistics import mean
+
+import numpy as np
 
 from evaluate_latex_generate import generate_tables as tables
 from evaluate_script import run_aggregate_faithfulness as faithfulness
@@ -24,7 +25,7 @@ def load_record(path):
     result = json.loads(path.read_text(encoding="utf-8"))
     context = result["context"]
     record = {
-        **copy.deepcopy(result["faithfulness"]),
+        **result["faithfulness"],
         "schema_version": result["schema_version"],
         "status": result["status"],
         "sample_dir": str(path.parent.resolve()),
@@ -52,6 +53,12 @@ def load_record(path):
     record["localization_provenance"] = {
         key: localization[key] for key in ("source_sha256", "gt_mask_sha256")
     }
+    # Compact float64 arrays instead of Python float lists: later consistency
+    # checks read them through np.asarray, and this keeps 48k records in RAM.
+    for source in ("clean", "perturbation"):
+        score = record["maps"][source]
+        for field in ("fractions", "ins_curve", "del_curve"):
+            score[field] = np.asarray(score[field], dtype=np.float64)
     return record, attack
 
 
