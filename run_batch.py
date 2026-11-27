@@ -94,7 +94,7 @@ def parse_args():
             "grad_cam",
             "raw_attention",
             "xgrad_cam",
-            'layercam',
+            'layer_cam',
             "attention_grad",
         ],
         help="Saliency explanation method",
