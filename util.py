@@ -14,6 +14,7 @@ from explain_method import (
     xgrad_cam,
     raw_attention,
     attention_grad,
+    layer_cam,
 )
 from torch import nn
 import matplotlib.pyplot as plt
@@ -114,6 +115,8 @@ def get_explainable_method(method_name):
         explain_method = raw_attention
     elif method_name == "attention_grad":
         explain_method = attention_grad
+    elif method_name == "layer_cam":
+        explain_method = layer_cam
     
     else:
         raise ValueError(f"Unknown explainable method: {method_name}")
